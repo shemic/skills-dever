@@ -1,9 +1,9 @@
 ---
-name: dever-project-dev
+name: shemic-dever
 description: Use when bootstrapping or developing a Dever-based Go project, especially for config/model/service/provider/api/middleware work that relies on init-based code generation.
 ---
 
-# Dever Project Dev
+# shemic-dever
 
 ## Overview
 
@@ -12,10 +12,10 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 2. 现有 Dever 项目继续开发
 
 主参考：
-- `references/module-business-development.md`（module 业务开发主手册）
-- `references/empty-project-bootstrap.md`（冷启动入口）
-- `scripts/bootstrap-empty-project.sh`（一键初始化脚本）
-- `scripts/scaffold-module.sh`（业务模块脚手架脚本）
+- `references/module.md`（module 业务开发主手册）
+- `references/boot.md`（冷启动入口）
+- `scripts/boot.sh`（一键初始化脚本）
+- `scripts/module.sh`（业务模块脚手架脚本）
 
 ## When to Use
 
@@ -31,7 +31,7 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 
 1. 冷启动模式：项目还没有完整骨架（缺少 `go.mod` / `main.go` / `module` / `config`）。
 2. 迭代模式：项目骨架已存在，仅做业务增量开发。
-3. 业务实现模式：无论冷启动还是迭代，只要要写 `module` 业务代码，都按 `references/module-business-development.md` 执行。
+3. 业务实现模式：无论冷启动还是迭代，只要要写 `module` 业务代码，都按 `references/module.md` 执行。
 
 ## Mandatory Rules
 
@@ -51,17 +51,17 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 当项目是空的或仅有 `go.mod` 时：
 
 1. 优先运行脚本：
-   - `bash scripts/bootstrap-empty-project.sh <module_name> [dever_version] [app_name] [port]`
+   - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]`
 2. 按需生成业务模块骨架：
-   - `bash scripts/scaffold-module.sh <module_dir> <resource_name> [dever_version]`
-3. 再按 `references/module-business-development.md` 写业务代码。
+   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
+3. 再按 `references/module.md` 写业务代码。
 
 ## Iteration Workflow (Existing Project)
 
 1. 明确本次改动属于哪类：`config` / `model` / `service` / `api` / `middleware`。
 2. 需要新资源时先生成骨架：
-   - `bash scripts/scaffold-module.sh <module_dir> <resource_name> [dever_version]`
-3. 在 `module/<name>` 下实现业务代码（严格按 `references/module-business-development.md`）。
+   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
+3. 在 `module/<name>` 下实现业务代码（严格按 `references/module.md`）。
 4. 执行一次初始化生成：
    - `go run github.com/shemic/dever/cmd/dever@main init --skip-tidy`
 5. 检查生成文件是否正确更新。
@@ -76,7 +76,7 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 
 1. 从需求提取：模块名、资源名、接口动作（list/info/add/update/delete）、权限规则、状态规则。
 2. 先生成骨架：
-   - `bash scripts/scaffold-module.sh <module_dir> <resource_name> [dever_version]`
+   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
 3. 再补业务规则：
    - Model 字段和索引
    - Service 校验和状态流转
@@ -86,7 +86,7 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
    - `go run github.com/shemic/dever/cmd/dever@main init --skip-tidy`
 5. 输出路由与 load 注册名给开发者确认。
 
-## How To Use `references/module-business-development.md`
+## How To Use `references/module.md`
 
 这是业务开发主线文档，默认必读。
 
@@ -139,4 +139,4 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 3. `init --skip-tidy` 已执行
 4. 生成文件已更新且未手改
 5. 输出包含路由与 load 注册信息
-6. 若涉及 module 业务改动，已按 `references/module-business-development.md` 的交付要求输出业务规则说明
+6. 若涉及 module 业务改动，已按 `references/module.md` 的交付要求输出业务规则说明

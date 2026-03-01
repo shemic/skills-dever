@@ -6,8 +6,8 @@ RESOURCE_RAW="${2:-}"
 DEVER_VERSION="${3:-main}"
 
 if [[ -z "$MODULE_DIR" || -z "$RESOURCE_RAW" ]]; then
-  echo "Usage: bash scripts/scaffold-module.sh <module_dir> <resource_name> [dever_version]"
-  echo "Example: bash scripts/scaffold-module.sh blog article main"
+  echo "Usage: bash scripts/module.sh <module_dir> <resource_name> [dever_version]"
+  echo "Example: bash scripts/module.sh blog article main"
   exit 1
 fi
 

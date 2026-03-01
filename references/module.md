@@ -9,8 +9,8 @@
 
 快速入口（推荐）：
 
-- `bash scripts/scaffold-module.sh <module_dir> <resource_name> [dever_version]`
-- 示例：`bash scripts/scaffold-module.sh blog article main`
+- `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
+- 示例：`bash scripts/module.sh blog article main`
 - 注意：脚手架会覆盖同名文件，续写已有模块前先确认文件冲突
 
 ---
@@ -276,7 +276,7 @@ func (Article) GetInfo(c *server.Context) error {
 ## 8. 新建模块完整流程（从 0 写业务）
 
 1. 优先执行脚手架命令（自动生成 model/service/provider/api）：
-   - `bash scripts/scaffold-module.sh blog article main`
+   - `bash scripts/module.sh blog article main`
 2. 基于需求补充字段、校验、权限和状态流转。
 3. 如需多实体，继续执行脚手架命令生成第二个资源骨架。
 4. 执行：

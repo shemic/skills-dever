@@ -7,7 +7,7 @@ APP_NAME="${3:-dever-app}"
 PORT="${4:-8082}"
 
 if [[ -z "$MODULE_NAME" ]]; then
-  echo "Usage: bash scripts/bootstrap-empty-project.sh <module_name> [dever_version] [app_name] [port]"
+  echo "Usage: bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]"
   exit 1
 fi
 

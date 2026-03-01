@@ -5,13 +5,13 @@
 ## 一键初始化
 
 ```bash
-bash scripts/bootstrap-empty-project.sh <module_name> [dever_version] [app_name] [port]
+bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]
 ```
 
 示例：
 
 ```bash
-bash scripts/bootstrap-empty-project.sh my main my-app 8082
+bash scripts/boot.sh my main my-app 8082
 ```
 
 ## 脚本会做什么
@@ -30,5 +30,5 @@ bash scripts/bootstrap-empty-project.sh my main my-app 8082
    - `GET /health/check`
    - `POST /debug/echo`（`msg` 支持 query/form/json，统一由 `c.Input` 读取）
 3. 创建业务模块骨架：
-   - `bash scripts/scaffold-module.sh <module_dir> <resource_name> [dever_version]`
-4. 按 `references/module-business-development.md` 继续完善业务规则
+   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
+4. 按 `references/module.md` 继续完善业务规则
