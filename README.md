@@ -49,6 +49,7 @@ npx skills remove shemic-dever
 - `SKILL.md`：技能入口与执行规则
 - `references/boot.md`：空项目冷启动入口
 - `references/module.md`：module 业务开发手册
+- `references/front-page.md`：业务 module 使用 package/front 编写后台页面 JSON 的手册
 - `scripts/boot.sh`：一键初始化空项目
 - `scripts/module.sh`：按模块/资源生成业务骨架
 
@@ -63,7 +64,7 @@ npx skills remove shemic-dever
 或：
 
 ```text
-使用 shemic-dever skill。当前是迭代模式，请在 module/blog 增加 article 审核接口并按规则执行 init。
+使用 shemic-dever skill。当前是迭代模式，请在 module/blog 增加 article 审核接口，并保持 dever run 开发流程。
 ```
 
 ## 快速使用
@@ -72,11 +73,17 @@ npx skills remove shemic-dever
    - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]`
 2. 生成业务模块骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-3. 业务补充完成后执行：
-   - `go run github.com/shemic/dever/cmd/dever@main init --skip-tidy`
+3. 开发后台页面：
+   - 先按 `references/front-page.md` 接入/检查 `package/front`
+   - 再写 `module/<name>/page/**/*.json(c)`
+4. 日常开发：
+   - `dever run`
+5. 需要发布产物时：
+   - `dever build`
 
 ## 建议
 
 1. 规则改动优先更新 `SKILL.md`。
 2. 业务实现方法与模板优先更新 `references/module.md`。
-3. 仅当脚手架行为变化时更新 `scripts/*.sh`。
+3. 安装、开发、发布主流程变动时，同步更新 `README.md` 与 `references/*.md`。
+4. 仅当脚手架行为变化时更新 `scripts/*.sh`。

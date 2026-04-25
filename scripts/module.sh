@@ -25,6 +25,14 @@ if [[ -z "$PROJECT_MODULE" ]]; then
   exit 1
 fi
 
+run_dever() {
+  if grep -Eq 'replace[[:space:]]+github.com/shemic/dever[[:space:]]+=>[[:space:]]+\./dever' go.mod 2>/dev/null; then
+    go run ./dever/cmd/dever "$@"
+    return
+  fi
+  go run "github.com/shemic/dever/cmd/dever@${DEVER_VERSION}" "$@"
+}
+
 to_camel() {
   echo "$1" | tr '-_' ' ' | awk '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1,1)) tolower(substr($i,2))} printf "%s",$0}' | tr -d ' '
 }
@@ -33,7 +41,7 @@ RESOURCE_FILE="$(echo "$RESOURCE_RAW" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
 TYPE_NAME="$(to_camel "$RESOURCE_FILE")"
 SERVICE_TYPE="${TYPE_NAME}Service"
 API_TYPE="${TYPE_NAME}"
-MODEL_FUNC="${TYPE_NAME}Model"
+MODEL_FUNC="New${TYPE_NAME}Model"
 TABLE_NAME="${MODULE_DIR}_${RESOURCE_FILE}"
 SVC_VAR="$(echo "${TYPE_NAME:0:1}" | tr '[:upper:]' '[:lower:]')${TYPE_NAME:1}Svc"
 
@@ -59,7 +67,7 @@ type ${TYPE_NAME}Index struct {
 }
 
 func ${MODEL_FUNC}() *orm.Model[${TYPE_NAME}] {
-	return orm.LoadModel[${TYPE_NAME}]("${TABLE_NAME}", ${TYPE_NAME}Index{}, "sort desc,id desc", "default")
+	return orm.LoadModel[${TYPE_NAME}]("${TABLE_NAME}", ${TYPE_NAME}{}, ${TYPE_NAME}Index{}, "sort desc,id desc", "default")
 }
 EOF
 
@@ -168,16 +176,15 @@ cat > "module/${MODULE_DIR}/service/${RESOURCE_FILE}_provider.go" <<EOF
 package service
 
 import (
-	"fmt"
-
 	"github.com/shemic/dever/server"
+	"github.com/shemic/dever/util"
 )
 
 func (s ${SERVICE_TYPE}) ProviderInfo(c *server.Context, params []any) any {
 	if len(params) < 1 {
 		panic("ProviderInfo 参数不足，需要 code")
 	}
-	code := fmt.Sprint(params[0])
+	code := util.ToStringTrimmed(params[0])
 	return s.Info(c.Context(), code)
 }
 EOF
@@ -186,9 +193,8 @@ cat > "module/${MODULE_DIR}/api/${RESOURCE_FILE}.go" <<EOF
 package api
 
 import (
-	"strconv"
-
 	"github.com/shemic/dever/server"
+	"github.com/shemic/dever/util"
 
 	${MODULE_DIR}service "${PROJECT_MODULE}/module/${MODULE_DIR}/service"
 )
@@ -198,8 +204,7 @@ type ${API_TYPE} struct{}
 var ${SVC_VAR} = ${MODULE_DIR}service.${SERVICE_TYPE}{}
 
 func (${API_TYPE}) GetList(c *server.Context) error {
-	limitStr := c.Input("limit", "is_number", "分页条数", "20")
-	limit, _ := strconv.ParseInt(limitStr, 10, 64)
+	limit, _ := util.ParseInt64(c.Input("limit", "is_number", "分页条数", "20"))
 	return c.JSON(map[string]any{
 		"list": ${SVC_VAR}.List(c.Context(), limit),
 	})
@@ -242,7 +247,7 @@ func (${API_TYPE}) PostDelete(c *server.Context) error {
 }
 EOF
 
-go run "github.com/shemic/dever/cmd/dever@${DEVER_VERSION}" init --skip-tidy
+run_dever install
 
 if [[ "$MODULE_DIR" == "main" ]]; then
   ROUTE_PREFIX="/${RESOURCE_FILE}"
@@ -251,6 +256,8 @@ else
 fi
 
 echo "Scaffold completed: module/${MODULE_DIR} (${RESOURCE_FILE})"
+echo "dever 已安装/刷新。保持使用：dever run"
+echo "Release build: dever build"
 echo "Generated routes examples:"
 echo "  GET  ${ROUTE_PREFIX}/list"
 echo "  GET  ${ROUTE_PREFIX}/info"

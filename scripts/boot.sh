@@ -22,6 +22,14 @@ else
   fi
 fi
 
+run_dever() {
+  if grep -Eq 'replace[[:space:]]+github.com/shemic/dever[[:space:]]+=>[[:space:]]+\./dever' go.mod 2>/dev/null; then
+    go run ./dever/cmd/dever "$@"
+    return
+  fi
+  go run "github.com/shemic/dever/cmd/dever@${DEVER_VERSION}" "$@"
+}
+
 go get "github.com/shemic/dever@${DEVER_VERSION}"
 
 mkdir -p config module/main/{api,service,model} middleware data/load
@@ -117,26 +125,68 @@ func (Debug) PostEcho(c *server.Context) error {
 }
 EOF
 
-if [[ ! -f config/setting.json ]]; then
-cat > config/setting.json <<EOF
+if [[ ! -f config/setting.json && ! -f config/setting.jsonc ]]; then
+cat > config/setting.jsonc <<EOF
 {
   "log": {
     "level": "info",
-    "encoding": "console",
     "development": false,
     "enabled": true,
     "output": "stdout"
+  },
+  "observe": {
+    "enabled": false,
+    "provider": "builtin",
+    "service": "",
+    "slowRequest": "500ms",
+    "slowSQL": "200ms",
+    "options": {
+      "endpoint": "",
+      "timeout": "3s",
+      "buffer": 512,
+      "headers": {
+        "Authorization": ""
+      }
+    }
   },
   "http": {
     "host": "0.0.0.0",
     "port": ${PORT},
     "shutdownTimeout": "10s",
     "appName": "${APP_NAME}",
+    "cors": {
+      "enabled": true,
+      "allowOrigins": ["*"],
+      "allowMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allowHeaders": ["*"],
+      "allowCredentials": false,
+      "exposeHeaders": [],
+      "maxAge": 0
+    },
     "enableTuning": true,
     "prefork": false
   },
   "auth": {
     "jwtSecret": "replace_me"
+    // 多 JWT 时改为：
+    // "jwt": {
+    //   "schemes": {
+    //     "user": {
+    //       "alg": "HS256",
+    //       "secret": "replace_user_secret",
+    //       "header": "Authorization",
+    //       "prefix": "Bearer",
+    //       "claimKeys": ["uid", "sub"]
+    //     }
+    //   },
+    //   "guards": [
+    //     {
+    //       "scheme": "user",
+    //       "prefixes": ["/"],
+    //       "publicPaths": ["/ping/index", "/health/check"]
+    //     }
+    //   ]
+    // }
   },
   "database": {
     "create": false
@@ -148,10 +198,13 @@ cat > config/setting.json <<EOF
 EOF
 fi
 
-go run "github.com/shemic/dever/cmd/dever@${DEVER_VERSION}" init --skip-tidy
+run_dever install
 
 echo "Bootstrap completed."
-echo "Run: go run ."
+echo "Install: dever command ready"
+echo "Config: config/setting.jsonc"
+echo "Run: dever run"
+echo "Build: dever build"
 echo "Try endpoints:"
 echo "  GET  /ping/index"
 echo "  GET  /health/check"
