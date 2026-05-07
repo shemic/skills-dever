@@ -47,6 +47,7 @@ npx skills remove shemic-dever
 ## 目录结构
 
 - `SKILL.md`：技能入口与执行规则
+- `references/project.md`：完整项目交付总手册，从需求拆解到后端与后台 JSON 页面
 - `references/boot.md`：空项目冷启动入口
 - `references/module.md`：module 业务开发手册
 - `references/front-page.md`：业务 module 使用 package/front 编写后台页面 JSON 的手册
@@ -67,18 +68,30 @@ npx skills remove shemic-dever
 使用 shemic-dever skill。当前是迭代模式，请在 module/blog 增加 article 审核接口，并保持 dever run 开发流程。
 ```
 
+完整项目：
+
+```text
+使用 shemic-dever skill，按完整项目模式开发。我要做一个合同管理后台：客户、合同、付款计划、回款记录。普通 CRUD 走 package/front，复杂保存写 service hook。
+```
+
+说明：只要使用 `shemic-dever` 做后台，默认就是通过 `package/front + page JSON` 实现，不需要在需求里额外写“通过 JSON 实现后台”。
+
 ## 快速使用
 
 1. 空项目初始化：
    - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]`
 2. 生成业务模块骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-3. 开发后台页面：
+3. 完整项目开发：
+   - 先按 `references/project.md` 拆模块、模型、页面、动作矩阵
+   - 再按 `references/module.md` 写后端
+   - 最后按 `references/front-page.md` 写后台 JSON；后台默认就是 page JSON
+4. 开发后台页面：
    - 先按 `references/front-page.md` 接入/检查 `package/front`
    - 再写 `module/<name>/page/**/*.json(c)`
-4. 日常开发：
+5. 日常开发：
    - `dever run`
-5. 需要发布产物时：
+6. 需要发布产物时：
    - `dever build`
 
 ## 建议

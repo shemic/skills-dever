@@ -1,6 +1,6 @@
 ---
 name: shemic-dever
-description: Use when bootstrapping or developing a Dever-based Go project, especially for config, package/front-backed module page JSON, model, service, provider, api, middleware, jwt, and observe work that relies on init-based code generation and Dever runtime conventions.
+description: Use when bootstrapping or developing a Dever-based Go project, especially for complete backend/admin systems, package/front-backed page JSON, model, service, provider, api, middleware, jwt, observe, and init-based Dever runtime conventions.
 ---
 
 # shemic-dever
@@ -12,8 +12,9 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 2. 现有 Dever 项目继续开发
 
 主参考：
+- `references/project.md`（完整项目交付总手册：从需求拆解到后端与后台 page JSON）
 - `references/module.md`（module 业务开发主手册）
-- `references/front-page.md`（业务 module 如何使用 package/front 编写后台页面 JSON）
+- `references/front-page.md`（业务 module / package 如何使用 package/front 编写后台页面 JSON）
 - `references/boot.md`（冷启动入口）
 - `scripts/boot.sh`（一键初始化脚本）
 - `scripts/module.sh`（业务模块脚手架脚本）
@@ -23,9 +24,10 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 出现以下任一情况时使用：
 
 - 空项目要从 0 搭建 Dever 工程
+- 用户要求“做一个完整项目”、“开发一个后台系统”、“管理端”、“admin”、“CRUD 后台”、“从需求直接落地”
 - 新增模块或改动 `module/*` 下代码
 - 新增/修改 Model、Service、Provider、API、中间件
-- 新增/修改 `module/*/page/**/*.json(c)` 页面协议
+- 新增/修改 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)` 页面协议
 - 基于 `package/front` 写业务后台列表页、编辑页、详情页、统计页、导入导出、上传或资源库页面
 - 在项目初始化或老项目接入后台时安装/加载 `package/front`（例如 `dever package front`，或按 front 手册补齐等价接入文件）
 - 配置 `frontmeta.Options` / `frontmeta.Relations` 来支撑后台页面选项和关联字段
@@ -37,8 +39,12 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 
 1. 冷启动模式：项目还没有完整骨架（缺少 `go.mod` / `main.go` / `module` / `config`）。
 2. 迭代模式：项目骨架已存在，仅做业务增量开发。
-3. 业务实现模式：无论冷启动还是迭代，只要要写 `module` 业务代码，都按 `references/module.md` 执行。
-4. 后台页面模式：只要要写 `module/*/page/**/*.json(c)` 或使用 `package/front`，先按 `references/front-page.md` 检查 front 接入，再写 model/meta/page。
+3. 完整项目模式：用户给的是业务目标而不是单个文件改动时，先按 `references/project.md` 输出模块矩阵、模型矩阵、页面矩阵、动作矩阵，再进入 boot/module/front-page。
+4. 业务实现模式：无论冷启动还是迭代，只要要写 `module` 业务代码，都按 `references/module.md` 执行。
+5. 后台页面模式：只要任务目标是后台、管理端、admin、资源管理、CRUD 页面、列表/编辑/详情/统计/导入导出，即使用户没有说“page JSON”或“通过 JSON 实现”，也默认使用 `package/front + page JSON`。
+   - 先按 `references/front-page.md` 检查 front 接入，再写 model/page。
+   - 不要要求用户额外声明“通过 JSON 实现后台”。
+   - 写页面 JSON 时优先按 `references/front-page.md` 的模板生成；如需参考样例，只参考 GitHub 上的 `demo`、`package/bot`、`package/front`，不要参考当前本地项目里的页面副本。
 
 ## Mandatory Rules
 
@@ -83,6 +89,21 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 14. 严格按 Dever 框架开发：
    - 优先复用 `dever/orm`、`dever/load`、`dever/server`、`dever/util`、`dever/log`、`dever/observe`
    - 不绕过 Dever 自己实现第二套路由、模型加载、配置加载、日志和观测体系
+15. 后台页面归属必须按代码归属放置：
+   - 项目业务模块页面放 `module/<module>/page/**/*.json(c)`
+   - 可复用 package 自带页面放 `package/<package>/page/**/*.json(c)`
+   - 如果只是用 `module/<name>/main.go` 引入 package，`module` 目录只做 `// dever:import ...`，不要把 package 自带页面挪到 `module/<name>/page`
+   - 页面 `page.parent` 指向 `config/front.json(c)` 中的菜单 key；例如 package/bot 的页面仍可挂到配置里的 `bot`
+16. `package/front` 页面枚举展示必须配 option：
+   - `show-base` / `show-tag` / `show-select` / `show-status` 列展示状态、分类、类型、策略等枚举字段时，必须提供 `data.option.<field>` 或 `column.meta.option`
+   - 表格列的 `value` 要能推导到 option key，例如 `status` -> `data.option.status`，`type` -> `data.option.type`
+   - 如果使用 `meta.cases`，必须确认页面运行时支持；不确定时按 GitHub 上 `demo` 或 `package/front` 样例里的 `option` 模式写，不要参考本地项目页面副本
+   - 禁止只把枚举原始值直接丢给展示节点，否则会显示 `1`、`llm`、`round_robin` 这类内部值
+17. 后台默认交付方式：
+   - 只要任务是后台/管理端/CRUD 页面，默认写 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)`
+   - 普通 CRUD 默认走 `package/front`，不要为每张表手写 CRUD API
+   - 不要因为用户没说“JSON”就改前端源码、造前端页面或手写一套后台接口
+   - 只有用户明确要求改前端运行时，或 `front-page.md` 明确无法表达的通用能力，才考虑前端改造
 
 ## Cold-Start Workflow (Empty Project)
 
@@ -100,6 +121,34 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 5. 如果要做后台页面，先按 `references/front-page.md` 接入/检查 `package/front`。
 6. 再按 `references/module.md` 写业务代码。
 
+## Full Project Workflow
+
+当用户希望开发完整项目，尤其包含后台/管理端时，必须先读 `references/project.md`，并按这个顺序工作：
+
+1. 把用户需求拆成模块、模型、页面、动作、Service/API 五类矩阵。
+2. 先确认项目状态：
+   - 空项目：走 `references/boot.md`
+   - 现有项目：先搜索可复用 model/service/provider/page/config
+3. 先设计 Model：
+   - 字段注释
+   - Options
+   - Relations
+   - Index
+4. 再设计后台信息架构：
+   - 一级菜单
+   - 可见列表页
+   - 隐藏编辑/详情/弹窗页
+   - 父子页面关系
+5. 后端普通 CRUD 优先交给 `package/front`，不要为每张表手写 CRUD API。
+6. 复杂业务只在必要处写 Service / Provider / API。
+7. 最后写 page JSON；后台页面默认就是 page JSON，不需要用户单独说明；复杂后台按 `front-page.md` 的模板组合，不发明新 DSL。
+8. 交付时输出：
+   - 模型清单
+   - 页面清单
+   - Service/Provider 清单
+   - API 路由清单
+   - 使用方式和未执行项
+
 ## Iteration Workflow (Existing Project)
 
 1. 明确本次改动属于哪类：`config` / `model` / `service` / `api` / `middleware`。
@@ -108,7 +157,7 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
    - 本地框架项目：`go run ./dever/cmd/dever install`
 3. 需要新资源时先生成骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-4. 如果本次涉及后台页面，先按 `references/front-page.md` 确认 front 路由、菜单、权限和页面读取链路。
+4. 如果本次涉及后台页面，先按 `references/front-page.md` 确认页面归属目录、front 路由、菜单、权限和页面读取链路。
 5. 保持 `dever run` 运行，敏感改动会自动刷新生成文件和重启服务。
 6. 在 `module/<name>` 下实现业务代码（严格按 `references/module.md`）。
 7. 检查生成文件是否正确更新。
@@ -143,16 +192,36 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 2. 续写模块：按“续写现有模块完整流程（增量改业务）”执行。
 3. 代码层面严格遵守其模板：Model -> Service -> Provider -> API -> Middleware -> init 生成。
 
+## How To Use `references/project.md`
+
+这是完整项目交付总手册。
+
+当任务满足以下任一条件时先读取：
+
+- 用户只给了业务目标，例如“做一个合同管理后台”
+- 用户希望 AI 从 0 设计模块、表、接口和后台页面
+- 用户提到后台、管理端、admin、CRUD、列表、编辑、详情、统计、导入导出等后台能力
+- 需求横跨多个模块、多个页面、多个模型
+- 需要判断哪些能力走 Model + page JSON，哪些能力必须写 Service / Provider / API
+
+使用方式：
+
+1. 先按 `project.md` 输出模块矩阵、模型矩阵、页面矩阵、动作矩阵。
+2. 再按 `module.md` 写后端业务。
+3. 再按 `front-page.md` 写后台 page JSON。
+4. 最后用 `project.md` 的交付清单自查。
+
 ## How To Use `references/front-page.md`
 
 这是业务 module 消费 `package/front` 通用后台能力的页面开发手册。
 
 当任务涉及以下内容时读取：
 
-- 新增或修改 `module/*/page/**/*.json(c)`
+- 新增或修改 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)`
 - 初始化或检查 `package/front` 是否已经安装、导入、路由生成
 - 基于 model 写列表页、编辑页、详情页、统计页
 - 配置后台菜单、layout、nodes、action、data、state
+- 配置 `show-base` / `show-tag` / `show-select` / `show-status` 的枚举 option、状态标签、类型标签
 - 配置筛选、表格、表单、弹窗、抽屉、tab
 - 配置导入、导出、上传、资源库
 - 使用 `frontmeta.Options` / `frontmeta.Relations`
@@ -172,7 +241,7 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 ### Config
 - 配置文件：`config/setting.json(c)`
 - 读取入口：`github.com/shemic/dever/config` 的 `Load("")`
-- `setting.jsonc`、`front.jsonc`、`module/*/page/**/*.jsonc` 现在支持 JSONC
+- `setting.jsonc`、`front.jsonc`、`module/*/page/**/*.jsonc`、`package/*/page/**/*.jsonc` 现在支持 JSONC
 - `data/table/*.json` 是生成文件，不要写注释，不要手改
 
 ### Model

@@ -18,7 +18,9 @@
   3. 再持续写 `module/*`
   4. 需要发布产物时统一使用 `dever build`
 
-如果目标是“业务后台页面”，不要从 API CRUD 开始。先读 `references/front-page.md`，按 `model + frontmeta + page JSON` 复用 `package/front`；只有通用页面能力无法覆盖时才补 service/api。
+如果目标是“业务后台页面”，不要从 API CRUD 开始。使用 `shemic-dever` 做后台时，默认按 `model + package/front + page JSON` 复用通用后台能力；用户不需要额外说“通过 JSON 实现”。只有通用页面能力无法覆盖时才补 service/api。
+
+如果目标是“完整项目”或“复杂后台系统”，不要直接从某个 module 开始写代码。先读 `references/project.md`，输出模块矩阵、模型矩阵、页面矩阵和动作矩阵，再回到本文实现具体 module。
 
 ---
 
@@ -347,7 +349,7 @@ func (Article) GetInfo(c *server.Context) error {
 
 1. 优先执行脚手架命令（自动生成 model/service/provider/api）：
    - `bash scripts/module.sh blog article main`
-2. 如果要写后台页面，先接入/检查 `package/front`，并把 model 构造函数命名保持为 `New<Resource>Model`。
+2. 如果要写后台页面，先接入/检查 `package/front`，并把 model 构造函数命名保持为 `New<Resource>Model`。项目模块页面放 `module/<name>/page`；可复用 package 页面放 `package/<name>/page`，不要混放。
 3. 基于需求补充字段、校验、权限和状态流转。
 4. 如需多实体，继续执行脚手架命令生成第二个资源骨架。
 5. 确保 `dever run` 正在运行：
@@ -365,7 +367,7 @@ func (Article) GetInfo(c *server.Context) error {
 2. 优先复用已有 Service，不要在 API 里堆逻辑。
 3. 变更涉及模型字段时，先改 Model，再改 Service/API。
 4. 新增可复用动作时，补 `ProviderXxx`。
-5. 如果变更页面 JSON，优先复用 `package/front` 的 list/update/view/stat 页面模式，并检查默认模型名是否能命中。
+5. 如果变更页面 JSON，先确认页面归属目录（module 页面放 `module/*/page`，package 页面放 `package/*/page`），再复用 `package/front` 的 list/update/view/stat 页面模式，并检查默认模型名是否能命中。
 6. 改完保持 `dever run` 运行即可：
    - `dever run` 会自动处理 `init --skip-tidy`
 7. 对照生成文件确认改动生效。

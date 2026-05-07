@@ -30,8 +30,9 @@ bash scripts/boot.sh my main my-app 8082
 1. 冷启动脚手架：`bash scripts/boot.sh ...`
 2. 脚本会自动执行 `install`
 3. 启动开发：`dever run`
-4. 如果要做后台页面，按 `references/front-page.md` 接入/检查 `package/front`
-5. 需要发布产物时：`dever build`
+4. 如果用户要做完整项目，先按 `references/project.md` 拆模块、模型、页面和动作矩阵
+5. 如果要做后台页面，默认按 `package/front + page JSON`，按 `references/front-page.md` 接入/检查 `package/front`
+6. 需要发布产物时：`dever build`
 
 说明：
 
@@ -62,9 +63,10 @@ bash scripts/boot.sh my main my-app 8082
    - 用户 bin 目录是否已加入 `PATH`
 4. 如果项目是本地联调 `./dever`，优先检查 `go.mod` 是否已有：
    - `replace github.com/shemic/dever => ./dever`
-5. 创建业务模块骨架：
+5. 如果是完整项目，先读 `references/project.md`，不要直接从单个 API 开始写
+6. 创建业务模块骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-6. 如果要开发后台页面，先完成 `package/front` 初始化检查
-7. 按 `references/module.md` 继续完善业务规则
-8. 需要发布当前服务时：
+7. 如果要开发后台页面，默认走 page JSON，先完成 `package/front` 初始化检查
+8. 按 `references/module.md` 继续完善业务规则
+9. 需要发布当前服务时：
    - `dever build`
