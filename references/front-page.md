@@ -21,6 +21,14 @@ backend/package/<package>/page/**/*.json(c)
 backend/package/front/page/**/*.json(c)
 ```
 
+本文已经把 GitHub 源里的三类 page JSON 作为覆盖基线整理进文档：
+
+- `package/front/page/**/*.json`：账号、角色、权限、资源中心、上传规则、存储、上传分类等通用后台。
+- `package/bot/page/**/*.json`：来源服务、能力、参数、分类、日志、服务端点、服务参数映射等复杂后台。
+- `module/user/page/**/*.json`：业务列表、编辑、详情、统计、配置、内容、来源、导入导出等业务模块页面。
+
+后续 AI 写页面时，不需要再到当前 workspace 找完整页面照抄；如果确实要看原始样例，只能看 GitHub 上对应的 `demo`、`package/front`、`package/bot`、`module/user`，不能把本地副本当作标准。
+
 不适用范围：
 
 - 前端源码、组件、路由、状态管理开发。
@@ -367,12 +375,11 @@ value 路径规则：
 show-title, show-base, show-rich, show-text, show-date, show-link,
 show-button, show-button-group, show-tag, show-select, show-status,
 show-table, show-page, show-stat-card, show-chart, show-category-list,
-show-resource, show-stream-request, show-icon, show-tooltip
+show-resource, show-resource-browser, show-icon, show-tooltip
 
 form-input, form-password, form-textarea, form-number, form-switch,
 form-radio, form-checkbox, form-select, form-tree, form-cascader,
-form-date, form-array, form-upload, form-editor, form-param-picker,
-form-service-picker, form-service-param-mapping
+form-date, form-array, form-combo-mapping, form-upload, form-editor
 
 media-image, media-audio, media-video, media-file-list
 
@@ -380,45 +387,6 @@ feedback-modal, feedback-drawer, feedback-confirm, feedback-alert
 
 nav-tab
 ```
-
-### 4.3.1 服务参数映射
-
-`form-service-param-mapping` 用于来源服务参数映射。常见规则：
-
-| 规则 | 值来源 | 是否需要内部参数 | 典型用途 |
-| --- | --- | --- | --- |
-| 直接映射 | 用户输入的内部参数值 | 是 | `prompt`、`content[0].text` |
-| 选项映射 | 内部选项值转换成来源字段值 | 是 | 比例、分辨率、枚举 |
-| 附件映射 | 上传文件 URL | 是 | `image`、`content[1].image_url.url` |
-| 组合映射 | 多个选项组合后输出字段值 | 是 | `size = 分辨率 + 比例` |
-| 固定值映射 | 后台填写的固定常量 | 否 | `content[0].type = text`、`content[1].role = first_frame` |
-
-服务参数的 `key` 支持对象/数组路径：
-
-```txt
-image_url.test1.test2
-content[0].type
-content[0].text
-content[1].image_url.url
-content[1].role
-```
-
-例如火山视频 `content` 可以配置为：
-
-| 映射规则 | 内部参数 | 字段标识 | 字段值 |
-| --- | --- | --- | --- |
-| 固定值映射 | 不选 | `content[0].type` | `text` |
-| 直接映射 | 提示词 | `content[0].text` | - |
-| 固定值映射 | 不选 | `content[1].type` | `image_url` |
-| 附件映射 | 上传图片 | `content[1].image_url.url` | 选第 1 个文件 |
-| 固定值映射 | 不选 | `content[1].role` | `first_frame` |
-
-来源服务配置建议：
-
-- `host` 填来源域名，例如 `https://ark.cn-beijing.volces.com/api/v3/`。
-- `path` 填接口路径，例如视频任务创建接口 `contents/generations/tasks`。
-- 服务接口的 `api` 填模型名，例如 `doubao-seedance-1-5-pro-251215`。
-- 当 `path` 不为空时，OpenAI/Doubao 会优先按后台服务参数生成请求体，不再自动拼接 `prompt`、`content`、`role` 这类协议字段。
 
 ### 4.4 data
 
@@ -1010,6 +978,152 @@ option 来源：
 }
 ```
 
+远程 option 需要带当前表单值时，用 `meta.optionParams`，值写路径即可：
+
+```json
+{
+  "type": "form-select",
+  "value": "form.option_id",
+  "option": "/front/route/option?type=model&use=demo.NewOptionModel&parentField=param_id",
+  "meta": {
+    "optionParams": {
+      "parentId": "form.param_id"
+    }
+  }
+}
+```
+
+字段联动优先用通用能力，不要写业务专用组件：
+
+```json
+{
+  "id": "role",
+  "type": "form-select",
+  "value": "form.role",
+  "option": "option.role",
+  "meta": {
+    "control": [
+      {
+        "value": "Manager",
+        "hide": ["source"]
+      }
+    ],
+    "clearOnChange": ["form.source_id"]
+  }
+}
+```
+
+- `meta.control`: 当前字段等于某值时隐藏其他节点，`hide` 填目标节点 id。
+- `meta.hiddenWhen` / `meta.showWhen`: 目标节点自己声明显示或隐藏条件，适合复杂条件。
+- `meta.hiddenCondition` / `meta.showCondition`: 条件组合方式，默认 `all`，需要任一条件命中时填 `any`。
+- `meta.optionFilter`: 根据其他字段过滤当前 option，`form-select`、`form-radio`、`form-checkbox` 等都应走这套通用 option。
+- `meta.clearOnChange`: 当前字段值变化后清空其他路径；常用于切换类型、规则、分类后清理下游字段。
+
+`optionFilter` 示例：
+
+```json
+{
+  "type": "form-select",
+  "value": "form.param_id",
+  "option": "/front/route/option?type=model&use=demo.NewParamModel&extraFields=type",
+  "meta": {
+    "optionFilter": [
+      {
+        "field": "type",
+        "path": "form.rule",
+        "map": {
+          "option": ["select", "checkbox"],
+          "file": ["upload"]
+        }
+      }
+    ]
+  }
+}
+```
+
+需要“分类 + 项目”的二级选择时，用已有 `form-cascader`，不要写业务专用组件：
+
+```json
+{
+  "type": "form-cascader",
+  "value": "form.param_id",
+  "mode": "form",
+  "placeholder": "请选择参数",
+  "meta": {
+    "api": "/front/route/option",
+    "use": "demo.NewParamCateModel",
+    "childUse": "demo.NewParamModel",
+    "childParentField": "cate_id",
+    "valueMode": "leaf",
+    "placeholder": ["选择分类", "选择参数"],
+    "childExtraFields": "type,key",
+    "optionFilter": [
+      {
+        "field": "type",
+        "path": "form.rule",
+        "map": {
+          "option": ["select", "checkbox"]
+        }
+      }
+    ]
+  }
+}
+```
+
+`form-cascader` 二级模型选择规则：
+
+- `use`: 第一级模型。
+- `childUse`: 第二级模型。
+- `childParentField`: 子模型关联父模型的字段。
+- `valueMode: "leaf"`: 表单只保存最后一级 id；不填时保存完整路径数组，适合地区这类层级值。
+- `optionFilter`: 过滤第二级选项，规则和 `form-select` 一样。
+- 不要把业务规则、字段拼装、保存结构写进组件；复杂保存放 service hook。
+
+需要“多个参数选项组合 -> 一个字段值”的动态列映射时，可以用 `form-combo-mapping`。它只负责表格编辑和输出标准 JSON，不负责业务校验：
+
+```json
+{
+  "type": "form-combo-mapping",
+  "name": "字段值",
+  "value": "form.mapping",
+  "mode": "form",
+  "meta": {
+    "mainParamPath": "form.param_id",
+    "extraParamsPath": "form.combo_params",
+    "optionSource": "/front/route/option?type=model&use=demo.NewParamOptionModel&parentField=param_id&valueField=id&labelField=name",
+    "paramSource": "/front/route/option?type=model&use=demo.NewParamModel&valueField=id&labelField=name",
+    "addText": "添加字段值",
+    "addAllText": "添加全部字段值",
+    "clearText": "清空"
+  }
+}
+```
+
+输出格式：
+
+```json
+{
+  "params": [1, 2],
+  "rows": [
+    {
+      "values": {
+        "1": 10,
+        "2": 20
+      },
+      "native_value": "2048x2048"
+    }
+  ]
+}
+```
+
+规则：
+
+- `mainParamPath`: 主参数 id 路径。
+- `extraParamsPath`: 额外参与参数数组路径，支持 `[{ "param_id": 2 }]` 或 `[2]`。
+- `optionSource`: 按 `parentId` 拉取参数选项。
+- `paramSource`: 用 `selected` 拉取参数名称，用于表头展示。
+- 动态列这种场景不要硬塞进 `form-array`，避免把通用数组组件做复杂。
+
 ### 7.2 上传
 
 ```json
@@ -1110,6 +1224,41 @@ option 来源：
   }
 }
 ```
+
+需要“添加全部/清空”时仍用 `form-array`，不要写专用组件。`fillFromOption` 会按 option 批量生成行：
+
+```json
+{
+  "type": "form-array",
+  "value": "form.mappings",
+  "mode": "form",
+  "meta": {
+    "pageRoute": "/demo/mapping/update",
+    "addText": "添加字段值",
+    "addAllText": "添加全部字段值",
+    "clearText": "清空",
+    "valueFormat": "json",
+    "fillFromOption": {
+      "source": "/front/route/option?type=model&use=demo.NewOptionModel&parentField=param_id",
+      "targetField": "option_id",
+      "params": {
+        "parentId": "form.param_id"
+      },
+      "defaultRow": {
+        "native_value": ""
+      }
+    }
+  }
+}
+```
+
+规则：
+
+- 普通“添加”会生成一行模板；配置 `fillFromOption` 后会优先添加第一个未使用 option。
+- `addAllText` 显示“添加全部”按钮，把未使用 option 全部生成行。
+- `clearText` 显示“清空”按钮。
+- `valueFormat: "json"` 表示保存为 JSON 字符串；不填则保存数组。
+- 复杂保存、跨字段拼装、强校验放 service hook，不要塞到前端节点组件里。
 
 字段多、需要列表式维护时，不要继续堆 `form-array`，改用“父 update 嵌入子 list”的模式，见第 10 节。
 
@@ -2206,3 +2355,440 @@ JSON 能力：
 ```
 
 如果没有写前端源码，要明确说明：本次只通过 page JSON 使用已打包后台运行时。
+
+## 21. 完整覆盖索引：按 bot / front / user 现有 JSON 反向整理
+
+本节用于回答“AI 是否可以只看本文档就写出完整后台 JSON”。结论：可以。下面把 `package/front`、`package/bot`、`module/user` 现有页面里出现过的页面结构、节点类型、动作、字段和 meta 按能力归类列出来。
+
+注意：
+
+- 这是能力索引，不是让 AI 复制这些页面。
+- 写新后台时仍先选模板，再按本节确认字段是否已支持。
+- 如果本节没有列出的节点、action、meta，不要凭空写；要么换成已有能力，要么先扩展通用运行时。
+
+### 21.1 顶层协议字段完整表
+
+所有 page JSON 顶层只使用下面 6 个字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `page` | object | 页面菜单、标题、权限、排序、类型 |
+| `layout` | object | 页面布局树 |
+| `nodes` | object | 按 layout id 挂载节点数组 |
+| `data` | object | 业务数据初始值、表格、表单、选项、统计数据 |
+| `state` | object | 临时 UI 状态，如弹窗、抽屉、tab、confirm |
+| `action` | object | 页面动作字典 |
+
+### 21.2 `page` 字段完整表
+
+| 字段 | 用途 | 常见写法 |
+| --- | --- | --- |
+| `id` | 页面唯一标识；可省略，通常由 path 决定 | `"user-list"` |
+| `name` | 菜单名、页面名 | `"用户列表"` |
+| `title` | 页面标题；部分旧协议/外部页面使用 | `"用户列表"` |
+| `route` | 固定路由；多数 Dever 后台页面由文件路径推导，不必写 | `"/admin/users"` |
+| `icon` | 菜单图标 | `"User"` |
+| `parent` | 父菜单或父页面 path | `"system"`、`"user/list"` |
+| `type` | 页面类型；`1` 常见可见菜单页，`2` 常见隐藏/弹窗/子页 | `"1"` / `"2"` |
+| `sort` | 菜单排序 | `100` |
+| `auth` | 权限声明；不常手写，优先由按钮/action 推导 | `[]` |
+| `init` | 初始化动作数组；普通 CRUD 通常不需要 | `["load-page"]` |
+
+### 21.3 `layout` 完整能力
+
+已注册布局类型：
+
+```txt
+container, header, footer, main, aside, row, col
+```
+
+布局节点字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `type` | 布局类型 |
+| `name` | 可读名称 |
+| `value` | 布局参数，例如 `col` 栅格宽度 |
+| `path` | 子页面路径或 `state.xxx` / `data.xxx` 路径 |
+| `children` | 子布局节点 |
+| `className` | 额外样式 |
+| `meta` | 布局扩展配置 |
+
+常见布局模式：
+
+| 模式 | 写法 |
+| --- | --- |
+| 普通页 | `container -> header + main` |
+| 搜索表格页 | `container -> header + main`，`main` 内挂搜索区、表格、分页 |
+| 两栏分类页 | `container -> row -> col(aside) + col(main)` |
+| tab 页 | 顶部放 `nav-tab`，节点通过 `meta.tab` 绑定 tab |
+| 子页面容器 | 布局节点写 `path: "state.currentPage"` 或固定 path |
+
+### 21.4 节点统一字段完整表
+
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 节点实例 id，建议稳定 |
+| `key` | 权限、按钮、导入导出、操作项稳定标识 |
+| `auth` | 节点权限 |
+| `name` | label / 列名 / 按钮名 |
+| `icon` | 图标 |
+| `tip` | 短提示 |
+| `placeholder` | 输入提示 |
+| `info` | 说明文字 |
+| `value` | 绑定路径，默认读写 `data` |
+| `option` | 静态选项、data 路径、远程 URL |
+| `mode` | `form` / `search` / `table` |
+| `type` | 节点类型 |
+| `meta` | 节点扩展配置 |
+| `validate` | 校验规则 |
+| `className` | 样式 |
+| `action` | 事件动作 |
+| `items` | 子项；常用于按钮组、tab、复杂节点配置 |
+
+### 21.5 已支持节点类型完整表
+
+| 类型 | 节点 | 用途 |
+| --- | --- | --- |
+| 展示 | `show-title` | 页面标题/区块标题 |
+| 展示 | `show-base` | 普通文本、数字、字段展示 |
+| 展示 | `show-rich` | 富文本展示 |
+| 展示 | `show-text` | 文本块/说明 |
+| 展示 | `show-date` | 日期时间格式化展示 |
+| 展示 | `show-link` | 链接 |
+| 展示 | `show-button` | 单按钮 |
+| 展示 | `show-button-group` | 按钮组、导入导出入口、批量操作 |
+| 展示 | `show-tag` | 标签、枚举标签 |
+| 展示 | `show-select` | 只读枚举值转文本 |
+| 展示 | `show-status` | 状态标签、状态切换展示 |
+| 展示 | `show-stat-card` | 统计卡片 |
+| 展示 | `show-chart` | 图表 |
+| 展示 | `show-table` | 表格 |
+| 展示 | `show-page` | 分页 |
+| 展示 | `show-icon` | 图标展示 |
+| 展示 | `show-tooltip` | tooltip 包裹说明 |
+| 展示 | `show-category-list` | 左侧分类/树形分类列表 |
+| 展示 | `show-resource` | 资源中心 |
+| 展示 | `show-resource-browser` | 资源选择/浏览；和 `show-resource` 共用实现 |
+| 展示 | `show-stream-request` | 流式测试/请求结果展示 |
+| 导航 | `nav-tab` | tab 切换 |
+| 表单 | `form-input` | 单行输入 |
+| 表单 | `form-icon` | 图标选择 |
+| 表单 | `form-password` | 密码输入 |
+| 表单 | `form-textarea` | 多行输入 |
+| 表单 | `form-upload` | 上传 |
+| 表单 | `form-editor` | 富文本编辑器 |
+| 表单 | `form-number` | 数字输入 |
+| 表单 | `form-switch` | 开关 |
+| 表单 | `form-radio` | 单选按钮组 |
+| 表单 | `form-checkbox` | 多选 |
+| 表单 | `form-select` | 下拉选择 |
+| 表单 | `form-tree` | 树选择，如权限树 |
+| 表单 | `form-cascader` | 二级/多级选择，如分类 + 参数、地区 |
+| 表单 | `form-date` | 日期/日期范围 |
+| 表单 | `form-array` | 子表单数组 |
+| 表单 | `form-combo-mapping` | 多参数选项组合映射成字段值 |
+| 媒体 | `media-image` | 图片展示 |
+| 媒体 | `media-audio` | 音频展示 |
+| 媒体 | `media-video` | 视频展示 |
+| 媒体 | `media-file-list` | 文件列表展示 |
+| 反馈 | `feedback-modal` | 弹窗 |
+| 反馈 | `feedback-alert` | 警告提示 |
+| 反馈 | `feedback-confirm` | 确认框 |
+| 反馈 | `feedback-drawer` | 抽屉 |
+
+### 21.6 `action` 完整表
+
+顶层 `action` 字典支持这些类型：
+
+| type | 用途 | 关键字段 |
+| --- | --- | --- |
+| `state` | 写入 `state` | `key`、`value` |
+| `data` | 写入 `data` | `key`、`value` |
+| `request` | 调 HTTP 接口并回写 | `api`、`method`、`params`、`target`、`then` |
+| `page` | 切换子页面 path | `target`、`value` |
+| `modal` | 控制 `state.dialog.*` / `state.confirm.*` | `key`、`value` |
+| `save` | 走 `/front/route/action` 保存 | `params`、`use`、`path`、`before`、`after`、`then` |
+| `delete` | 走 `/front/route/action` 删除 | `params`、`key`、`path`、`then` |
+| `export` | 创建导出任务 | `exportKey`、`tableId`、`source`、`scope` |
+| `import` | 打开/返回导入任务配置 | `importKey`、`tableId`、`uploadRuleId` |
+| `increment` | 本地数字自增，常用于刷新版本号 | `key` |
+| `array` | 修改本地数组 | `key`、`op`、`index`、`value` / `params` |
+
+`array.op` 常用值：
+
+```txt
+append, upsert, patch, update, remove, delete
+```
+
+`before` / `after` 里的 `type: "service"` 是保存 hook，不是顶层 action 类型：
+
+```json
+{
+  "type": "save",
+  "params": "form",
+  "before": {
+    "type": "service",
+    "use": "user.UserUpdateHook.BeforeSaveUserUpdate"
+  },
+  "after": {
+    "type": "service",
+    "use": "user.UserUpdateHook.AfterSaveUserUpdate"
+  }
+}
+```
+
+覆盖索引里可把这两类 hook 记为 `before:service`、`after:service`。
+
+事件写法：
+
+| 位置 | 示例 |
+| --- | --- |
+| 节点点击 | `"action": { "click": "open-create" }` |
+| 节点 change | `"action": { "change": ["clear-child", "reload-option"] }` |
+| 确认框 | `"action": { "confirm": "delete-row" }` |
+| 内联 action 对象 | `"click": { "type": "modal", "key": "dialog.open", "value": true }` |
+
+### 21.7 `data` / `state` 路径完整约定
+
+常见 `data`：
+
+| 路径 | 说明 |
+| --- | --- |
+| `data.page` | 页面标题、描述、帮助文案 |
+| `data.search` | 搜索条件 |
+| `data.table` | 表格数据、分页、排序、过滤 |
+| `data.form` | 表单数据 |
+| `data.option` | 枚举/远程 option 缓存 |
+| `data.stat` | 统计卡片和图表数据 |
+| `data.actionTarget` | 当前操作行、删除对象、弹窗上下文 |
+| `data.resourceMeta` | 资源中心配置 |
+| `data.requestParams` | 请求/测试面板参数 |
+| `data.channelRequest` | 通道请求结果 |
+| `data.attempts` | 请求尝试/日志结果 |
+
+常见 `state`：
+
+| 路径 | 说明 |
+| --- | --- |
+| `state.dialog.*` | 弹窗开关 |
+| `state.drawer.*` | 抽屉开关 |
+| `state.confirm.*` | 确认框开关 |
+| `state.currentTab` | 当前 tab |
+| `state.currentCate` | 当前分类 |
+| `state.serviceParamForm` | 服务参数临时表单 |
+| `state.serviceEndpointForm` | 服务端点临时表单 |
+| `state.*Index` | 本地数组当前编辑/删除下标 |
+
+### 21.8 常见 `meta` 索引
+
+这些 key 都已经在 bot/front/user 的页面中出现过或由对应通用节点消费。不要把它们都塞进一个节点；按节点类型选择需要的字段。
+
+```txt
+addAllText, addText, allowBatchSelect, allowCategoryAssign, allowClear,
+allowUpload, api, back, bizKey, bizName, blockMs, bodyClassName, bodyScroll,
+bulkActions, buttons, cardDensity, categoryIdPath, changeVersionPath,
+childExtraFields, childParentField, childUse, clearLabel, clearOnChange,
+clearText, columns, confirm, content, control, controlClassName, countField,
+createButton, dataKey, defaultFirst, description, descriptionPath, drag,
+drawerClassName, emptyText, endValue, errorMessage, externalPagination,
+extraParamsPath, fallback, falseValue, field, fillFromOption, footer,
+formLayout, formSection, format, height, hiddenCondition, hiddenWhen, hideCategoryFilter,
+icon, inputType, itemName, kind, labelField, labelTarget, leafLayout,
+loadingText, mainParamPath, maxCount, maxLength, minHeight, multiple,
+nameKey, optionDirection, optionFilter, optionParams, optionReloadPaths,
+optionSource, orientation, pageDataPatches, pagePath, pageRoute, pageRouteQuery,
+pageSizePath, paramApi, paramSource, parentField, patchPayloadPath,
+patchRowKey, patchTargetPath, placeholder, powerPath, queryKey, range,
+remote, remoteOptionSearch, remoteSearch, requestApi, rootValue, rowKey,
+rows, ruleId, saveMode, savePath, searchLayoutId, searchPlaceholder,
+searchSubmit, selectable, showCondition, showCount, showWhen, side, size,
+stateKey, statusCases, statusChangeAction, statusDisplay, statusField,
+streamApi, successMessage, tab, tabs, target, template, title, titleKeyPath,
+titleNamePath, titlePath, to, totalPath, tree, treeClassName, trueValue,
+type, uncategorized, uncategorizedLabel, uploadRules, uploadType, use,
+valueFormat, valueMode, variant, width, withBack
+```
+
+常用 meta 按功能分组：
+
+| 功能 | meta |
+| --- | --- |
+| 远程 option | `api`、`use`、`labelField`、`nameKey`、`parentField`、`rootValue`、`extraFields`、`childExtraFields` |
+| option 联动过滤 | `optionParams`、`optionReloadPaths`、`optionFilter`、`remoteOptionSearch`、`remoteSearch` |
+| 字段联动显示 | `hiddenWhen`、`showWhen`、`hiddenCondition`、`showCondition`、`control`、`tab` |
+| 表单布局 | `formLayout`、`controlClassName`、`placeholder`、`clearOnChange`、`clearLabel` |
+| 二级/级联选择 | `childUse`、`childParentField`、`valueMode`、`saveMode`、`labelTarget`、`leafLayout` |
+| 子数组 | `pageRoute`、`pageRouteQuery`、`addText`、`addAllText`、`clearText`、`drag`、`valueFormat`、`fillFromOption` |
+| 组合映射 | `mainParamPath`、`extraParamsPath`、`optionSource`、`paramSource`、`addText`、`addAllText`、`clearText` |
+| 上传/资源 | `uploadType`、`kind`、`ruleId`、`bizKey`、`bizName`、`uploadRules`、`allowUpload`、`allowBatchSelect` |
+| 表格 | `columns`、`rowKey`、`remote`、`selectable`、`bulkActions`、`externalPagination`、`pagePath`、`pageSizePath`、`totalPath`、`tree` |
+| 弹窗/抽屉 | `stateKey`、`pageRoute`、`pageDataPatches`、`pageStatePatches`、`size`、`width`、`bodyClassName`、`footer` |
+| 流式请求 | `streamApi`、`requestApi`、`paramApi`、`loadingText`、`successMessage`、`errorMessage`、`blockMs` |
+| 统计/图表 | `rows`、`columns`、`countField`、`countUnit`、`format`、`cardDensity` |
+
+### 21.9 表格 column 完整字段
+
+表格列字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `name` | 列名 |
+| `value` | 行数据字段路径 |
+| `type` | 列渲染节点类型 |
+| `editor` | 是否行内编辑，或指定编辑器类型 |
+| `trigger` | 行内编辑触发方式，`click` / `doubleClick` |
+| `action` | 列内动作 |
+| `meta` | 列扩展 |
+| `className` | 列样式 |
+| `tip` / `info` | 列说明 |
+| `auth` | 列权限 |
+
+现有列类型：
+
+```txt
+show-base, show-tag, show-select, show-date, show-rich, show-icon,
+show-button, show-table, form-switch, media-image, media-audio,
+media-video, media-file-list
+```
+
+常见 column meta：
+
+```txt
+align, buttons, cases, columns, compact, confirmValues, controlClassName,
+countUnit, description, display, editable, falseValue, field, fixed,
+format, height, label, maxVisible, preview, size, titlePath, trueValue,
+variant, width
+```
+
+列表页中，参数为空或值为 `0` 时显示 `-`，优先用列 `meta.cases` 或后端格式化，不要让表格裸显示 `0`：
+
+```json
+{
+  "name": "参数",
+  "value": "param_id",
+  "type": "show-base",
+  "meta": {
+    "cases": [
+      { "value": 0, "text": "-" },
+      { "value": "", "text": "-" }
+    ]
+  }
+}
+```
+
+### 21.10 校验规则完整字段
+
+`validate` 是数组，每项支持：
+
+| 字段 | 说明 |
+| --- | --- |
+| `type` | 校验类型，如 `required`、`min`、`max`、`pattern`、`service` |
+| `message` | 错误提示 |
+| `pattern` | 正则 |
+| `target` | 目标路径 |
+| `min` / `max` | 长度或数值范围 |
+| `use` | service 校验 |
+| `field` | 字段名 |
+| `operator` | 条件操作符 |
+| `except` | 排除值 |
+| `params` | 额外参数 |
+| `when` | 条件校验数组 |
+| `condition` | `all` / `any` |
+
+`when.operator` 支持：
+
+```txt
+equals, notEquals, empty, notEmpty, includes, notIncludes
+```
+
+### 21.11 现有 page JSON 覆盖矩阵
+
+`package/front` 覆盖通用后台：
+
+| 页面 | 覆盖能力 |
+| --- | --- |
+| `front/account/list` | 账号列表、搜索、表格、弹窗编辑、确认删除、分页 |
+| `front/account/update` | 账号编辑、密码字段、角色选择、保存 |
+| `front/account/profile` | 个人资料、当前账号加载、保存前 service hook |
+| `front/auth/list` | 权限树/权限列表、图标、弹窗编辑 |
+| `front/auth/update` | 权限编辑、图标、排序、radio |
+| `front/role/list` | 角色列表、弹窗编辑、确认删除 |
+| `front/role/update` | 角色编辑、权限 `form-tree` |
+| `front/resource/list` | 资源中心、上传、资源浏览 |
+| `front/upload_accept_type/list` | 上传允许类型列表 |
+| `front/upload_accept_type/update` | 允许类型编辑 |
+| `front/upload_file_cate/list` | 资源分类、左侧分类列表、局部刷新 |
+| `front/upload_file_cate/update` | 资源分类编辑、service hook |
+| `front/upload_rule/list` | 上传规则列表、枚举展示 |
+| `front/upload_rule/update` | 上传规则编辑、radio/checkbox/select/switch |
+| `front/upload_storage/list` | 存储方式列表 |
+| `front/upload_storage/update` | 存储方式编辑、密码/密钥字段 |
+
+`package/bot` 覆盖复杂 package 后台：
+
+| 页面 | 覆盖能力 |
+| --- | --- |
+| `bot/energon/account/update` | package 账号配置、开关、保存 |
+| `bot/energon/log/list` | 日志列表、日期列、日志详情弹窗 |
+| `bot/energon/log/view` | 日志详情、富文本、嵌套表格、媒体展示 |
+| `bot/energon/provider_cate/list` | 来源分类，两栏分类模式 |
+| `bot/energon/provider_cate/update` | 分类编辑 |
+| `bot/energon/provider/list` | 来源列表、开关、弹窗、service hook |
+| `bot/energon/provider/update` | 来源编辑、数组配置、单选/下拉 |
+| `bot/energon/service/list` | 来源服务列表、服务弹窗、开关 |
+| `bot/energon/service/update` | 来源服务编辑、接口 path、协议参数、service hook |
+| `bot/energon/service_endpoint/list` | 服务端点子列表、本地数组弹窗、确认删除 |
+| `bot/energon/service_endpoint/update` | 服务端点数组项编辑 |
+| `bot/energon/service_endpoint/param` | 服务端点参数二级选择 |
+| `bot/energon/service_param/list` | 服务参数子列表、规则展示、参数为空显示 `-` |
+| `bot/energon/service_param/update` | 服务参数映射、固定值、选项、附件、组合映射 |
+| `bot/energon/service_param/combo_param` | 组合映射参与参数二级选择 |
+| `bot/energon/service_param/option_mapping` | 参数选项到来源字段值映射 |
+| `bot/energon/param_cate/list` | 参数分类列表 |
+| `bot/energon/param_cate/update` | 参数分类编辑 |
+| `bot/energon/param/list` | 参数列表、选项子表、开关、service hook |
+| `bot/energon/param/update` | 参数编辑、`form-array` 选项维护 |
+| `bot/energon/param_option/update` | 参数选项编辑 |
+| `bot/energon/power_cate/list` | 能力分类 |
+| `bot/energon/power_cate/update` | 能力分类编辑 |
+| `bot/energon/power/list` | 能力列表、开关、弹窗 |
+| `bot/energon/power/update` | 能力编辑、参数数组、目标数组、service hook |
+| `bot/energon/power_param/update` | 能力参数二级选择 |
+| `bot/energon/power_target/update` | 能力目标二级选择 |
+
+`module/user` 覆盖业务模块后台：
+
+| 页面 | 覆盖能力 |
+| --- | --- |
+| `user/list` | 用户列表、搜索、日期范围、导入导出、drawer、modal、confirm、delete |
+| `user/update` | 用户编辑、tab、角色/地区级联、富文本、上传、数组、保存 hook |
+| `user/view` | 用户详情、富文本、媒体、文件列表 |
+| `user/stat` | 统计卡片、图表 |
+| `user/config/set` | 固定配置页、tab、上传、富文本、保存 |
+| `user/content/list` | 内容列表、搜索、枚举、弹窗 |
+| `user/content/update` | 内容编辑、富文本、枚举 |
+| `user/source/list` | 来源列表 |
+| `user/source/update` | 来源编辑 |
+| `user/title/update` | 简单编辑页 |
+
+### 21.12 AI 生成复杂后台时的完整工作流
+
+1. 先写菜单和页面矩阵，不直接写 JSON。
+2. 每个资源至少拆成：
+   - `list.json`：可见入口。
+   - `update.json`：隐藏编辑页或弹窗页。
+   - `view.json`：需要只读详情时再加。
+3. 普通 CRUD 不写 API，依赖 model + `package/front`。
+4. 子项字段少时用 `form-array`；子项字段多或有独立生命周期时，用父页嵌入子 `list.json`。
+5. 选项、单选、多选、二级选择优先由 model `Options` / `Relations` / `form-cascader` 解决。
+6. 弹窗、抽屉、确认框只控制 `state`，实际保存/删除走 action。
+7. 导入导出走 `show-button-group` + `import/export` action。
+8. 复杂保存前规范化、跨表保存、校验、第三方协议都写 service hook。
+9. 写完每个 JSON 后自查：
+   - 节点类型是否在 21.5。
+   - action 类型是否在 21.6。
+   - `meta` 是否符合对应节点。
+   - 表格枚举列是否有 option 或 cases。
+   - 弹窗/抽屉 stateKey 是否存在。
+   - `form`、`search`、`table`、`option` 路径是否一致。

@@ -215,6 +215,13 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 
 这是业务 module 消费 `package/front` 通用后台能力的页面开发手册。
 
+它不是简单示例文档，而是完整的 page JSON 字段字典和能力索引。写后台 JSON 前必须用它确认：
+
+- `page/layout/nodes/data/state/action` 六段结构。
+- 可用节点类型、表格列类型、action 类型、validate 字段、常见 `meta`。
+- `package/front`、`package/bot`、`module/user` 已覆盖的页面模式。
+- 哪些能力只需要 page JSON，哪些必须放到 service/provider hook。
+
 当任务涉及以下内容时读取：
 
 - 新增或修改 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)`
@@ -226,6 +233,13 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 - 配置导入、导出、上传、资源库
 - 使用 `frontmeta.Options` / `frontmeta.Relations`
 - 让业务模块复用 `package/front` 的通用后台能力，而不是重复造 CRUD 和页面运行时
+
+写 JSON 时的硬规则：
+
+1. 后台/管理端/CRUD 页面默认用 page JSON；用户不用额外说明“通过 JSON 实现”。
+2. 不允许猜节点、action 或 meta 名称；先查 `front-page.md` 的完整索引。
+3. 普通 CRUD 不手写 API；复杂保存、跨表校验、协议适配写 service/provider hook。
+4. 如需参考样例，只看 GitHub 上的 `demo`、`package/front`、`package/bot`、`module/user`，不要把当前 workspace 的本地页面副本当标准。
 
 ## Quick Conventions
 
@@ -364,3 +378,4 @@ description: Use when bootstrapping or developing a Dever-based Go project, espe
 7. 生成文件已更新且未手改
 8. 输出包含路由与 load 注册信息
 9. 若涉及 module 业务改动，已按 `references/module.md` 的交付要求输出业务规则说明
+10. 若涉及后台 page JSON，已按 `references/front-page.md` 的完整索引自查节点类型、action 类型、表格列、`meta`、`data/state` 路径和 service hook 边界
