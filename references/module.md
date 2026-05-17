@@ -1,11 +1,12 @@
 # Module Business Development Playbook
 
-这个文档专门回答：在 `module` 下怎么写业务代码。
+这个文档专门回答：在 Dever 项目里怎么写业务代码，重点是 `module`，但规则同样约束写在其他目录里的业务逻辑。
 
-适用两类场景：
+适用三类场景：
 
 1. 新建模块：`module/<new_module>`
 2. 续写模块：`module/<existing_module>`
+3. 在 `package/*`、`cmd/*`、worker、task、hook、helper、middleware 等非 `module/*/service` 位置写业务逻辑
 
 快速入口（仅需要业务 API/Provider 骨架时推荐）：
 
@@ -15,7 +16,7 @@
 - 当前主开发流程：
   1. `go run .../dever install`
   2. `dever run`
-  3. 再持续写 `module/*`
+  3. 再持续写 `module/*` 或其他业务目录
   4. 需要发布产物时统一使用 `dever build`
 
 如果目标是“业务后台页面”，不要从 API CRUD 开始。使用 `shemic-dever` 做后台时，默认按 `model + package/front + page JSON` 复用通用后台能力；用户不需要额外说“通过 JSON 实现”。只有通用页面能力无法覆盖时才补 service/api。
@@ -64,6 +65,29 @@
    - `data/router.go`
    - `data/load/model.go`
    - `data/load/service.go`
+
+### 0.5 非 module/service 的业务代码
+
+只要代码承载业务规则、业务编排、状态流转、外部调用、任务处理、导入导出、回调处理、页面 hook、worker 逻辑，就必须按本文 Service 规则写；不要因为文件不在 `module/*/service` 下，就写成临时脚本或巨型过程。
+
+适用目录包括但不限于：
+
+- `package/*` 中的可复用业务能力
+- `cmd/*` 中的 worker、job、daemon
+- `module/*/hook`、`module/*/task`、`module/*/helper`
+- `middleware` 中除鉴权装配外的业务策略
+- `package/front` hook、导入导出处理、资源处理
+
+约束：
+
+1. 先定义业务用例，再决定放在哪个目录。
+2. 核心业务函数使用 `context.Context + 明确参数`，不要直接依赖 HTTP 请求对象。
+3. HTTP、Provider、CLI、worker、page hook 只做适配层，核心流程继续调用普通业务函数。
+4. 目录名和文件名按业务意图命名，不使用 `utils/common/helper/manager/value` 作为业务归宿。
+5. 不创建只有一两个函数的微目录；如果只服务当前流程，先放在同一业务文件里。
+6. 需要被 `Dever.Load` 动态调用时，在 `module/*/service` 或项目约定的 service 目录补一个薄 Provider，Provider 只做参数适配。
+7. 可复用的跨模块业务能力可以放到 `package/*`，但仍然按 Service 的复用、事务、错误、日志和并发约束写。
+8. 不要在 `cmd/*`、hook、middleware 中复制 Model 查询、状态校验或外部调用流程；抽成业务函数后复用。
 
 ---
 
