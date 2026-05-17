@@ -1,381 +1,178 @@
 ---
 name: shemic-dever
-description: Use when bootstrapping or developing a Dever-based Go project, especially for complete backend/admin systems, package/front-backed page JSON, model, service, provider, api, middleware, jwt, observe, and init-based Dever runtime conventions.
+description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/admin、package/front page JSON、model、service、provider、api、middleware、JWT、observe、config、Dever.Load、dever run/build 和生成注册文件等场景。
 ---
 
 # shemic-dever
 
-## Overview
+## 用途
 
-这个 skill 同时覆盖：
-1. 空项目冷启动
-2. 现有 Dever 项目继续开发
+本 skill 用于 Dever Go 项目的两类任务：
 
-主参考：
-- `references/project.md`（完整项目交付总手册：从需求拆解到后端与后台 page JSON）
-- `references/module.md`（module 业务开发主手册）
-- `references/front-page.md`（业务 module / package 如何使用 package/front 编写后台页面 JSON）
-- `references/boot.md`（冷启动入口）
-- `scripts/boot.sh`（一键初始化脚本）
-- `scripts/module.sh`（业务模块脚手架脚本）
+1. 冷启动：从零创建可运行的 Dever 项目。
+2. 迭代开发：在现有项目中新增或修改 model、service、provider、api、middleware、config、observe、JWT 或 `package/front` page JSON。
 
-## When to Use
+主要参考：
 
-出现以下任一情况时使用：
+| 任务 | 先读 | 再用 |
+| --- | --- | --- |
+| 空项目 / 冷启动 | `references/boot.md` | `scripts/boot.sh`，再读 `references/module.md` |
+| 完整后端 / 管理后台 | `references/project.md` | `references/module.md`、`references/front-page.md` |
+| module 业务代码 | `references/module.md` | 需要 API/Provider 骨架时用 `scripts/module.sh` |
+| 后台 / page JSON | `references/front-page.md` | 需要 service/provider hook 时读 `references/module.md` |
 
-- 空项目要从 0 搭建 Dever 工程
-- 用户要求“做一个完整项目”、“开发一个后台系统”、“管理端”、“admin”、“CRUD 后台”、“从需求直接落地”
-- 新增模块或改动 `module/*` 下代码
-- 新增/修改 Model、Service、Provider、API、中间件
-- 新增/修改 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)` 页面协议
-- 基于 `package/front` 写业务后台列表页、编辑页、详情页、统计页、导入导出、上传或资源库页面
-- 在项目初始化或老项目接入后台时安装/加载 `package/front`（例如 `dever package front`，或按 front 手册补齐等价接入文件）
-- 配置 `frontmeta.Options` / `frontmeta.Relations` 来支撑后台页面选项和关联字段
-- 接入或调整 JWT、observe、结构化日志
-- 需要确认 `Dever.Load` 可调用写法
-- 需要统一执行注册文件生成流程
+## 触发条件
 
-## Mode Selection
+任务涉及以下任一内容时使用本 skill：
 
-1. 冷启动模式：项目还没有完整骨架（缺少 `go.mod` / `main.go` / `module` / `config`）。
-2. 迭代模式：项目骨架已存在，仅做业务增量开发。
-3. 完整项目模式：用户给的是业务目标而不是单个文件改动时，先按 `references/project.md` 输出模块矩阵、模型矩阵、页面矩阵、动作矩阵，再进入 boot/module/front-page。
-4. 业务实现模式：无论冷启动还是迭代，只要要写 `module` 业务代码，都按 `references/module.md` 执行。
-5. 后台页面模式：只要任务目标是后台、管理端、admin、资源管理、CRUD 页面、列表/编辑/详情/统计/导入导出，即使用户没有说“page JSON”或“通过 JSON 实现”，也默认使用 `package/front + page JSON`。
-   - 先按 `references/front-page.md` 检查 front 接入，再写 model/page。
-   - 不要要求用户额外声明“通过 JSON 实现后台”。
-   - 写页面 JSON 时优先按 `references/front-page.md` 的模板生成；如需参考样例，只参考 GitHub 上的 `demo`、`package/bot`、`package/front`，不要参考当前本地项目里的页面副本。
+- 冷启动 Dever 项目。
+- 从需求开发完整后端或管理后台系统。
+- 新增或修改 `module/*` 业务代码。
+- 新增或修改 Model、Service、Provider、API、middleware、JWT、observe、日志或 config。
+- 新增或修改 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)`。
+- 基于 `package/front` 编写后台 CRUD、列表、编辑、详情、统计、导入导出、上传或资源库页面。
+- 安装/加载 `package/front`，或配置 `frontmeta.Options` / `frontmeta.Relations`。
+- 确认 `Dever.Load`、生成注册、路由或 Dever 命令流程。
 
-## Mandatory Rules
+## 模式路由
 
-1. 框架来源优先看 `go.mod`：
-   - 常规项目：使用 `github.com/shemic/dever`
-   - 如果项目显式 `replace github.com/shemic/dever => ./dever`，再使用本地 `./dever` 命令
-2. 主开发流程统一为：
-   - 先执行一次 `install`
-   - 后续统一使用 `dever run`
-3. 发布打包统一使用 `dever build`
-   - 无参数默认打包当前项目根目录 `main.go`
-   - `dever build cmd/worker` 会自动打包 `cmd/worker/main.go`
-   - 默认产物面向 release：`linux/amd64`、`trimpath`、`buildvcs=false`、`-ldflags="-s -w -buildid="`
-4. `dever run` 已经负责：
-   - 启动前执行 `init --skip-tidy`
-   - 监听 `model/service/api` 等敏感变更后自动重新执行 `init --skip-tidy`
-5. 显式执行 `init/routes/service/model` 只作为调试和排查手段，不再作为日常主流程
-6. 不要手改生成文件：
+1. 冷启动：项目缺少完整骨架（`go.mod`、`main.go`、`module`、`config`）时，先读 `references/boot.md`。
+2. 完整项目：用户给的是业务目标而不是单个文件改动时，先读 `references/project.md`，编码前产出模块、模型、页面、动作、Service/API 矩阵。
+3. 业务实现：只要写 `module` 代码，就读 `references/module.md`。
+4. 后台页面：只要写后台、admin、CRUD 页面，就读 `references/front-page.md`；即使用户没说 JSON，也默认 page JSON。
+5. 现有项目：新增平行实现前，先搜索可复用 model、service、provider、middleware、page JSON、frontmeta 和 config。
+
+## 硬规则
+
+1. 框架来源以 `go.mod` 为准。
+   - 常规项目使用 `github.com/shemic/dever`。
+   - 如果 `go.mod` 显式 `replace github.com/shemic/dever => ./dever`，使用本地 `./dever` 命令。
+   - 需要可复现时，优先使用 `go.mod` 锁定的 Dever 版本，不优先用 `@main`。
+2. 日常开发流程是先 `install` 一次，再 `dever run`。
+   - `dever run` 启动前会执行 `init --skip-tidy`，并在敏感 `model/service/api` 变更后刷新生成注册。
+   - 手动 `init/routes/service/model` 只用于调试。
+3. 禁止手改生成文件：
    - `data/router.go`
    - `data/load/model.go`
    - `data/load/service.go`
-7. API 参数统一使用 `c.Input(...)`（包含 path/query/form/json body 字段）。
-8. API 必须是结构体方法，方法前缀使用 `Get/Post/Put/Delete`。
-9. 如需严格可复现，优先使用 `go.mod` 中锁定的 dever 版本号替代 `@main`。
-10. 能复用 `dever` 的，不要在项目层重复写第二套：
-   - util 转换
-   - JWT 校验
-   - observe 埋点
-   - 结构化日志
-11. 能复用既有项目代码就复用：
-   - 先找现有 model/service/provider/middleware/page JSON/frontmeta/helper
-   - 可安全扩展现有实现时，不新建平行实现
-   - 重复流程必须抽成清晰的 service/helper/config，而不是复制粘贴
-12. 代码必须简单好读：
-   - API 薄，Service 承载业务，Model 只放结构和构造
-   - 函数职责单一、命名表达业务意图、控制流尽量平铺
-   - 不为“以后可能用到”提前加复杂抽象、继承式基类或多余层级
-13. 默认按高性能、高可用、高并发设计：
-   - 查询必须考虑索引、分页、条件下推，避免全表扫描和 N+1
-   - 外部调用要有超时、错误处理、可观测日志，重试只用于幂等场景
-   - 并发场景避免无保护的包级可变状态；共享状态用 DB/Redis/锁/事务保证一致性
-14. 严格按 Dever 框架开发：
-   - 优先复用 `dever/orm`、`dever/load`、`dever/server`、`dever/util`、`dever/log`、`dever/observe`
-   - 不绕过 Dever 自己实现第二套路由、模型加载、配置加载、日志和观测体系
-15. 后台页面归属必须按代码归属放置：
-   - 项目业务模块页面放 `module/<module>/page/**/*.json(c)`
-   - 可复用 package 自带页面放 `package/<package>/page/**/*.json(c)`
-   - 如果只是用 `module/<name>/main.go` 引入 package，`module` 目录只做 `// dever:import ...`，不要把 package 自带页面挪到 `module/<name>/page`
-   - 页面 `page.parent` 指向 `config/front.json(c)` 中的菜单 key；例如 package/bot 的页面仍可挂到配置里的 `bot`
-16. `package/front` 页面枚举展示必须配 option：
-   - `show-base` / `show-tag` / `show-select` / `show-status` 列展示状态、分类、类型、策略等枚举字段时，必须提供 `data.option.<field>` 或 `column.meta.option`
-   - 表格列的 `value` 要能推导到 option key，例如 `status` -> `data.option.status`，`type` -> `data.option.type`
-   - 如果使用 `meta.cases`，必须确认页面运行时支持；不确定时按 GitHub 上 `demo` 或 `package/front` 样例里的 `option` 模式写，不要参考本地项目页面副本
-   - 禁止只把枚举原始值直接丢给展示节点，否则会显示 `1`、`llm`、`round_robin` 这类内部值
-17. 后台默认交付方式：
-   - 只要任务是后台/管理端/CRUD 页面，默认写 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)`
-   - 普通 CRUD 默认走 `package/front`，不要为每张表手写 CRUD API
-   - 不要因为用户没说“JSON”就改前端源码、造前端页面或手写一套后台接口
-   - 只有用户明确要求改前端运行时，或 `front-page.md` 明确无法表达的通用能力，才考虑前端改造
+4. API 必须薄。
+   - API 必须是结构体方法，方法名前缀使用 `Get/Post/Put/Delete`。
+   - 所有请求字段用 `c.Input(...)` 获取。
+   - API 只取参、调用 Service、返回 `c.JSON(...)` 或 `c.Error(...)`；不要在 handler 里写长业务流程。
+5. 优先复用 Dever 和现有项目代码。
+   - 优先复用 `orm/load/server/util/log/observe/auth/jwt` 以及已有 model、service、provider、middleware、page JSON、frontmeta。
+   - 不要在项目层重复造第二套路由、模型加载、配置加载、日志、observe、JWT 或 util 系统。
+6. Service 代码必须从业务用例开始。
+   - 先写清可读的业务主流程，再按真实职责拆分。
+   - 禁止固定模板拆文件、无意义单行转发、单实现 interface、桶文件（`helper/utils/common/value/manager`）和单文件微目录。
+   - 详细 Service 约束按 `references/module.md` 执行。
+7. 性能和并发安全不是可选项。
+   - 列表必须考虑索引、分页、字段选择和批量查询；避免全表扫描和 N+1。
+   - 外部调用必须有超时、结构化错误/日志；重试只用于幂等操作。
+   - 状态流转、唯一创建、计数器和共享状态必须用事务、唯一索引、锁或幂等键兜底。
+8. 后台页面默认使用 `package/front + page JSON`。
+   - 普通 CRUD 不需要自定义 API。
+   - 复杂保存、校验、规范化、跨表逻辑放到 Service/Provider hook。
+   - 只有用户明确要求，或 `front-page.md` 证明缺少可复用运行时能力，才改前端 runtime。
+9. 页面归属按代码归属。
+   - 项目业务模块页面放 `module/<module>/page/**/*.json(c)`。
+   - 可复用 package 页面放 `package/<package>/page/**/*.json(c)`。
+   - 如果 `module/<name>/main.go` 只是引入 package，页面仍放 package，不复制到 module。
+   - 可见页面的 `page.parent` 用 `config/front.json(c)` 菜单 key；隐藏编辑、详情、弹窗页面用入口页面 path。
+10. page JSON 必须使用 model 元信息。
+   - 枚举、状态、分类列必须有 `data.option.<field>` 或 `column.meta.option`，不要展示内部原始值。
+   - 标准 `/list`、`/update`、`/create`、`/detail` 页面应从 Model comment、Options、Relations 推导 label、option 和 relation。
+   - `/set`、`/config` 和自定义弹窗页必须显式指定 model：列表用 `data.table.list: "<<ModelName>>"`，表单用 `data.form._model` / `_use`，保存用 submit `use`，保证推导链路可用。
+11. 禁止猜 page JSON 节点、action 或 meta。
+   - 先读 `references/front-page.md`。
+   - 如需样例，只参考 GitHub 上的 `demo`、`package/front`、`package/bot`、`module/user`；不要把当前 workspace 的页面副本当标准。
 
-## Cold-Start Workflow (Empty Project)
+## 工作流程
 
-当项目是空的或仅有 `go.mod` 时：
+### 冷启动
 
-1. 优先运行脚本：
-   - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]`
-2. 安装 `dever` 命令：
+1. 读 `references/boot.md`。
+2. 执行 `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]`。
+3. 安装 Dever 一次：
    - 常规项目：`go run github.com/shemic/dever/cmd/dever@main install`
-   - 本地框架项目：`go run ./dever/cmd/dever install`
-3. 启动开发流程：
-   - `dever run`
-4. 按需生成业务模块骨架：
-   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-5. 如果要做后台页面，先按 `references/front-page.md` 接入/检查 `package/front`。
-6. 再按 `references/module.md` 写业务代码。
+   - 本地 replace：`go run ./dever/cmd/dever install`
+4. 启动 `dever run`。
+5. 确实需要业务 API/Provider 骨架时执行 `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`。
+6. 如果需要后台页面，写 page JSON 前先读 `references/front-page.md`。
 
-## Full Project Workflow
+### 完整项目
 
-当用户希望开发完整项目，尤其包含后台/管理端时，必须先读 `references/project.md`，并按这个顺序工作：
+1. 读 `references/project.md`。
+2. 产出模块、模型、页面、动作、Service/API 边界矩阵。
+3. 先设计 Model：字段、注释、Options、Relations、索引。
+4. 再设计后台信息架构：菜单分组、可见页面、隐藏编辑/详情/弹窗页面、parent path。
+5. 普通 CRUD 使用 Model + page JSON。
+6. 只有真实业务逻辑、外部协议、状态流转、异步任务或跨表规则才写 Service/Provider/API。
+7. 交付时列出 model 清单、page 清单、Service/Provider 清单、API 路由清单、使用说明和未执行项。
 
-1. 把用户需求拆成模块、模型、页面、动作、Service/API 五类矩阵。
-2. 先确认项目状态：
-   - 空项目：走 `references/boot.md`
-   - 现有项目：先搜索可复用 model/service/provider/page/config
-3. 先设计 Model：
-   - 字段注释
-   - Options
-   - Relations
-   - Index
-4. 再设计后台信息架构：
-   - 一级菜单
-   - 可见列表页
-   - 隐藏编辑/详情/弹窗页
-   - 父子页面关系
-5. 后端普通 CRUD 优先交给 `package/front`，不要为每张表手写 CRUD API。
-6. 复杂业务只在必要处写 Service / Provider / API。
-7. 最后写 page JSON；后台页面默认就是 page JSON，不需要用户单独说明；复杂后台按 `front-page.md` 的模板组合，不发明新 DSL。
-8. 交付时输出：
-   - 模型清单
-   - 页面清单
-   - Service/Provider 清单
-   - API 路由清单
-   - 使用方式和未执行项
+### 迭代开发
 
-## Iteration Workflow (Existing Project)
+1. 判断改动类型：`config`、`model`、`service`、`provider`、`api`、`middleware` 或 page JSON。
+2. 先搜索现有实现。
+3. 新增资源时，默认用 `scripts/module.sh` 的覆盖保护；确认替换同名文件时才加 `--force`。
+4. 写 page JSON 时，按 `references/front-page.md` 确认页面归属、菜单 parent、model 推导、front route 和 service hook 边界。
+5. 尽量保持 `dever run` 运行；敏感变更会自动刷新生成文件。
+6. 汇报时给出改动文件、路由和 load 注册名。
 
-1. 明确本次改动属于哪类：`config` / `model` / `service` / `api` / `middleware`。
-2. 如未安装 `dever`，先执行一次：
-   - 常规项目：`go run github.com/shemic/dever/cmd/dever@main install`
-   - 本地框架项目：`go run ./dever/cmd/dever install`
-3. 需要新资源时先生成骨架：
-   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-4. 如果本次涉及后台页面，先按 `references/front-page.md` 确认页面归属目录、front 路由、菜单、权限和页面读取链路。
-5. 保持 `dever run` 运行，敏感改动会自动刷新生成文件和重启服务。
-6. 在 `module/<name>` 下实现业务代码（严格按 `references/module.md`）。
-7. 检查生成文件是否正确更新。
-8. 汇报变更时给出：
-   - 改动文件列表
-   - 路由清单
-   - `load` 注册名清单
+### 从需求到接口
 
-## Requirement-To-Interface Delivery
+1. 从需求提取 module、resource、动作、权限、状态和错误。
+2. 后台 CRUD 优先使用 Model + page JSON。
+3. 校验、状态和跨表规则写 Service。
+4. `Dever.Load` 或页面 hook 写 Provider。
+5. 非后台 CRUD 的 HTTP 行为才写 API。
+6. 输出路由和 load 注册名。
 
-当输入是“需求描述”，按这个顺序产出接口：
+## 快速约定
 
-1. 从需求提取：模块名、资源名、接口动作（list/info/add/update/delete）、权限规则、状态规则。
-2. 先生成骨架：
-   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-3. 如果需要后台页面，先确认 `package/front` 已接入，并采用 `New<Resource>Model` 这类能被 front 默认模型解析命中的构造函数命名。
-4. 再补业务规则：
-   - Model 字段和索引
-   - Service 校验和状态流转
-   - API 入参与错误返回
-   - Provider（如果要被 `Dever.Load` 调用）
-5. 确保 `dever run` 正在运行，敏感改动会自动刷新生成文件。
-6. 输出路由与 load 注册名给开发者确认。
+- 配置文件：`config/setting.json(c)`、`config/front.json(c)`。
+- config 和 page 文件支持 JSONC；生成的 `data/table/*.json` 必须保持普通 JSON，且不能手改。
+- Model 构造函数使用 `orm.LoadModel[T](...)`；`module/*/model` 保持模型相关导出，避免误注册。
+- 业务 Service 方法可自由签名，推荐 `ctx + 明确参数`。
+- Provider 方法格式：`func (XxxService) ProviderAbc(c *server.Context, params []any) any`。
+- Provider 名称以生成注册为准，不要手写猜测。
+- 写转换函数前，先检查 `dever/util`，例如 `ToStringTrimmed`、`ParseInt64`、`ParseUint64`、`ParseFloat64`、`ParseBool`、`ToBool`、`ToKeyString`、`CloneMap`、`CloneMapSlice`、`ToSnake`、`UniqueUint64s`。
+- 鉴权用户通常从项目 middleware helper 获取，例如 `mid.GetUid(c.Context())`。
+- middleware 统一在 `middleware/Register()` 挂载。
+- JWT 优先复用 `dever/auth/jwt`；业务 middleware 只做薄装配。
+- Observe/log 复用 `dever/observe` 和 `dever/log`；不要在业务 API/Service 里重复包计时埋点。
+- 日志是结构化 JSON；链路字段以 `trace_id`、`span_id` 为准。
 
-## How To Use `references/module.md`
+## 命令
 
-这是业务开发主线文档，默认必读。
+日常：
 
-使用方式：
+1. `install`
+2. `dever run`
 
-1. 新建模块：直接按该文档的“新建模块完整流程（从 0 写业务）”执行。
-2. 续写模块：按“续写现有模块完整流程（增量改业务）”执行。
-3. 代码层面严格遵守其模板：Model -> Service -> Provider -> API -> Middleware -> init 生成。
+构建：
 
-## How To Use `references/project.md`
+- 使用 `dever build`。
+- 示例：`dever build`、`dever build cmd/worker`、`dever build -o dist/server`。
+- 默认 release 输出：`linux/amd64`、`CGO_ENABLED=0`、`trimpath`、`buildvcs=false`、`-ldflags="-s -w -buildid="`。
+- 只有需要 cgo 时才显式启用：`dever build --cgo=true`。
 
-这是完整项目交付总手册。
-
-当任务满足以下任一条件时先读取：
-
-- 用户只给了业务目标，例如“做一个合同管理后台”
-- 用户希望 AI 从 0 设计模块、表、接口和后台页面
-- 用户提到后台、管理端、admin、CRUD、列表、编辑、详情、统计、导入导出等后台能力
-- 需求横跨多个模块、多个页面、多个模型
-- 需要判断哪些能力走 Model + page JSON，哪些能力必须写 Service / Provider / API
-
-使用方式：
-
-1. 先按 `project.md` 输出模块矩阵、模型矩阵、页面矩阵、动作矩阵。
-2. 再按 `module.md` 写后端业务。
-3. 再按 `front-page.md` 写后台 page JSON。
-4. 最后用 `project.md` 的交付清单自查。
-
-## How To Use `references/front-page.md`
-
-这是业务 module 消费 `package/front` 通用后台能力的页面开发手册。
-
-它不是简单示例文档，而是完整的 page JSON 字段字典和能力索引。写后台 JSON 前必须用它确认：
-
-- `page/layout/nodes/data/state/action` 六段结构。
-- 可用节点类型、表格列类型、action 类型、validate 字段、常见 `meta`。
-- `package/front`、`package/bot`、`module/user` 已覆盖的页面模式。
-- 哪些能力只需要 page JSON，哪些必须放到 service/provider hook。
-
-当任务涉及以下内容时读取：
-
-- 新增或修改 `module/*/page/**/*.json(c)` 或 `package/*/page/**/*.json(c)`
-- 初始化或检查 `package/front` 是否已经安装、导入、路由生成
-- 基于 model 写列表页、编辑页、详情页、统计页
-- 配置后台菜单、layout、nodes、action、data、state
-- 配置 `show-base` / `show-tag` / `show-select` / `show-status` 的枚举 option、状态标签、类型标签
-- 配置筛选、表格、表单、弹窗、抽屉、tab
-- 配置导入、导出、上传、资源库
-- 使用 `frontmeta.Options` / `frontmeta.Relations`
-- 让业务模块复用 `package/front` 的通用后台能力，而不是重复造 CRUD 和页面运行时
-
-写 JSON 时的硬规则：
-
-1. 后台/管理端/CRUD 页面默认用 page JSON；用户不用额外说明“通过 JSON 实现”。
-2. 不允许猜节点、action 或 meta 名称；先查 `front-page.md` 的完整索引。
-3. 普通 CRUD 不手写 API；复杂保存、跨表校验、协议适配写 service/provider hook。
-4. 如需参考样例，只看 GitHub 上的 `demo`、`package/front`、`package/bot`、`module/user`，不要把当前 workspace 的本地页面副本当标准。
-
-## Quick Conventions
-
-### Engineering Constraints
-- 复用优先：先搜索同类 model/service/provider/helper/page JSON/frontmeta；能扩展就不要复制一套。
-- 封装适度：重复流程抽 service/helper/config；不要抽没有实际复用价值的空层。
-- 简单可读：API 只取参/调服务/返回；Service 写业务规则；函数短小、命名明确、少嵌套。
-- 性能优先：列表接口必须考虑索引、分页、字段选择、批量查询，避免全表扫描、N+1、无界 goroutine。
-- 可用性优先：外部依赖要设置超时、记录结构化错误、可降级；重试必须确认幂等。
-- 并发安全：不要用未加锁的包级可变状态缓存请求数据；状态流转使用事务、唯一索引、锁或幂等键。
-- Dever 优先：框架已有能力优先用 `orm/load/server/util/log/observe/auth/jwt`，不要绕开框架造第二套。
-
-### Config
-- 配置文件：`config/setting.json(c)`
-- 读取入口：`github.com/shemic/dever/config` 的 `Load("")`
-- `setting.jsonc`、`front.jsonc`、`module/*/page/**/*.jsonc`、`package/*/page/**/*.jsonc` 现在支持 JSONC
-- `data/table/*.json` 是生成文件，不要写注释，不要手改
-
-### Model
-- 使用 `orm.LoadModel[T](...)`
-- `module/*/model` 中尽量只放模型相关导出函数，避免误被扫描注册
-
-### Service + Provider
-- 业务方法可自由签名（推荐 `ctx + 明确参数`）
-- Provider 推荐签名：
-  - `func (XxxService) ProviderAbc(c *server.Context, params []any) any`
-- Provider 名称按生成结果调用（不要手写猜测）
-- 先检查 `dever/util` 是否已有可复用 helper，优先复用：
-  - `util.ToString`
-  - `util.ToStringTrimmed`
-  - `util.ParseInt64`
-  - `util.ParseUint64`
-  - `util.ParseFloat64`
-  - `util.ParseBool`
-  - `util.ToBool`
-  - `util.ToKeyString`
-  - `util.CloneMap`
-  - `util.CloneMapSlice`
-  - `util.FirstNonEmpty`
-  - `util.ToSnake`
-  - `util.UniqueUint64s`
-- 不要在 `module/*/service` 里重复写：
-  - `mapString`
-  - `mapInt`
-  - `NormalizeUint64`
-  - `toSnake`
-  - `isTrueValue`
-  - `normalizeOptionSeedValue`
-
-### API
-- 结构体方法映射路由
-- 返回统一使用 `c.JSON(...)` / `c.Error(...)`
-- 鉴权用户一般从 `mid.GetUid(c.Context())` 获取
-- 参数统一走 `c.Input(...)`
-
-### Middleware
-- 统一在 `middleware/Register()` 挂载
-- 全局优先 `coremiddleware.Init()` + 项目自定义中间件
-- JWT 认证优先复用 `dever/auth/jwt`
-- 单 JWT 继续兼容 `config.auth.jwtSecret`
-- 多 JWT 走 `config.auth.jwt.schemes + guards`
-- 业务层尽量只保留薄装配和 `GetUid(...)` 一类包装，不要再手写 Bearer 解析、签名校验、claims 注入
-
-### Observe
-- 框架自观测统一放在 `dever/observe`
-- 默认内置 provider 负责慢请求、慢 SQL、错误日志
-- 外部观测通过 `observe.Register(name, factory)` 注册，再由 `config.observe.provider` 启用
-- 框架内置 provider：
-  - `builtin`
-  - `http`
-  - `webhook`
-- 配置统一走 `config/setting.json(c)` 的 `observe` 段：
-  - `enabled`
-  - `provider`
-  - `service`
-  - `slowRequest`
-  - `slowSQL`
-  - `options`
-- 请求观测优先挂在框架默认中间件里，不要在业务 API 里手写重复埋点
-- 数据库观测优先挂在 `dever/orm` 执行器里，不要在业务 service 里重复包一层计时
-
-### Log
-- 当前日志是结构化 JSON，优先复用 `dever/log`
-- 链路字段以：
-  - `trace_id`
-  - `span_id`
-  为准，不再额外造 `request_id`
-
-### Install + Run
-- 日常开发主流程：
-  1. `install`
-  2. `dever run`
-- `dever run` 会自动处理：
-  - 启动前 `init --skip-tidy`
-  - 敏感文件变更后的重新生成与热重载
-- 不要把 `go run ... init --skip-tidy` 当成日常主命令再反复写进项目文档、脚本或交付说明
-
-### Build
-- 发布打包统一使用 `dever build`
-- 常见用法：
-  - 当前项目：`dever build`
-  - 子命令：`dever build cmd/workflow-worker`
-  - 指定输出：`dever build -o dist/server`
-- 默认是 release 构建：
-  - `CGO_ENABLED=0`
-  - `GOOS=linux`
-  - `GOARCH=amd64`
-  - `-trimpath`
-  - `-buildvcs=false`
-  - `-ldflags="-s -w -buildid="`
-- 如目标需要 cgo，再显式传：
-  - `dever build --cgo=true`
-
-## Optional Debug Commands
-
-仅在排查问题时按需执行：
+仅调试：
 
 - `go run github.com/shemic/dever/cmd/dever@main model`
 - `go run github.com/shemic/dever/cmd/dever@main service`
 - `go run github.com/shemic/dever/cmd/dever@main routes`
-- 如果项目本地 `replace` 到 `./dever`，对应改成：
-  - `go run ./dever/cmd/dever model`
-  - `go run ./dever/cmd/dever service`
-  - `go run ./dever/cmd/dever routes`
+- 本地 replace 时用 `go run ./dever/cmd/dever <model|service|routes>`。
 
-## Done Criteria
+## 完成标准
 
-满足以下条件才算完成：
+完成前检查：
 
-1. 模式选择正确（冷启动/迭代）
-2. 业务代码与目录约定一致
-3. 已检查可复用代码，没有留下不必要重复实现
-4. API/Service/Model 职责清晰，代码简单可读
-5. 已考虑性能、可用性、并发安全的关键风险
-6. `dever run` 已覆盖自动初始化，或已按需手动执行生成命令
-7. 生成文件已更新且未手改
-8. 输出包含路由与 load 注册信息
-9. 若涉及 module 业务改动，已按 `references/module.md` 的交付要求输出业务规则说明
-10. 若涉及后台 page JSON，已按 `references/front-page.md` 的完整索引自查节点类型、action 类型、表格列、`meta`、`data/state` 路径和 service hook 边界
+1. 模式和 reference 文件选择正确。
+2. 已搜索可复用代码。
+3. Model/API/Service/Provider/page 职责清晰。
+4. 生成文件已按需刷新，且未手改。
+5. 已考虑性能、可用性和并发风险。
+6. Service 代码避免假抽象，并遵守 `references/module.md`。
+7. 涉及 page JSON 时，已遵守 `references/front-page.md`。
+8. 最终回复包含改动文件、路由、load 注册、使用方式和未执行的验证项。

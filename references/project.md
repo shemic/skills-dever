@@ -61,6 +61,7 @@ Model + Service/Provider hook + package/front + page JSON
 3. 内置后台能力无法表达的 HTTP 行为，才写 API。
 4. 前端已经打包时，不查、不改前端源码，只写 page JSON。
 5. 只要是后台页面，page JSON 是默认方案，不需要用户在需求里显式声明。
+6. 设计 Service 时只声明真实业务用例，不为每个模型默认创建 Service；普通 CRUD 继续交给 Model + page JSON，只有状态流转、跨表编排、复杂校验、外部协议、异步任务等真实业务逻辑才进入 Service。
 
 ### 0.2 不要复制复杂度
 
@@ -280,6 +281,8 @@ page JSON 里再用 `show-base` / `show-select` / `meta.field` 展示，不要�
 ## 5. Service / Provider 设计细则
 
 ### 5.1 什么时候必须写 Service
+
+不要为每个模型默认创建 Service。只有 page JSON、Model 默认能力或简单 Provider 不能清楚表达业务规则时，才写 Service。
 
 - 保存前需要规范化 children。
 - 保存前要做跨表唯一校验。

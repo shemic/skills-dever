@@ -4,10 +4,24 @@ set -euo pipefail
 MODULE_DIR="${1:-}"
 RESOURCE_RAW="${2:-}"
 DEVER_VERSION="${3:-main}"
+FORCE=0
+
+if [[ "$DEVER_VERSION" == "--force" ]]; then
+  DEVER_VERSION="main"
+  FORCE=1
+fi
+if [[ "${4:-}" == "--force" ]]; then
+  FORCE=1
+fi
 
 if [[ -z "$MODULE_DIR" || -z "$RESOURCE_RAW" ]]; then
-  echo "Usage: bash scripts/module.sh <module_dir> <resource_name> [dever_version]"
+  echo "Usage: bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]"
   echo "Example: bash scripts/module.sh blog article main"
+  exit 1
+fi
+
+if [[ ! "$MODULE_DIR" =~ ^[A-Za-z0-9_-]+$ || ! "$RESOURCE_RAW" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  echo "module_dir and resource_name only support letters, numbers, underscore and hyphen."
   exit 1
 fi
 
@@ -45,20 +59,46 @@ MODEL_FUNC="New${TYPE_NAME}Model"
 TABLE_NAME="${MODULE_DIR}_${RESOURCE_FILE}"
 SVC_VAR="$(echo "${TYPE_NAME:0:1}" | tr '[:upper:]' '[:lower:]')${TYPE_NAME:1}Svc"
 
+TARGET_FILES=(
+  "module/${MODULE_DIR}/model/${RESOURCE_FILE}.go"
+  "module/${MODULE_DIR}/service/${RESOURCE_FILE}.go"
+  "module/${MODULE_DIR}/service/${RESOURCE_FILE}_provider.go"
+  "module/${MODULE_DIR}/api/${RESOURCE_FILE}.go"
+)
+
+if [[ "$FORCE" != "1" ]]; then
+  existing=()
+  for file in "${TARGET_FILES[@]}"; do
+    if [[ -e "$file" ]]; then
+      existing+=("$file")
+    fi
+  done
+  if (( ${#existing[@]} > 0 )); then
+    echo "Refuse to overwrite existing files:"
+    printf '  %s\n' "${existing[@]}"
+    echo "Re-run with --force only after confirming these files can be replaced."
+    exit 1
+  fi
+fi
+
 mkdir -p "module/${MODULE_DIR}/model" "module/${MODULE_DIR}/service" "module/${MODULE_DIR}/api"
 
 cat > "module/${MODULE_DIR}/model/${RESOURCE_FILE}.go" <<EOF
 package model
 
-import "github.com/shemic/dever/orm"
+import (
+	"time"
+
+	"github.com/shemic/dever/orm"
+)
 
 type ${TYPE_NAME} struct {
-	ID     int64  \`dorm:"primaryKey;autoIncrement;comment:主键ID"\`
-	Name   string \`dorm:"size:64;not null;comment:名称"\`
-	Code   string \`dorm:"size:64;not null;comment:唯一标识"\`
-	Status int8   \`dorm:"size:1;not null;default:1;comment:状态"\`
-	Sort   int64  \`dorm:"default:1;comment:排序"\`
-	Cdate  int64  \`dorm:"comment:创建时间"\`
+	ID        uint64    \`dorm:"primaryKey;autoIncrement;comment:主键ID"\`
+	Name      string    \`dorm:"type:varchar(64);not null;comment:名称"\`
+	Code      string    \`dorm:"type:varchar(64);not null;comment:唯一标识"\`
+	Status    int16     \`dorm:"type:smallint;not null;default:1;comment:状态"\`
+	Sort      int       \`dorm:"type:int;not null;default:100;comment:排序"\`
+	CreatedAt time.Time \`dorm:"comment:创建时间"\`
 }
 
 type ${TYPE_NAME}Index struct {
@@ -66,24 +106,20 @@ type ${TYPE_NAME}Index struct {
 	List struct{} \`index:"status,sort,id"\`
 }
 
-func ${MODEL_FUNC}() *orm.Model[${TYPE_NAME}] {
-	return orm.LoadModel[${TYPE_NAME}]("${TABLE_NAME}", ${TYPE_NAME}{}, ${TYPE_NAME}Index{}, "sort desc,id desc", "default")
+var ${TYPE_NAME}StatusOptions = []map[string]any{
+	{"id": 1, "value": "启用"},
+	{"id": 2, "value": "删除"},
 }
-EOF
 
-cat > "module/${MODULE_DIR}/service/helper.go" <<'EOF'
-package service
-
-import (
-	"fmt"
-	"time"
-)
-
-func buildCode(prefix string) string {
-	if prefix == "" {
-		prefix = "id"
-	}
-	return fmt.Sprintf("%s_%d", prefix, time.Now().UnixNano())
+func ${MODEL_FUNC}() *orm.Model[${TYPE_NAME}] {
+	return orm.LoadModel[${TYPE_NAME}]("${TYPE_NAME}", "${TABLE_NAME}", orm.ModelConfig{
+		Index:    ${TYPE_NAME}Index{},
+		Order:    "sort desc,id desc",
+		Database: "default",
+		Options: map[string]any{
+			"status": ${TYPE_NAME}StatusOptions,
+		},
+	})
 }
 EOF
 
@@ -125,13 +161,14 @@ func (${SERVICE_TYPE}) Add(ctx context.Context, name string) (string, error) {
 	if name == "" {
 		return "", errors.New("name 不能为空")
 	}
-	code := buildCode("${RESOURCE_FILE}")
+	now := time.Now()
+	code := fmt.Sprintf("${RESOURCE_FILE}_%d", now.UnixNano())
 	model.${MODEL_FUNC}().Insert(ctx, map[string]any{
-		"name":   name,
-		"code":   code,
-		"status": 1,
-		"sort":   time.Now().Unix(),
-		"cdate":  time.Now().Unix(),
+		"name":       name,
+		"code":       code,
+		"status":     1,
+		"sort":       int(now.Unix()),
+		"created_at": now,
 	})
 	return code, nil
 }
@@ -248,12 +285,6 @@ func (${API_TYPE}) PostDelete(c *server.Context) error {
 EOF
 
 run_dever install
-
-if [[ "$MODULE_DIR" == "main" ]]; then
-  ROUTE_PREFIX="/${RESOURCE_FILE}"
-else
-  ROUTE_PREFIX="/${MODULE_DIR}/${RESOURCE_FILE}"
-fi
 
 echo "Scaffold completed: module/${MODULE_DIR} (${RESOURCE_FILE})"
 echo "dever 已安装/刷新。保持使用：dever run"

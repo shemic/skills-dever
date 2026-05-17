@@ -178,6 +178,7 @@ func NewUserModel() *orm.Model[User] {
 - 密码/隐藏字段优先放 `orm.ModelConfig.Fields`。
 - model 文件不要 import `package/front/service/meta`，不要写 `frontmeta.RegisterModelMeta`。
 - 页面 JSON 里不要重复写 model 已经能推导的 label 和 option，除非当前字段需要覆盖默认行为。
+- 标准 `/list`、`/update`、`/create`、`/detail` 页面会按路径自动推导 model；如果页面是 `/set`、`/config`、自定义弹窗页等非标准路径，列表用 `data.table.list: "<<ModelName>>"`，表单用 `data.form._model` / `data.form._use`，保存用 `action.submit.use` 显式声明 model，让运行时继续自动推导 label、option、relation，不要为了补 label 给每个表单节点手写 `name`。
 
 ## 4. page JSON 顶层结构
 
@@ -375,11 +376,13 @@ value 路径规则：
 show-title, show-base, show-rich, show-text, show-date, show-link,
 show-button, show-button-group, show-tag, show-select, show-status,
 show-table, show-page, show-stat-card, show-chart, show-category-list,
-show-resource, show-resource-browser, show-icon, show-tooltip
+show-resource, show-resource-browser, show-stream-request, show-agent,
+show-icon, show-tooltip
 
 form-input, form-password, form-textarea, form-number, form-switch,
 form-radio, form-checkbox, form-select, form-tree, form-cascader,
-form-date, form-array, form-combo-mapping, form-upload, form-editor
+form-date, form-array, form-combo-mapping, form-upload, form-editor,
+type-editor
 
 media-image, media-audio, media-video, media-file-list
 
@@ -1123,6 +1126,54 @@ option 来源：
 - `optionSource`: 按 `parentId` 拉取参数选项。
 - `paramSource`: 用 `selected` 拉取参数名称，用于表头展示。
 - 动态列这种场景不要硬塞进 `form-array`，避免把通用数组组件做复杂。
+
+### 7.1.1 类型编辑器
+
+需要“左侧选择类型，右侧维护该类型的一组字段”时用 `type-editor`，不要为每个类型复制一套表单页：
+
+```json
+{
+  "id": "setting-type-editor",
+  "type": "type-editor",
+  "value": "state.selected_type",
+  "option": "option.setting_type",
+  "meta": {
+    "typeField": "type",
+    "primaryKey": "id",
+    "loadApi": "/front/route/option?type=service&use=<module>.OptionService.LoadSettings",
+    "loadParams": {
+      "parentId": "state.route.query.id"
+    },
+    "savePath": "<module>/<resource>/update",
+    "saveBefore": {
+      "type": "service",
+      "use": "<module>.Hook.BeforeSaveSetting"
+    },
+    "context": {
+      "parent_id": "state.route.query.id"
+    },
+    "defaultRecord": {
+      "status": 1
+    },
+    "fields": [
+      {
+        "type": "form-textarea",
+        "name": "内容",
+        "value": "content",
+        "validate": [{ "type": "required" }]
+      }
+    ]
+  }
+}
+```
+
+规则：
+
+- `option` / `meta.typeOptions` 提供类型列表。
+- `loadApi` 返回已有记录列表，组件按 `typeField` 找当前类型记录。
+- `context` 会合并进保存 payload；适合放父 id、租户 id 等固定上下文。
+- `fields` 只支持 `form-input`、`form-radio`、`form-select`、`form-textarea` 这类内置编辑字段。
+- 复杂校验和保存前规范化放 `saveBefore` 对应的 service hook。
 
 ### 7.2 上传
 
@@ -1924,6 +1975,53 @@ option 来源：
 - 多 sheet、复杂数据、特殊样式才用 `use` 指向 service。
 - 导入字段别名、缺失策略、提示写在 page JSON；复杂校验写 service。
 
+### 13.1 流式测试与智能体面板
+
+能力测试用 `show-stream-request`，它负责参数加载、请求发起、流式读取和停止：
+
+```json
+{
+  "id": "power-stream-test",
+  "type": "show-stream-request",
+  "meta": {
+    "powerPath": "data.actionTarget.testPower.key",
+    "paramApi": "/bot/energon/power_params",
+    "requestApi": "/bot/energon/request",
+    "streamApi": "/bot/energon/stream",
+    "stopApi": "/bot/energon/stream_stop",
+    "blockMs": 1000,
+    "uploadRules": [
+      { "ruleId": 1, "kind": "image", "bizKey": "energon", "bizName": "AI生成" }
+    ]
+  }
+}
+```
+
+智能体临时对话/执行面板用 `show-agent`，通常放在弹窗或抽屉内部：
+
+```json
+{
+  "id": "agent-stream",
+  "type": "show-agent",
+  "meta": {
+    "agentPath": "data.actionTarget.testAgent.key",
+    "agentNamePath": "data.actionTarget.testAgent.name",
+    "openPath": "state.dialog.test",
+    "requestApi": "/bot/agent/run",
+    "streamApi": "/bot/agent/stream",
+    "stopApi": "/bot/agent/stop",
+    "paramApi": "/bot/energon/power_params",
+    "blockMs": 1000
+  }
+}
+```
+
+规则：
+
+- 这两个节点复用已有 bot/energon/agent 流式运行时；不要为测试面板新写前端组件。
+- `powerPath` / `agentPath` 必须能读到当前行或当前上下文的 key。
+- 如果业务不是 bot/energon/agent，但需要同类流式能力，先补后端 service/api 协议，再复用这些节点的 `requestApi` / `streamApi` / `stopApi`。
+
 ## 14. 弹窗、抽屉、确认框
 
 弹窗：
@@ -2471,6 +2569,7 @@ container, header, footer, main, aside, row, col
 | 展示 | `show-resource` | 资源中心 |
 | 展示 | `show-resource-browser` | 资源选择/浏览；和 `show-resource` 共用实现 |
 | 展示 | `show-stream-request` | 流式测试/请求结果展示 |
+| 展示 | `show-agent` | 智能体对话/执行面板 |
 | 导航 | `nav-tab` | tab 切换 |
 | 表单 | `form-input` | 单行输入 |
 | 表单 | `form-icon` | 图标选择 |
@@ -2488,6 +2587,7 @@ container, header, footer, main, aside, row, col
 | 表单 | `form-date` | 日期/日期范围 |
 | 表单 | `form-array` | 子表单数组 |
 | 表单 | `form-combo-mapping` | 多参数选项组合映射成字段值 |
+| 表单 | `type-editor` | 按类型切换字段组并保存单条配置 |
 | 媒体 | `media-image` | 图片展示 |
 | 媒体 | `media-audio` | 音频展示 |
 | 媒体 | `media-video` | 视频展示 |

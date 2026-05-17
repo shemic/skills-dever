@@ -79,9 +79,9 @@ npx skills remove shemic-dever
 ## 快速使用
 
 1. 空项目初始化：
-   - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]`
-2. 生成业务模块骨架：
-   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
+   - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]`
+2. 生成业务 API/Provider 骨架：
+   - `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`
 3. 完整项目开发：
    - 先按 `references/project.md` 拆模块、模型、页面、动作矩阵
    - 再按 `references/module.md` 写后端

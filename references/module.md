@@ -7,11 +7,11 @@
 1. 新建模块：`module/<new_module>`
 2. 续写模块：`module/<existing_module>`
 
-快速入口（推荐）：
+快速入口（仅需要业务 API/Provider 骨架时推荐）：
 
-- `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
+- `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`
 - 示例：`bash scripts/module.sh blog article main`
-- 注意：脚手架会覆盖同名文件，续写已有模块前先确认文件冲突
+- 默认拒绝覆盖同名文件；确认要替换时才加 `--force`
 - 当前主开发流程：
   1. `go run .../dever install`
   2. `dever run`
@@ -142,16 +142,20 @@ module/blog/
 ```go
 package model
 
-import "github.com/shemic/dever/orm"
+import (
+    "time"
+
+    "github.com/shemic/dever/orm"
+)
 
 type Article struct {
-    ID      int64  `dorm:"primaryKey;autoIncrement;comment:主键ID"`
-    Name    string `dorm:"size:64;not null;comment:标题"`
-    Code    string `dorm:"size:64;not null;comment:唯一标识"`
-    UID     int64  `dorm:"column:uid;comment:用户ID"`
-    Status  int8   `dorm:"size:1;default:1;comment:状态"`
-    Sort    int64  `dorm:"default:1;comment:排序"`
-    Cdate   int64  `dorm:"comment:创建时间"`
+    ID        uint64    `dorm:"primaryKey;autoIncrement;comment:主键ID"`
+    Name      string    `dorm:"type:varchar(64);not null;comment:标题"`
+    Code      string    `dorm:"type:varchar(64);not null;comment:唯一标识"`
+    UID       uint64    `dorm:"type:bigint;not null;default:0;column:uid;comment:用户ID"`
+    Status    int16     `dorm:"type:smallint;not null;default:1;comment:状态"`
+    Sort      int       `dorm:"type:int;not null;default:100;comment:排序"`
+    CreatedAt time.Time `dorm:"comment:创建时间"`
 }
 
 type ArticleIndex struct {
@@ -159,8 +163,20 @@ type ArticleIndex struct {
     UIDSort struct{} `index:"uid,status,sort,id"`
 }
 
+var articleStatusOptions = []map[string]any{
+    {"id": 1, "value": "启用"},
+    {"id": 2, "value": "删除"},
+}
+
 func NewArticleModel() *orm.Model[Article] {
-    return orm.LoadModel[Article]("blog_article", Article{}, ArticleIndex{}, "sort desc,id desc", "default")
+    return orm.LoadModel[Article]("文章", "blog_article", orm.ModelConfig{
+        Index:    ArticleIndex{},
+        Order:    "sort desc,id desc",
+        Database: "default",
+        Options: map[string]any{
+            "status": articleStatusOptions,
+        },
+    })
 }
 ```
 
@@ -177,6 +193,29 @@ func NewArticleModel() *orm.Model[Article] {
 
 Service 负责业务规则，不负责 HTTP 协议细节。
 
+### 4.0 从零开始写 Service
+
+写 Service 前先定义业务用例，不要先定义文件结构。
+
+必须先回答：
+
+1. 这个 Service 负责哪个业务动作？
+2. 输入、输出和错误是什么？
+3. 会读写哪些 Model？
+4. 是否有事务、状态流转、外部调用、异步任务或幂等要求？
+5. 哪些规则必须在 Service 兜底，而不是只靠 API、Provider 或页面校验？
+
+第一版先写清主流程，主流程应该像业务步骤一样可读：
+
+1. 归一化输入
+2. 校验业务规则
+3. 查询必要数据
+4. 执行业务动作
+5. 写入状态或结果
+6. 返回稳定结果
+
+不要一开始就创建 helper、interface、manager、executor、runtime、options 等抽象。只有当真实职责出现后，再拆函数、文件或目录。
+
 ### 4.1 常规业务方法模板
 
 ```go
@@ -185,6 +224,7 @@ package service
 import (
     "context"
     "errors"
+    "fmt"
     "strings"
     "time"
 
@@ -193,24 +233,25 @@ import (
 
 type ArticleService struct{}
 
-func (ArticleService) Create(ctx context.Context, uid int64, name string) (string, error) {
+func (ArticleService) Create(ctx context.Context, uid uint64, name string) (string, error) {
     name = strings.TrimSpace(name)
     if name == "" {
         return "", errors.New("名称不能为空")
     }
-    code := buildCode("article")
+    now := time.Now()
+    code := fmt.Sprintf("article_%d", now.UnixNano())
     model.NewArticleModel().Insert(ctx, map[string]any{
-        "uid":    uid,
-        "name":   name,
-        "code":   code,
-        "status": 1,
-        "sort":   time.Now().Unix(),
-        "cdate":  time.Now().Unix(),
+        "uid":        uid,
+        "name":       name,
+        "code":       code,
+        "status":     1,
+        "sort":       int(now.Unix()),
+        "created_at": now,
     })
     return code, nil
 }
 
-func (ArticleService) GetInfo(ctx context.Context, uid int64, code string) *model.Article {
+func (ArticleService) GetInfo(ctx context.Context, uid uint64, code string) *model.Article {
     return model.NewArticleModel().Find(ctx, map[string]any{
         "uid":    uid,
         "code":   strings.TrimSpace(code),
@@ -236,6 +277,44 @@ func (ArticleService) GetInfo(ctx context.Context, uid int64, code string) *mode
    - `util.CloneMap`
    - `util.CloneMapSlice`
    - `util.UniqueUint64s`
+
+### 4.3 Service 过度封装禁令
+
+1. 禁止无意义单行转发。
+   - 不要只给外部函数换名，例如 `func frameType(v any) string { return external.FrameType(v) }`。
+   - 只有当函数承载业务语义、统一错误处理、默认值、协议兼容或多处复杂重复时，才允许抽出。
+2. 禁止单实现 interface。
+   - 当前只有一个具体实现时，直接用 concrete type。
+   - 只有存在多个实现、跨包稳定契约、真实替换需求或明确外部边界时，才允许 interface。
+3. 禁止固定模板拆文件。
+   - 不要因为“Service 都应该有这些文件”而创建文件。
+   - 文件必须来自真实职责，命名必须表达业务意图或技术边界。
+4. 禁止桶文件。
+   - 不要创建 `helper.go`、`utils.go`、`common.go`、`value.go`、`manager.go` 这类无法表达职责的文件。
+   - 必须改成能表达职责的名字，例如 `normalize.go`、`validate.go`、`status.go`、`payload.go`、`selector.go`、`scheduler.go`。
+5. 禁止单小文件目录。
+   - 目录必须代表稳定业务边界。
+   - 如果目录里只有一个小文件，且只服务当前 Service 主流程，应并回上层。
+6. 禁止为了“以后可能扩展”提前抽象。
+   - 抽象必须来自当前已经存在的重复、复杂分支、多个实现或清晰边界。
+
+### 4.4 Service 自查清单
+
+写完第一版后必须检查：
+
+- 主流程是否能直接读出业务步骤？
+- 是否有只调用一次的 helper？
+- 是否有单行转发 wrapper？
+- 是否有单实现 interface？
+- 是否有桶文件名？
+- 是否有只有一个小文件的目录？
+- 是否把普通 CRUD 写成了不必要的 Service/API？
+- 是否把数据库细节塞进 API？
+- 是否把 HTTP 协议细节塞进 Service？
+- 是否为了未来扩展提前造层？
+- 是否能复用 Dever util、已有 Model、已有 Service、已有 Provider？
+
+发现问题先改结构，再继续加功能。
 
 ---
 
@@ -345,16 +424,18 @@ func (Article) GetInfo(c *server.Context) error {
 
 ---
 
-## 8. 新建模块完整流程（从 0 写业务）
+## 8. 新建模块完整流程（从 0 写业务 API/Provider）
 
-1. 优先执行脚手架命令（自动生成 model/service/provider/api）：
+1. 确认当前需求确实需要自定义 API/Provider；普通后台 CRUD 先走 Model + page JSON。
+2. 执行脚手架命令（自动生成 model/service/provider/api）：
    - `bash scripts/module.sh blog article main`
-2. 如果要写后台页面，先接入/检查 `package/front`，并把 model 构造函数命名保持为 `New<Resource>Model`。项目模块页面放 `module/<name>/page`；可复用 package 页面放 `package/<name>/page`，不要混放。
-3. 基于需求补充字段、校验、权限和状态流转。
-4. 如需多实体，继续执行脚手架命令生成第二个资源骨架。
-5. 确保 `dever run` 正在运行：
+   - 有同名文件时脚本会拒绝覆盖；确认替换才加 `--force`
+3. 如果要写后台页面，先接入/检查 `package/front`，并把 model 构造函数命名保持为 `New<Resource>Model`。项目模块页面放 `module/<name>/page`；可复用 package 页面放 `package/<name>/page`，不要混放。
+4. 基于需求补充字段、校验、权限和状态流转。
+5. 如需多实体，继续执行脚手架命令生成第二个资源骨架。
+6. 确保 `dever run` 正在运行：
    - `dever run` 会自动处理 `init --skip-tidy`
-6. 检查：
+7. 检查：
    - `data/router.go` 有新路由
    - `data/load/model.go` 有新 model 注册
    - `data/load/service.go` 有新 provider 注册

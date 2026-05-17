@@ -5,7 +5,7 @@
 ## 一键初始化
 
 ```bash
-bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]
+bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]
 ```
 
 示例：
@@ -24,6 +24,8 @@ bash scripts/boot.sh my main my-app 8082
    - 如果 `go.mod` 显式 `replace github.com/shemic/dever => ./dever`：`go run ./dever/cmd/dever install`
 5. 后续开发统一通过：
    - `dever run`
+
+脚本默认拒绝覆盖已有核心文件；确认要重置这些文件时才加 `--force`。
 
 ## 当前推荐开发流程
 
@@ -64,7 +66,7 @@ bash scripts/boot.sh my main my-app 8082
 4. 如果项目是本地联调 `./dever`，优先检查 `go.mod` 是否已有：
    - `replace github.com/shemic/dever => ./dever`
 5. 如果是完整项目，先读 `references/project.md`，不要直接从单个 API 开始写
-6. 创建业务模块骨架：
+6. 确实需要自定义 API/Provider 时创建业务骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
 7. 如果要开发后台页面，默认走 page JSON，先完成 `package/front` 初始化检查
 8. 按 `references/module.md` 继续完善业务规则

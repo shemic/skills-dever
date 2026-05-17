@@ -1,13 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODULE_NAME="${1:-}"
-DEVER_VERSION="${2:-main}"
-APP_NAME="${3:-dever-app}"
-PORT="${4:-8082}"
+FORCE=0
+ARGS=()
+for arg in "$@"; do
+  if [[ "$arg" == "--force" ]]; then
+    FORCE=1
+  else
+    ARGS+=("$arg")
+  fi
+done
+
+MODULE_NAME="${ARGS[0]:-}"
+DEVER_VERSION="${ARGS[1]:-main}"
+APP_NAME="${ARGS[2]:-dever-app}"
+PORT="${ARGS[3]:-8082}"
 
 if [[ -z "$MODULE_NAME" ]]; then
-  echo "Usage: bash scripts/boot.sh <module_name> [dever_version] [app_name] [port]"
+  echo "Usage: bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]"
   exit 1
 fi
 
@@ -29,6 +39,29 @@ run_dever() {
   fi
   go run "github.com/shemic/dever/cmd/dever@${DEVER_VERSION}" "$@"
 }
+
+TARGET_FILES=(
+  "main.go"
+  "middleware/init.go"
+  "module/main/api/ping.go"
+  "module/main/api/debug.go"
+  "module/main/service/echo.go"
+)
+
+if [[ "$FORCE" != "1" ]]; then
+  existing=()
+  for file in "${TARGET_FILES[@]}"; do
+    if [[ -e "$file" ]]; then
+      existing+=("$file")
+    fi
+  done
+  if (( ${#existing[@]} > 0 )); then
+    echo "Refuse to overwrite existing files:"
+    printf '  %s\n' "${existing[@]}"
+    echo "Re-run with --force only after confirming these files can be replaced."
+    exit 1
+  fi
+fi
 
 go get "github.com/shemic/dever@${DEVER_VERSION}"
 
