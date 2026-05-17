@@ -55,35 +55,39 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
    - `data/router.go`
    - `data/load/model.go`
    - `data/load/service.go`
-4. API 必须薄。
+4. 冷启动项目必须建立 `.gitignore`。
+   - 忽略本地密钥、日志、运行时数据、上传数据、打包产物和编辑器目录。
+   - 不要忽略 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
+   - 默认内容按 `references/boot.md` 的 `.gitignore` 约定执行。
+5. API 必须薄。
    - API 必须是结构体方法，方法名前缀使用 `Get/Post/Put/Delete`。
    - 所有请求字段用 `c.Input(...)` 获取。
    - API 只取参、调用 Service、返回 `c.JSON(...)` 或 `c.Error(...)`；不要在 handler 里写长业务流程。
-5. 优先复用 Dever 和现有项目代码。
+6. 优先复用 Dever 和现有项目代码。
    - 优先复用 `orm/load/server/util/log/observe/auth/jwt` 以及已有 model、service、provider、middleware、page JSON、frontmeta。
    - 不要在项目层重复造第二套路由、模型加载、配置加载、日志、observe、JWT 或 util 系统。
-6. Service 代码必须从业务用例开始。
+7. Service 代码必须从业务用例开始。
    - 先写清可读的业务主流程，再按真实职责拆分。
    - 禁止固定模板拆文件、无意义单行转发、单实现 interface、桶文件（`helper/utils/common/value/manager`）和单文件微目录。
    - 详细 Service 约束按 `references/module.md` 执行。
-7. 性能和并发安全不是可选项。
+8. 性能和并发安全不是可选项。
    - 列表必须考虑索引、分页、字段选择和批量查询；避免全表扫描和 N+1。
    - 外部调用必须有超时、结构化错误/日志；重试只用于幂等操作。
    - 状态流转、唯一创建、计数器和共享状态必须用事务、唯一索引、锁或幂等键兜底。
-8. 后台页面默认使用 `package/front + page JSON`。
+9. 后台页面默认使用 `package/front + page JSON`。
    - 普通 CRUD 不需要自定义 API。
    - 复杂保存、校验、规范化、跨表逻辑放到 Service/Provider hook。
    - 只有用户明确要求，或 `front-page.md` 证明缺少可复用运行时能力，才改前端 runtime。
-9. 页面归属按代码归属。
+10. 页面归属按代码归属。
    - 项目业务模块页面放 `module/<module>/page/**/*.json(c)`。
    - 可复用 package 页面放 `package/<package>/page/**/*.json(c)`。
    - 如果 `module/<name>/main.go` 只是引入 package，页面仍放 package，不复制到 module。
    - 可见页面的 `page.parent` 用 `config/front.json(c)` 菜单 key；隐藏编辑、详情、弹窗页面用入口页面 path。
-10. page JSON 必须使用 model 元信息。
+11. page JSON 必须使用 model 元信息。
    - 枚举、状态、分类列必须有 `data.option.<field>` 或 `column.meta.option`，不要展示内部原始值。
    - 标准 `/list`、`/update`、`/create`、`/detail` 页面应从 Model comment、Options、Relations 推导 label、option 和 relation。
    - `/set`、`/config` 和自定义弹窗页必须显式指定 model：列表用 `data.table.list: "<<ModelName>>"`，表单用 `data.form._model` / `_use`，保存用 submit `use`，保证推导链路可用。
-11. 禁止猜 page JSON 节点、action 或 meta。
+12. 禁止猜 page JSON 节点、action 或 meta。
    - 先读 `references/front-page.md`。
    - 如需样例，只参考 GitHub 上的 `demo`、`package/front`、`package/bot`、`module/user`；不要把当前 workspace 的页面副本当标准。
 
@@ -93,12 +97,13 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 
 1. 读 `references/boot.md`。
 2. 执行 `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]`。
-3. 安装 Dever 一次：
+3. 确认 `.gitignore` 已创建或补齐 Dever ignore block。
+4. 安装 Dever 一次：
    - 常规项目：`go run github.com/shemic/dever/cmd/dever@main install`
    - 本地 replace：`go run ./dever/cmd/dever install`
-4. 启动 `dever run`。
-5. 确实需要业务 API/Provider 骨架时执行 `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`。
-6. 如果需要后台页面，写 page JSON 前先读 `references/front-page.md`。
+5. 启动 `dever run`。
+6. 确实需要业务 API/Provider 骨架时执行 `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`。
+7. 如果需要后台页面，写 page JSON 前先读 `references/front-page.md`。
 
 ### 完整项目
 
@@ -132,6 +137,7 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 
 - 配置文件：`config/setting.json(c)`、`config/front.json(c)`。
 - config 和 page 文件支持 JSONC；生成的 `data/table/*.json` 必须保持普通 JSON，且不能手改。
+- `.gitignore` 必须保留 Dever ignore block：忽略 `/server`、`/dist/`、`/build/`、`/data/log/`、`/data/tmp/`、`/data/cache/`、`/data/run/`、`/data/bin/`、`/data/upload/`、`.env*`、`config/*.local.json(c)`；不要忽略 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
 - Model 构造函数使用 `orm.LoadModel[T](...)`；`module/*/model` 保持模型相关导出，避免误注册。
 - 业务 Service 方法可自由签名，推荐 `ctx + 明确参数`。
 - Provider 方法格式：`func (XxxService) ProviderAbc(c *server.Context, params []any) any`。

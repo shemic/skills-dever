@@ -80,6 +80,7 @@ npx skills remove shemic-dever
 
 1. 空项目初始化：
    - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]`
+   - 脚本会创建/补齐 `.gitignore`，忽略本地环境、日志、运行时数据和打包产物
 2. 生成业务 API/Provider 骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`
 3. 完整项目开发：
@@ -100,3 +101,4 @@ npx skills remove shemic-dever
 2. 业务实现方法与模板优先更新 `references/module.md`。
 3. 安装、开发、发布主流程变动时，同步更新 `README.md` 与 `references/*.md`。
 4. 仅当脚手架行为变化时更新 `scripts/*.sh`。
+5. 冷启动产物约定变化时同步更新 `references/boot.md`，尤其是 `.gitignore`、配置和命令流程。

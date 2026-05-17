@@ -40,6 +40,50 @@ run_dever() {
   go run "github.com/shemic/dever/cmd/dever@${DEVER_VERSION}" "$@"
 }
 
+ensure_gitignore() {
+  local file=".gitignore"
+  local marker="# >>> dever generated ignore"
+  if [[ -f "$file" ]] && grep -Fq "$marker" "$file"; then
+    return
+  fi
+  if [[ -f "$file" && -s "$file" ]]; then
+    printf '\n' >> "$file"
+  fi
+  cat >> "$file" <<'EOF'
+# >>> dever generated ignore
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+config/*.local.json
+config/*.local.jsonc
+
+# Dever runtime data and local build artifacts
+/data/log/
+/data/tmp/
+/data/cache/
+/data/run/
+/data/bin/
+/data/upload/
+
+# Release/build outputs
+/server
+/server.exe
+/dist/
+/build/
+*.test
+*.out
+coverage.out
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+# <<< dever generated ignore
+EOF
+}
+
 TARGET_FILES=(
   "main.go"
   "middleware/init.go"
@@ -66,6 +110,7 @@ fi
 go get "github.com/shemic/dever@${DEVER_VERSION}"
 
 mkdir -p config module/main/{api,service,model} middleware data/load
+ensure_gitignore
 
 cat > main.go <<EOF
 package main
@@ -236,6 +281,7 @@ run_dever install
 echo "Bootstrap completed."
 echo "Install: dever command ready"
 echo "Config: config/setting.jsonc"
+echo "Gitignore: .gitignore"
 echo "Run: dever run"
 echo "Build: dever build"
 echo "Try endpoints:"

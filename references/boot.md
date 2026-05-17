@@ -18,11 +18,12 @@ bash scripts/boot.sh my main my-app 8082
 
 1. 初始化/复用 `go.mod`
 2. 安装 `github.com/shemic/dever@<version>`
-3. 生成可运行骨架（`main.go`、`middleware/init.go`、`module/main/api/{ping,debug}.go`、`module/main/service/echo.go`、`config/setting.jsonc`）
-4. 安装 `dever` 命令：
+3. 生成/补齐 `.gitignore`
+4. 生成可运行骨架（`main.go`、`middleware/init.go`、`module/main/api/{ping,debug}.go`、`module/main/service/echo.go`、`config/setting.jsonc`）
+5. 安装 `dever` 命令：
    - 常规项目：`go run github.com/shemic/dever/cmd/dever@<version> install`
    - 如果 `go.mod` 显式 `replace github.com/shemic/dever => ./dever`：`go run ./dever/cmd/dever install`
-5. 后续开发统一通过：
+6. 后续开发统一通过：
    - `dever run`
 
 脚本默认拒绝覆盖已有核心文件；确认要重置这些文件时才加 `--force`。
@@ -42,6 +43,53 @@ bash scripts/boot.sh my main my-app 8082
 - 改动 `model/service/api` 等敏感文件后，也会自动重新执行 `init --skip-tidy`
 - 日常开发不再把 `go run ... init --skip-tidy` 当成主命令
 - 需要 Linux 发布包时，统一使用 `dever build`
+
+## `.gitignore` 约定
+
+Dever 冷启动项目必须建立 `.gitignore`。脚本会创建或追加一个带 marker 的 Dever ignore block；已有 `.gitignore` 不会被整体覆盖。
+
+默认忽略：
+
+```gitignore
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+config/*.local.json
+config/*.local.jsonc
+
+# Dever runtime data and local build artifacts
+/data/log/
+/data/tmp/
+/data/cache/
+/data/run/
+/data/bin/
+/data/upload/
+
+# Release/build outputs
+/server
+/server.exe
+/dist/
+/build/
+*.test
+*.out
+coverage.out
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+```
+
+不要忽略这些 Dever 生成结果：
+
+- `data/router.go`
+- `data/load/model.go`
+- `data/load/service.go`
+- `data/table/*.json`
+
+原因：它们属于框架运行和迁移所需的可追踪产物，不能当成本地临时文件处理。
 
 ## 生成的默认配置约定
 
@@ -65,10 +113,11 @@ bash scripts/boot.sh my main my-app 8082
    - 用户 bin 目录是否已加入 `PATH`
 4. 如果项目是本地联调 `./dever`，优先检查 `go.mod` 是否已有：
    - `replace github.com/shemic/dever => ./dever`
-5. 如果是完整项目，先读 `references/project.md`，不要直接从单个 API 开始写
-6. 确实需要自定义 API/Provider 时创建业务骨架：
+5. 确认 `.gitignore` 存在，并且没有忽略 `data/router.go`、`data/load/*.go`、`data/table/*.json`
+6. 如果是完整项目，先读 `references/project.md`，不要直接从单个 API 开始写
+7. 确实需要自定义 API/Provider 时创建业务骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`
-7. 如果要开发后台页面，默认走 page JSON，先完成 `package/front` 初始化检查
-8. 按 `references/module.md` 继续完善业务规则
-9. 需要发布当前服务时：
+8. 如果要开发后台页面，默认走 page JSON，先完成 `package/front` 初始化检查
+9. 按 `references/module.md` 继续完善业务规则
+10. 需要发布当前服务时：
    - `dever build`
