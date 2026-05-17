@@ -48,48 +48,18 @@ bash scripts/boot.sh my main my-app 8082
 
 Dever 冷启动项目必须建立 `.gitignore`。脚本会创建或追加一个带 marker 的 Dever ignore block；已有 `.gitignore` 不会被整体覆盖。
 
-默认忽略：
+默认内容见 `files/gitignore`，不要在文档里重复维护完整模板，避免和脚本写入内容漂移。
 
-```gitignore
-# Local environment and secrets
-.env
-.env.*
-!.env.example
-!.env.*.example
-config/*.local.json
-config/*.local.jsonc
+手动冷启动时，可以直接把 `files/gitignore` 复制为项目根目录 `.gitignore`。如果项目已经有 `.gitignore`，只追加 `files/gitignore` 里的 Dever ignore block；如果已经存在 marker，则不要重复追加。
 
-# Dever runtime data and local build artifacts
-/data/log/
-/data/tmp/
-/data/cache/
-/data/run/
-/data/bin/
-/data/upload/
+核心规则是：`data` 和 `package` 目录只保留占位文件，其余内容由本地运行、下载或生成得到。
 
-# Release/build outputs
-/server
-/server.exe
-/dist/
-/build/
-*.test
-*.out
-coverage.out
+冷启动脚本会创建：
 
-# OS/editor
-.DS_Store
-.idea/
-.vscode/
-```
+- `data/readme.txt`
+- `package/readme.txt`
 
-不要忽略这些 Dever 生成结果：
-
-- `data/router.go`
-- `data/load/model.go`
-- `data/load/service.go`
-- `data/table/*.json`
-
-原因：它们属于框架运行和迁移所需的可追踪产物，不能当成本地临时文件处理。
+`data/router.go`、`data/load/*.go`、`data/table/*.json` 等由 `dever run` / `init` 在本地刷新，不手改、不默认提交。
 
 ## 生成的默认配置约定
 
@@ -113,7 +83,7 @@ coverage.out
    - 用户 bin 目录是否已加入 `PATH`
 4. 如果项目是本地联调 `./dever`，优先检查 `go.mod` 是否已有：
    - `replace github.com/shemic/dever => ./dever`
-5. 确认 `.gitignore` 存在，并且没有忽略 `data/router.go`、`data/load/*.go`、`data/table/*.json`
+5. 确认 `.gitignore` 存在，并且 `data/readme.txt`、`package/readme.txt` 作为占位文件存在
 6. 如果是完整项目，先读 `references/project.md`，不要直接从单个 API 开始写
 7. 确实需要自定义 API/Provider 时创建业务骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version]`

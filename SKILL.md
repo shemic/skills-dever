@@ -56,9 +56,9 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
    - `data/load/model.go`
    - `data/load/service.go`
 4. 冷启动项目必须建立 `.gitignore`。
-   - 忽略本地密钥、日志、运行时数据、上传数据、打包产物和编辑器目录。
-   - 不要忽略 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
-   - 默认内容按 `references/boot.md` 的 `.gitignore` 约定执行。
+   - 忽略本地密钥、运行时数据、下载/生成的 package、打包产物和编辑器目录。
+   - `data` 和 `package` 默认只保留 `readme.txt` 占位文件。
+   - 默认内容按 `files/gitignore` 和 `references/boot.md` 的 `.gitignore` 约定执行。
 5. API 必须薄。
    - API 必须是结构体方法，方法名前缀使用 `Get/Post/Put/Delete`。
    - 所有请求字段用 `c.Input(...)` 获取。
@@ -139,7 +139,7 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 
 - 配置文件：`config/setting.json(c)`、`config/front.json(c)`。
 - config 和 page 文件支持 JSONC；生成的 `data/table/*.json` 必须保持普通 JSON，且不能手改。
-- `.gitignore` 必须保留 Dever ignore block：忽略 `/server`、`/dist/`、`/build/`、`/data/log/`、`/data/tmp/`、`/data/cache/`、`/data/run/`、`/data/bin/`、`/data/upload/`、`.env*`、`config/*.local.json(c)`；不要忽略 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
+- `.gitignore` 必须保留 Dever ignore block：忽略 `/server`、`/dist/`、`/build/`、`/data/*`、`/package/*`、`.env*`、`config/*.local.json(c)`；只反向保留 `/data/readme.txt` 和 `/package/readme.txt`。
 - Model 构造函数使用 `orm.LoadModel[T](...)`；`module/*/model` 保持模型相关导出，避免误注册。
 - 业务 Service 方法可自由签名，推荐 `ctx + 明确参数`。
 - Provider 方法格式：`func (XxxService) ProviderAbc(c *server.Context, params []any) any`。

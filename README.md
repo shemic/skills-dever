@@ -26,7 +26,7 @@ npx skills add shemic/skills-dever
 tmp_dir="$(mktemp -d)"
 git clone git@github.com:shemic/skills-dever.git "$tmp_dir"
 mkdir -p ~/.codex/skills/shemic-dever
-cp -r "$tmp_dir"/{SKILL.md,references,scripts,README.md} ~/.codex/skills/shemic-dever/
+cp -r "$tmp_dir"/{SKILL.md,references,scripts,files,README.md} ~/.codex/skills/shemic-dever/
 rm -rf "$tmp_dir"
 ```
 
@@ -51,6 +51,7 @@ npx skills remove shemic-dever
 - `references/boot.md`：空项目冷启动入口
 - `references/module.md`：module 业务开发手册
 - `references/front-page.md`：业务 module 使用 package/front 编写后台页面 JSON 的手册
+- `files/gitignore`：冷启动项目默认 `.gitignore` 模板
 - `scripts/boot.sh`：一键初始化空项目
 - `scripts/module.sh`：按模块/资源生成业务骨架
 
@@ -80,7 +81,7 @@ npx skills remove shemic-dever
 
 1. 空项目初始化：
    - `bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]`
-   - 脚本会创建/补齐 `.gitignore`，忽略本地环境、日志、运行时数据和打包产物
+   - 脚本会创建/补齐 `.gitignore`，忽略本地环境、运行时数据、下载/生成的 package 和打包产物，只保留 `data/readme.txt`、`package/readme.txt`
 2. 生成业务 API/Provider 骨架：
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`
 3. 完整项目开发：

@@ -198,7 +198,7 @@ AI 要把极简输入扩展成“模块、模型、页面、服务、接口”�
 
 1. 读 `references/boot.md`。
 2. 执行冷启动脚本。
-3. 确认 `.gitignore` 已补齐，且没有忽略 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
+3. 确认 `.gitignore` 已补齐，且 `data/readme.txt`、`package/readme.txt` 占位文件存在。
 4. 安装并启动 `dever run`。
 5. 建立模块矩阵、模型矩阵、页面矩阵。
 6. 生成核心业务模块骨架。

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+GITIGNORE_TEMPLATE="${SKILL_ROOT}/files/gitignore"
+
 FORCE=0
 ARGS=()
 for arg in "$@"; do
@@ -43,45 +47,21 @@ run_dever() {
 ensure_gitignore() {
   local file=".gitignore"
   local marker="# >>> dever generated ignore"
+  if [[ ! -f "$GITIGNORE_TEMPLATE" ]]; then
+    echo "Missing gitignore template: $GITIGNORE_TEMPLATE"
+    exit 1
+  fi
+  if [[ ! -f "$file" ]]; then
+    cp "$GITIGNORE_TEMPLATE" "$file"
+    return
+  fi
   if [[ -f "$file" ]] && grep -Fq "$marker" "$file"; then
     return
   fi
-  if [[ -f "$file" && -s "$file" ]]; then
+  if [[ -s "$file" ]]; then
     printf '\n' >> "$file"
   fi
-  cat >> "$file" <<'EOF'
-# >>> dever generated ignore
-# Local environment and secrets
-.env
-.env.*
-!.env.example
-!.env.*.example
-config/*.local.json
-config/*.local.jsonc
-
-# Dever runtime data and local build artifacts
-/data/log/
-/data/tmp/
-/data/cache/
-/data/run/
-/data/bin/
-/data/upload/
-
-# Release/build outputs
-/server
-/server.exe
-/dist/
-/build/
-*.test
-*.out
-coverage.out
-
-# OS/editor
-.DS_Store
-.idea/
-.vscode/
-# <<< dever generated ignore
-EOF
+  cat "$GITIGNORE_TEMPLATE" >> "$file"
 }
 
 TARGET_FILES=(
@@ -109,7 +89,8 @@ fi
 
 go get "github.com/shemic/dever@${DEVER_VERSION}"
 
-mkdir -p config module/main/{api,service,model} middleware data/load
+mkdir -p config module/main/{api,service,model} middleware data/load package
+touch data/readme.txt package/readme.txt
 ensure_gitignore
 
 cat > main.go <<EOF
