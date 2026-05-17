@@ -69,8 +69,6 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 7. Service 代码必须从业务用例开始。
    - 先写清可读的业务主流程，再按真实职责拆分。
    - 禁止固定模板拆文件、无意义单行转发、单实现 interface、桶文件（`helper/utils/common/value/manager`）和单文件微目录。
-   - 命名必须简短、清晰，并复用目录和 package 提供的上下文；不要用长文件名、长类型名或多段下划线掩盖职责混乱。
-   - 同一稳定领域出现多个文件时必须收进子目录，例如 `stream/*`、`log/*`、`runtime/*`、`prompt/*`；不要把领域文件散落在 service 根目录。
    - 详细 Service 约束按 `references/module.md` 执行。
 8. 性能和并发安全不是可选项。
    - 列表必须考虑索引、分页、字段选择和批量查询；避免全表扫描和 N+1。

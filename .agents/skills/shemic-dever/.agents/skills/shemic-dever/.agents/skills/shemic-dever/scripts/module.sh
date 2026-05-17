@@ -1,0 +1,297 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODULE_DIR="${1:-}"
+RESOURCE_RAW="${2:-}"
+DEVER_VERSION="${3:-main}"
+FORCE=0
+
+if [[ "$DEVER_VERSION" == "--force" ]]; then
+  DEVER_VERSION="main"
+  FORCE=1
+fi
+if [[ "${4:-}" == "--force" ]]; then
+  FORCE=1
+fi
+
+if [[ -z "$MODULE_DIR" || -z "$RESOURCE_RAW" ]]; then
+  echo "Usage: bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]"
+  echo "Example: bash scripts/module.sh blog article main"
+  exit 1
+fi
+
+if [[ ! "$MODULE_DIR" =~ ^[A-Za-z0-9_-]+$ || ! "$RESOURCE_RAW" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  echo "module_dir and resource_name only support letters, numbers, underscore and hyphen."
+  exit 1
+fi
+
+if [[ ! -f go.mod ]]; then
+  echo "go.mod not found. Please run bootstrap first."
+  exit 1
+fi
+
+PROJECT_MODULE="$(go list -m -f '{{.Path}}' 2>/dev/null || true)"
+if [[ -z "$PROJECT_MODULE" ]]; then
+  PROJECT_MODULE="$(awk '/^module /{print $2; exit}' go.mod)"
+fi
+if [[ -z "$PROJECT_MODULE" ]]; then
+  echo "Cannot resolve module path from go.mod"
+  exit 1
+fi
+
+run_dever() {
+  if grep -Eq 'replace[[:space:]]+github.com/shemic/dever[[:space:]]+=>[[:space:]]+\./dever' go.mod 2>/dev/null; then
+    go run ./dever/cmd/dever "$@"
+    return
+  fi
+  go run "github.com/shemic/dever/cmd/dever@${DEVER_VERSION}" "$@"
+}
+
+to_camel() {
+  echo "$1" | tr '-_' ' ' | awk '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1,1)) tolower(substr($i,2))} printf "%s",$0}' | tr -d ' '
+}
+
+RESOURCE_FILE="$(echo "$RESOURCE_RAW" | tr '[:upper:]' '[:lower:]' | tr '-' '_')"
+TYPE_NAME="$(to_camel "$RESOURCE_FILE")"
+SERVICE_TYPE="${TYPE_NAME}Service"
+API_TYPE="${TYPE_NAME}"
+MODEL_FUNC="New${TYPE_NAME}Model"
+TABLE_NAME="${MODULE_DIR}_${RESOURCE_FILE}"
+SVC_VAR="$(echo "${TYPE_NAME:0:1}" | tr '[:upper:]' '[:lower:]')${TYPE_NAME:1}Svc"
+
+TARGET_FILES=(
+  "module/${MODULE_DIR}/model/${RESOURCE_FILE}.go"
+  "module/${MODULE_DIR}/service/${RESOURCE_FILE}.go"
+  "module/${MODULE_DIR}/service/${RESOURCE_FILE}_provider.go"
+  "module/${MODULE_DIR}/api/${RESOURCE_FILE}.go"
+)
+
+if [[ "$FORCE" != "1" ]]; then
+  existing=()
+  for file in "${TARGET_FILES[@]}"; do
+    if [[ -e "$file" ]]; then
+      existing+=("$file")
+    fi
+  done
+  if (( ${#existing[@]} > 0 )); then
+    echo "Refuse to overwrite existing files:"
+    printf '  %s\n' "${existing[@]}"
+    echo "Re-run with --force only after confirming these files can be replaced."
+    exit 1
+  fi
+fi
+
+mkdir -p "module/${MODULE_DIR}/model" "module/${MODULE_DIR}/service" "module/${MODULE_DIR}/api"
+
+cat > "module/${MODULE_DIR}/model/${RESOURCE_FILE}.go" <<EOF
+package model
+
+import (
+	"time"
+
+	"github.com/shemic/dever/orm"
+)
+
+type ${TYPE_NAME} struct {
+	ID        uint64    \`dorm:"primaryKey;autoIncrement;comment:主键ID"\`
+	Name      string    \`dorm:"type:varchar(64);not null;comment:名称"\`
+	Code      string    \`dorm:"type:varchar(64);not null;comment:唯一标识"\`
+	Status    int16     \`dorm:"type:smallint;not null;default:1;comment:状态"\`
+	Sort      int       \`dorm:"type:int;not null;default:100;comment:排序"\`
+	CreatedAt time.Time \`dorm:"comment:创建时间"\`
+}
+
+type ${TYPE_NAME}Index struct {
+	Code struct{} \`unique:"code"\`
+	List struct{} \`index:"status,sort,id"\`
+}
+
+var ${TYPE_NAME}StatusOptions = []map[string]any{
+	{"id": 1, "value": "启用"},
+	{"id": 2, "value": "删除"},
+}
+
+func ${MODEL_FUNC}() *orm.Model[${TYPE_NAME}] {
+	return orm.LoadModel[${TYPE_NAME}]("${TYPE_NAME}", "${TABLE_NAME}", orm.ModelConfig{
+		Index:    ${TYPE_NAME}Index{},
+		Order:    "sort desc,id desc",
+		Database: "default",
+		Options: map[string]any{
+			"status": ${TYPE_NAME}StatusOptions,
+		},
+	})
+}
+EOF
+
+cat > "module/${MODULE_DIR}/service/${RESOURCE_FILE}.go" <<EOF
+package service
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"${PROJECT_MODULE}/module/${MODULE_DIR}/model"
+)
+
+type ${SERVICE_TYPE} struct{}
+
+func (${SERVICE_TYPE}) List(ctx context.Context, limit int64) []*model.${TYPE_NAME} {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+	return model.${MODEL_FUNC}().Select(ctx, map[string]any{
+		"status": 1,
+	}, map[string]any{
+		"limit": fmt.Sprintf("%d", limit),
+	})
+}
+
+func (${SERVICE_TYPE}) Info(ctx context.Context, code string) *model.${TYPE_NAME} {
+	return model.${MODEL_FUNC}().Find(ctx, map[string]any{
+		"code":   strings.TrimSpace(code),
+		"status": 1,
+	})
+}
+
+func (${SERVICE_TYPE}) Add(ctx context.Context, name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", errors.New("name 不能为空")
+	}
+	now := time.Now()
+	code := fmt.Sprintf("${RESOURCE_FILE}_%d", now.UnixNano())
+	model.${MODEL_FUNC}().Insert(ctx, map[string]any{
+		"name":       name,
+		"code":       code,
+		"status":     1,
+		"sort":       int(now.Unix()),
+		"created_at": now,
+	})
+	return code, nil
+}
+
+func (${SERVICE_TYPE}) UpdateName(ctx context.Context, code, name string) error {
+	code = strings.TrimSpace(code)
+	name = strings.TrimSpace(name)
+	if code == "" {
+		return errors.New("code 不能为空")
+	}
+	if name == "" {
+		return errors.New("name 不能为空")
+	}
+	rows := model.${MODEL_FUNC}().Update(ctx, map[string]any{
+		"code":   code,
+		"status": 1,
+	}, map[string]any{
+		"name": name,
+	})
+	if rows <= 0 {
+		return errors.New("数据不存在或未更新")
+	}
+	return nil
+}
+
+func (${SERVICE_TYPE}) Delete(ctx context.Context, code string) bool {
+	code = strings.TrimSpace(code)
+	if code == "" {
+		return false
+	}
+	rows := model.${MODEL_FUNC}().Update(ctx, map[string]any{
+		"code":   code,
+		"status": 1,
+	}, map[string]any{
+		"status": 2,
+	})
+	return rows > 0
+}
+EOF
+
+cat > "module/${MODULE_DIR}/service/${RESOURCE_FILE}_provider.go" <<EOF
+package service
+
+import (
+	"github.com/shemic/dever/server"
+	"github.com/shemic/dever/util"
+)
+
+func (s ${SERVICE_TYPE}) ProviderInfo(c *server.Context, params []any) any {
+	if len(params) < 1 {
+		panic("ProviderInfo 参数不足，需要 code")
+	}
+	code := util.ToStringTrimmed(params[0])
+	return s.Info(c.Context(), code)
+}
+EOF
+
+cat > "module/${MODULE_DIR}/api/${RESOURCE_FILE}.go" <<EOF
+package api
+
+import (
+	"github.com/shemic/dever/server"
+	"github.com/shemic/dever/util"
+
+	${MODULE_DIR}service "${PROJECT_MODULE}/module/${MODULE_DIR}/service"
+)
+
+type ${API_TYPE} struct{}
+
+var ${SVC_VAR} = ${MODULE_DIR}service.${SERVICE_TYPE}{}
+
+func (${API_TYPE}) GetList(c *server.Context) error {
+	limit, _ := util.ParseInt64(c.Input("limit", "is_number", "分页条数", "20"))
+	return c.JSON(map[string]any{
+		"list": ${SVC_VAR}.List(c.Context(), limit),
+	})
+}
+
+func (${API_TYPE}) GetInfo(c *server.Context) error {
+	code := c.Input("code", "required", "业务标识")
+	info := ${SVC_VAR}.Info(c.Context(), code)
+	if info == nil {
+		return c.Error("数据不存在")
+	}
+	return c.JSON(map[string]any{"info": info})
+}
+
+func (${API_TYPE}) PostAdd(c *server.Context) error {
+	name := c.Input("name", "required", "名称")
+	code, err := ${SVC_VAR}.Add(c.Context(), name)
+	if err != nil {
+		return c.Error(err)
+	}
+	return c.JSON(map[string]any{"code": code})
+}
+
+func (${API_TYPE}) PostUpdate(c *server.Context) error {
+	code := c.Input("code", "required", "业务标识")
+	name := c.Input("name", "required", "名称")
+	if err := ${SVC_VAR}.UpdateName(c.Context(), code, name); err != nil {
+		return c.Error(err)
+	}
+	return c.JSON(map[string]any{"code": code, "name": name})
+}
+
+func (${API_TYPE}) PostDelete(c *server.Context) error {
+	code := c.Input("code", "required", "业务标识")
+	ok := ${SVC_VAR}.Delete(c.Context(), code)
+	if !ok {
+		return c.Error("删除失败或数据不存在")
+	}
+	return c.JSON(map[string]any{"code": code})
+}
+EOF
+
+run_dever install
+
+echo "Scaffold completed: module/${MODULE_DIR} (${RESOURCE_FILE})"
+echo "dever 已安装/刷新。保持使用：dever run"
+echo "Release build: dever build"
+echo "Generated routes examples:"
+echo "  GET  ${ROUTE_PREFIX}/list"
+echo "  GET  ${ROUTE_PREFIX}/info"
+echo "  POST ${ROUTE_PREFIX}/add"
+echo "  POST ${ROUTE_PREFIX}/update"
+echo "  POST ${ROUTE_PREFIX}/delete"

@@ -45,7 +45,45 @@
 4. 函数保持单一职责，优先早返回，避免深层嵌套。
 5. 命名表达业务意图，不使用 `data/item/manager/util` 这类模糊名。
 
-### 0.3 清理垃圾和冗余
+### 0.3 命名约束
+
+命名优先靠目录和 package 提供上下文，文件名、类型名、函数名只补充当前层缺失的信息。不要用长命名或多段下划线掩盖职责混乱。
+
+文件命名：
+
+1. 文件名用小写，优先一个业务词；两个词可以用 `_`。
+2. 文件名出现多个 `_` 时，先判断是否应该拆目录、拆职责或缩短语义。
+3. 不重复父目录已经表达的语义。例如 `runtime/loop.go` 优于 `runtime/runtime_loop.go`。
+4. 不用 `service_`、`runtime_`、`prompt_` 这类已由目录表达的前缀。
+5. 谨慎使用 `helper.go`、`utils.go`、`common.go`、`value.go`、`manager.go`；它们容易变成垃圾桶。
+
+目录归属：
+
+1. `service` 根目录只放入口、编排和跨领域 glue 文件，例如 `main.go`、`request.go`、`repo.go`、`types.go`。
+2. 同一稳定领域出现多个文件时必须收进子目录；不要让 `stream.go`、`stream_cancel.go`、`stream_collect.go` 这类同域文件散落在根目录。
+3. 已有稳定目录时，同域新增文件必须放进去。例如已有 `log/record.go`，日志查看、日志格式化、日志查询也应归到 `log/`，不要再写 `log_view.go` 到根目录。
+4. 目录成立条件：至少满足“多文件同域”、“有独立状态/协议/适配边界”、“被多个上层流程复用”之一。
+5. 目录不成立条件：只有一个很小文件、只服务当前函数、或只是为了套分类。此时先并回上层。
+6. Go 子目录就是子包，不能在子包里给父包类型继续加方法；遇到 `GatewayService.StartStream` 这类公开入口时，根目录只保留薄 facade，内部状态机、解析、收集、取消等稳定逻辑放进子包。
+7. 被 `Dever.Load` 或 page JSON 引用的 Provider/Hook 移目录时，必须同步更新 page JSON 的 `use` 字符串，并通过 `dever run` 或调试用 `dever service` 刷新生成注册；不要手改 `data/load/service.go`。
+
+类型命名：
+
+1. 类型名不要重复 package 语义。例如 `input.Target` 优于 `input.InputTarget`。
+2. 私有类型尽量短；导出类型必须让调用方看懂业务含义。
+3. 只有一个方法、没有状态、没有策略差异的类型，优先改成函数。
+4. `Service` 后缀只给真实业务入口；不要给每个小能力都套 `XxxService`。
+5. Dever 扫描和动态调用依赖的命名不能随意缩短：`New<Resource>Model`、`ProviderBeforeSaveXxx`、`ProviderLoadXxxOptions`、`Get/Post/Put/DeleteXxx` 必须保持协议语义。
+
+函数和变量命名：
+
+1. 函数名表达业务动作，不表达实现绕法；超过四个语义词时，先检查函数是否职责过多。
+2. 接收者、包名、目录已经提供上下文时，函数名不要重复上下文。
+3. 短作用域变量可用 `id/err/row/req/resp/ctx`；长作用域变量必须写清业务含义。
+4. 不用 `data/item/thing/manager/util/helper` 作为业务变量名；`row/item` 只适合很短的循环。
+5. 布尔变量使用明确判断语义，如 `exists/enabled/matched/cancelled`。
+
+### 0.4 清理垃圾和冗余
 
 每次实现后必须做一次 cleanup pass，主动删除垃圾、无用和冗余代码。不要把“以后可能用到”的代码留在项目里。
 
@@ -67,7 +105,7 @@
 
 如果不满足，就删除或合并。
 
-### 0.4 高性能、高可用、高并发
+### 0.5 高性能、高可用、高并发
 
 1. 列表和批量接口必须考虑索引、分页、条件下推、字段选择。
 2. 避免 N+1 查询；需要关联数据时优先批量查询后组装。
@@ -76,7 +114,7 @@
 5. 状态流转、扣减、唯一创建等并发敏感逻辑必须使用事务、唯一索引、锁或幂等键。
 6. 不在包级可变变量里保存请求态数据；共享缓存必须并发安全，并有失效策略。
 
-### 0.5 严格按 Dever 框架开发
+### 0.6 严格按 Dever 框架开发
 
 1. Model 使用 `orm.LoadModel[T](...)`。
 2. API 使用结构体方法，方法名前缀为 `Get/Post/Put/Delete`。
@@ -88,7 +126,7 @@
    - `data/load/model.go`
    - `data/load/service.go`
 
-### 0.6 非 module/service 的业务代码
+### 0.7 非 module/service 的业务代码
 
 只要代码承载业务规则、业务编排、状态流转、外部调用、任务处理、导入导出、回调处理、页面 hook、worker 逻辑，就必须按本文 Service 规则写；不要因为文件不在 `module/*/service` 下，就写成临时脚本或巨型过程。
 

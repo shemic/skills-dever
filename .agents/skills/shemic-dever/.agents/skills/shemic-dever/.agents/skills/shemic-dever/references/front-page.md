@@ -1975,16 +1975,16 @@ option 来源：
 - 多 sheet、复杂数据、特殊样式才用 `use` 指向 service。
 - 导入字段别名、缺失策略、提示写在 page JSON；复杂校验写 service。
 
-### 13.1 流式调用与智能体面板
+### 13.1 流式测试与智能体面板
 
-能力调用用 `show-stream-request`，它负责参数加载、请求发起、流式读取和停止：
+能力测试用 `show-stream-request`，它负责参数加载、请求发起、流式读取和停止：
 
 ```json
 {
-  "id": "power-stream-run",
+  "id": "power-stream-test",
   "type": "show-stream-request",
   "meta": {
-    "powerPath": "data.actionTarget.runPower.key",
+    "powerPath": "data.actionTarget.testPower.key",
     "paramApi": "/bot/energon/power_params",
     "requestApi": "/bot/energon/request",
     "streamApi": "/bot/energon/stream",
@@ -2004,9 +2004,9 @@ option 来源：
   "id": "agent-stream",
   "type": "show-agent",
   "meta": {
-    "agentPath": "data.actionTarget.runAgent.key",
-    "agentNamePath": "data.actionTarget.runAgent.name",
-    "openPath": "state.dialog.run",
+    "agentPath": "data.actionTarget.testAgent.key",
+    "agentNamePath": "data.actionTarget.testAgent.name",
+    "openPath": "state.dialog.test",
     "requestApi": "/bot/agent/run",
     "streamApi": "/bot/agent/stream",
     "stopApi": "/bot/agent/stop",
