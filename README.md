@@ -49,8 +49,8 @@ npx skills remove shemic-dever
 - `SKILL.md`：技能入口与执行规则
 - `references/project.md`：完整项目交付总手册，从需求拆解到后端与后台 JSON 页面
 - `references/boot.md`：空项目冷启动入口
-- `references/module.md`：module 业务开发手册
-- `references/front-page.md`：业务 module 使用 package/front 编写后台页面 JSON 的手册
+- `references/module.md`：业务后端开发手册，约束 `module/*`、`package/*`、worker、hook、middleware 等业务代码
+- `references/front-page.md`：使用 package/front 编写后台 page JSON 的手册
 - `files/gitignore`：冷启动项目默认 `.gitignore` 模板
 - `scripts/boot.sh`：一键初始化空项目
 - `scripts/module.sh`：按模块/资源生成业务骨架
@@ -86,7 +86,7 @@ npx skills remove shemic-dever
    - `bash scripts/module.sh <module_dir> <resource_name> [dever_version] [--force]`
 3. 完整项目开发：
    - 先按 `references/project.md` 拆模块、模型、页面、动作矩阵
-   - 再按 `references/module.md` 写后端
+   - 再按 `references/module.md` 写业务后端
    - 最后按 `references/front-page.md` 写后台 JSON；后台默认就是 page JSON
 4. 开发后台页面：
    - 先按 `references/front-page.md` 接入/检查 `package/front`
@@ -99,7 +99,7 @@ npx skills remove shemic-dever
 ## 建议
 
 1. 规则改动优先更新 `SKILL.md`。
-2. 业务实现方法与模板优先更新 `references/module.md`。
+2. 业务后端实现方法与模板优先更新 `references/module.md`。
 3. 安装、开发、发布主流程变动时，同步更新 `README.md` 与 `references/*.md`。
 4. 仅当脚手架行为变化时更新 `scripts/*.sh`。
 5. 冷启动产物约定变化时同步更新 `references/boot.md`，尤其是 `.gitignore`、配置和命令流程。

@@ -18,7 +18,7 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 | --- | --- | --- |
 | 空项目 / 冷启动 | `references/boot.md` | `scripts/boot.sh`，再读 `references/module.md` |
 | 完整后端 / 管理后台 | `references/project.md` | `references/module.md`、`references/front-page.md` |
-| module 业务代码 | `references/module.md` | 需要 API/Provider 骨架时用 `scripts/module.sh` |
+| 业务后端代码 | `references/module.md` | 需要 API/Provider 骨架时用 `scripts/module.sh` |
 | 后台 / page JSON | `references/front-page.md` | 需要 service/provider hook 时读 `references/module.md` |
 
 ## 触发条件
@@ -38,7 +38,7 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 
 1. 冷启动：项目缺少完整骨架（`go.mod`、`main.go`、`module`、`config`）时，先读 `references/boot.md`。
 2. 完整项目：用户给的是业务目标而不是单个文件改动时，先读 `references/project.md`，编码前产出模块、模型、页面、动作、Service/API 矩阵。
-3. 业务实现：只要写 `module` 代码，就读 `references/module.md`。
+3. 业务实现：只要写承载业务规则的后端代码，就读 `references/module.md`，不限于 `module/*`。
 4. 后台页面：只要写后台、admin、CRUD 页面，就读 `references/front-page.md`；即使用户没说 JSON，也默认 page JSON。
 5. 现有项目：新增平行实现前，先搜索可复用 model、service、provider、middleware、page JSON、frontmeta 和 config。
 
@@ -66,12 +66,14 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 6. 优先复用 Dever 和现有项目代码。
    - 优先复用 `orm/load/server/util/log/observe/auth/jwt` 以及已有 model、service、provider、middleware、page JSON、frontmeta。
    - 不要在项目层重复造第二套路由、模型加载、配置加载、日志、observe、JWT 或 util 系统。
-7. Service 代码必须从业务用例开始。
-   - 先写清可读的业务主流程，再按真实职责拆分。
-   - 禁止固定模板拆文件、无意义单行转发、单实现 interface、桶文件（`helper/utils/common/value/manager`）和单文件微目录。
-   - 命名必须简短、清晰，并复用目录和 package 提供的上下文；不要用长文件名、长类型名或多段下划线掩盖职责混乱。
-   - 同一稳定领域出现多个文件时必须收进子目录，例如 `stream/*`、`log/*`、`runtime/*`、`prompt/*`；不要把领域文件散落在 service 根目录。
-   - 详细 Service 约束按 `references/module.md` 执行。
+7. 所有业务后端代码都遵守通用开发约束，不限于 `module/*/service`。
+   - 写代码前先搜索可复用实现，禁止复制一套平行逻辑。
+   - 业务流程先从用例开始，再按真实职责拆分。
+   - 禁止假抽象、固定模板拆文件、无意义单行转发、单实现 interface、桶文件（`helper/utils/common/value/manager`）和单文件微目录。
+   - 命名必须短、清晰，复用目录和 package 语义；不要用长文件名、长类型名或多段下划线掩盖职责混乱。
+   - 同一稳定领域出现多个文件时必须收进子目录；已有领域目录时，同域新增文件必须放进去。
+   - 实现后必须做清理检查（cleanup pass），删除未使用、重复、临时、旧分支、旧配置和无意义 wrapper。
+   - 只要代码承载业务规则、状态流转、外部调用、任务处理、页面 hook、worker 或中间件策略，就必须按 `references/module.md` 的 Service 规则写。
 8. 性能和并发安全不是可选项。
    - 列表必须考虑索引、分页、字段选择和批量查询；避免全表扫描和 N+1。
    - 外部调用必须有超时、结构化错误/日志；重试只用于幂等操作。

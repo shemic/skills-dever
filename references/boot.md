@@ -1,4 +1,4 @@
-# Empty Project Bootstrap (Dever)
+# Dever 空项目冷启动手册
 
 优先用脚本，不手工拷大量模板。
 

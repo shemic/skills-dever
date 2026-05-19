@@ -1,4 +1,4 @@
-# Dever Full Project Delivery Playbook
+# Dever 完整项目交付手册
 
 这个文档回答：当用户只给一个业务需求时，AI 如何用 Dever skill 从 0 设计并交付一个完整项目。
 
@@ -15,7 +15,7 @@
 相关文档：
 
 - `references/boot.md`：空项目初始化
-- `references/module.md`：业务后端代码
+- `references/module.md`：业务后端代码与通用 Service 约束
 - `references/front-page.md`：后台 page JSON
 
 ## 0. 总原则
@@ -73,6 +73,8 @@ Model + Service/Provider hook + package/front + page JSON
 2. 按 `front-page.md` 的模板生成页面。
 3. 只在必要处参考 GitHub 上的 `demo`、`package/front`、`package/bot` 局部写法。
 4. 业务复杂度进 Service / Provider，不进 JSON DSL。
+
+所有业务后端代码都必须遵守 `references/module.md` 的通用开发约束。约束范围不限于 `module/*/service`，也包括 `package/*`、worker、task、hook、middleware 中承载业务规则、状态流转、外部调用或页面 hook 的代码。
 
 ### 0.3 AI 必须先产出设计摘要
 

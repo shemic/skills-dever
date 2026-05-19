@@ -1,6 +1,6 @@
-# Module Business Development Playbook
+# Dever 业务后端开发手册
 
-这个文档专门回答：在 Dever 项目里怎么写业务代码，重点是 `module`，但规则同样约束写在其他目录里的业务逻辑。
+这个文档专门回答：在 Dever 项目里怎么写业务后端代码。重点是 `module`，但同样约束 `package/*`、`cmd/*`、worker、task、hook、helper、middleware 等位置里的业务逻辑。
 
 适用三类场景：
 
@@ -85,7 +85,7 @@
 
 ### 0.4 清理垃圾和冗余
 
-每次实现后必须做一次 cleanup pass，主动删除垃圾、无用和冗余代码。不要把“以后可能用到”的代码留在项目里。
+每次实现后必须做一次清理检查（cleanup pass），主动删除垃圾、无用和冗余代码。不要把“以后可能用到”的代码留在项目里。
 
 必须清理：
 

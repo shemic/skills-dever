@@ -94,7 +94,7 @@ backend/package/front/page/**/*.json(c)
 
 | 来源 | 适合参考什么 | 注意 |
 | --- | --- | --- |
-| GitHub 上的 `demo` | 普通业务模块页面、列表页、编辑页、统计页、配置页 | 用来理解业务 module 怎么组织 page JSON |
+| GitHub 上的 `demo` | 普通业务模块页面、列表页、编辑页、统计页、配置页 | 用来理解业务页面怎么组织 page JSON |
 | GitHub 上的 `package/bot` | package 自带后台、复杂表单、父表单嵌入子列表、参数映射类页面 | 用来理解可复用 package 页面怎么写 |
 | GitHub 上的 `package/front` | 内置后台页面、账号/角色/上传/资源等通用后台能力 | 用来理解通用 CRUD、权限、导入导出和上传资源页面 |
 
