@@ -1741,9 +1741,10 @@ option 来源：
 ```json
 {
   "type": "show-category-list",
-  "value": "table.list",
+  "value": "parent.data.search.cate_id",
   "meta": {
-    "target": "parent.data.search.cate_id",
+    "remote": true,
+    "queryKey": "cate_id",
     "defaultFirst": true
   }
 }
@@ -1787,6 +1788,74 @@ option 来源：
   }
 }
 ```
+
+如果隐藏了独立管理页，但主流程仍依赖分类、标签、字典等维护能力，必须在主页面补一个弹窗入口，复用已有分类页，不要复制一套分类 CRUD：
+
+```json
+{
+  "type": "show-button",
+  "name": "分类",
+  "meta": {
+    "variant": "outline",
+    "size": "sm",
+    "icon": "tags"
+  },
+  "action": {
+    "click": {
+      "type": "modal",
+      "key": "dialog.cate",
+      "value": true
+    }
+  }
+}
+```
+
+```json
+{
+  "type": "feedback-modal",
+  "meta": {
+    "stateKey": "dialog.cate",
+    "pageRoute": "/<module>/<cate>/list",
+    "title": "分类",
+    "description": "新增或编辑分类，保存后列表和编辑表单会同步显示新名称。",
+    "assistant": false,
+    "size": "sm",
+    "bodyClassName": "py-2"
+  }
+}
+```
+
+分类维护弹窗里的 `show-category-list` 只用于选择要编辑的分类，不能污染外层页面筛选和 URL。用弹窗自己的本地搜索路径：
+
+```json
+{
+  "type": "show-category-list",
+  "value": "search.cate_id",
+  "meta": {
+    "remote": false,
+    "defaultFirst": true
+  }
+}
+```
+
+分类维护页同时保留本地字段：
+
+```json
+{
+  "data": {
+    "search": {
+      "cate_id": ""
+    }
+  }
+}
+```
+
+规则：
+
+- 主列表页筛选分类：用 `parent.data.search.<field>`，并按需设置 `remote: true` / `queryKey`。
+- 弹窗里维护分类：用本地 `search.<field>`，设置 `remote: false`，不要写 `parent.data.search.<field>`。
+- 隐藏或删除独立管理入口前，先确认分类、标签、字典、状态等必要维护入口是否已在主流程中补齐。
+- 只有分类名、状态、简单选择项的小表单弹窗，给 `feedback-modal.meta.assistant` 或字段 `meta.assistant` 设为 `false`，避免展示无意义的 `AI 填写`。
 
 ## 12. 固定配置页 / 单条 upsert
 
