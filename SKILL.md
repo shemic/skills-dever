@@ -143,6 +143,7 @@ description: Use when 开发 Dever Go 项目，包括冷启动、完整后台/ad
 - config 和 page 文件支持 JSONC；生成的 `data/table/*.json` 必须保持普通 JSON，且不能手改。
 - `.gitignore` 必须保留 Dever ignore block：忽略 `/server`、`/dist/`、`/build/`、`/data/*`、`/package/*`、`.env*`、`config/*.local.json(c)`；只反向保留 `/data/readme.txt` 和 `/package/readme.txt`。
 - Model 构造函数使用 `orm.LoadModel[T](...)`；`module/*/model` 保持模型相关导出，避免误注册。
+- Model 文件必须保持一个数据库表一个 model 文件：一个文件只定义一个表结构、一个 Index 和一个 `NewXxxModel`；共享枚举、Relation 可放独立 `options.go` / `relation.go`，不要把多个表塞进同一个 model 文件。
 - 业务 Service 方法可自由签名，推荐 `ctx + 明确参数`。
 - Provider 方法格式：`func (XxxService) ProviderAbc(c *server.Context, params []any) any`。
 - Provider 名称以生成注册为准，不要手写猜测。

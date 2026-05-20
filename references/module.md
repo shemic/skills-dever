@@ -223,6 +223,8 @@ module/blog/
 
 ### 3.1 单表模板
 
+Model 文件必须一表一文件：一个文件只定义一个数据库表对应的 struct、Index 和 `NewXxxModel`。共享枚举、共享 Relation、常量可以放在独立 `options.go`、`relation.go` 或同领域共享文件里，但不要把两个以上表结构和多个 `NewXxxModel` 塞进同一个 model 文件。
+
 ```go
 package model
 
