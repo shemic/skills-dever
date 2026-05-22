@@ -59,6 +59,10 @@ func NewArticleModel() *orm.Model[Article] {
 
 - 所有后台展示字段写 dorm `comment`。
 - 长文本用 `type:text`，不要用 `longtext`。
+- `CreatedAt` 可作为常规创建时间字段；`UpdatedAt` 不要默认添加。
+- 只有明确需要追踪最后更新时间的表才加 `UpdatedAt`，例如运行记录、审批状态、进度/黑板等会被多次更新的运行态记录。
+- 纯配置、节点/边定义、版本快照、消息、记忆等没有明确更新时间语义的表，默认只保留 `CreatedAt`。
+- Model 没有 `UpdatedAt` 时，service/repo/page 也不能写 `updated_at`，字段和写入必须保持一致。
 - 状态、类型、枚举字段必须写 `Options`。
 - 关联字段优先写 `Relations`，页面会自动生成 option 和关联展示。
 - 密码/隐藏字段写 `ModelConfig.Fields`。
