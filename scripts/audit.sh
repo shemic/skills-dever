@@ -117,10 +117,35 @@ check_page() {
     if rg -q '"_model"[[:space:]]*:|"_use"[[:space:]]*:|"<<[^"]*New[A-Za-z0-9_]*Model>>' "$file"; then
       err "$file: standard page must use path-inferred model, not _model/_use/<<Model>>"
     fi
-    if rg -q '"use"[[:space:]]*:[[:space:]]*"[^"]*New[A-Za-z0-9_]*Model"' "$file"; then
+    if has_direct_submit_model_use "$file"; then
       err "$file: standard page action must not hardcode submit.use"
     fi
   fi
+}
+
+has_direct_submit_model_use() {
+  local file="$1"
+  awk '
+    /"submit"[[:space:]]*:/ {
+      in_submit = 1
+      depth = 0
+    }
+    in_submit {
+      for (i = 1; i <= length($0); i++) {
+        c = substr($0, i, 1)
+        if (c == "{") depth++
+        if (c == "}") depth--
+      }
+      if (depth == 1 && $0 ~ /"use"[[:space:]]*:[[:space:]]*"[^"]*New[A-Za-z0-9_]*Model"/) {
+        found = 1
+        exit
+      }
+      if (depth <= 0) {
+        in_submit = 0
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$file"
 }
 
 check_generated() {

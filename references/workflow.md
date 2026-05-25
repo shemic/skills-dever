@@ -21,7 +21,7 @@ find module package -maxdepth 4 -type f 2>/dev/null
 - `data/load/model.go`
 - `data/load/service.go`
 - `config/front.json(c)`
-- `module/*/page` 或 `package/*/page`
+- `module/*/front/page` 或 `package/*/front/page`
 
 缺少哪层，就补哪层。不要为了“模式”套模板。
 

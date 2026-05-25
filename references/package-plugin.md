@@ -113,7 +113,9 @@ backend/package/<name>/front/
 module 也可用同样结构：
 
 ```txt
-backend/module/<name>/front/src/plugin.ts
+backend/module/<name>/front/
+  page/
+  src/plugin.ts
 ```
 
 开发态 `front/pnpm dev` 会直接扫描：

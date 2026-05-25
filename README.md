@@ -39,7 +39,7 @@ Model + package/front + page JSON
 bash skills/skills-dever/scripts/boot.sh my main my-app 8082
 bash skills/skills-dever/scripts/module.sh user profile
 bash skills/skills-dever/scripts/module.sh order order --provider
-bash skills/skills-dever/scripts/audit.sh module/profile/model module/profile/page
+bash skills/skills-dever/scripts/audit.sh module/profile/model module/profile/front/page
 ```
 
 日常开发：
