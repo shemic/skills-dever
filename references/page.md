@@ -5,7 +5,7 @@
 参考顺序：
 
 1. 当前项目的 `package/front/page`。
-2. 当前项目的 `package/bot/page`。
+2. 当前项目的 `package/bot/front/page`。
 3. 当前项目的 `package/front/service/page`、`service/action`、`service/meta`、`service/record`。
 4. 如果当前项目 package 里没有同类示例，再找 GitHub demo 里的 `module/*/page`。
 
@@ -19,8 +19,8 @@
 | --- | --- |
 | `package/front/page/account/list.json` | `front/account/list` |
 | `package/front/page/account/update.json` | `front/account/update` |
-| `package/bot/page/agent/agent/list.json` | `bot/agent/agent/list` |
-| `package/bot/page/brain/brain/list.json` | `bot/brain/brain/list` |
+| `package/bot/front/page/agent/agent/list.json` | `bot/agent/agent/list` |
+| `package/bot/front/page/brain/brain/list.json` | `bot/brain/brain/list` |
 
 页面归属跟代码归属走。`module/<name>/main.go` 如果只是 `// dever:import ...`，页面仍放真实 package。
 
@@ -105,7 +105,7 @@ feedback-modal, feedback-drawer, feedback-confirm
 nav-tab
 ```
 
-不确定支持不支持时，先查现有 `package/front/page` 和 `package/bot/page`，不要发明节点。
+不确定支持不支持时，先查现有 `package/front/page` 和 `package/bot/front/page`，不要发明节点。
 
 ## 5. Data / State / Action
 

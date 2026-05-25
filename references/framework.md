@@ -41,7 +41,12 @@ dever.Run(func(s server.Server) {
 - `dever model`：只生成 `data/load/model.go`。
 - `dever service`：只生成 `data/load/service.go`。
 - `dever migrate default`：按 `data/table` 应用表结构。
-- `dever build`：发布构建；用户禁止 build 时不要运行。
+- `dever front build`：构建所有 `backend/package/*/front` 与 `backend/module/*/front` 插件前端。
+- `dever front build bot`：只构建 `bot` 前端插件，输出到对应 `front/dist`。
+- `dever package add bot`：从 `github.com/dever-package/bot` 拉取 package，创建 `module/bot/main.go` shim，并刷新生成文件。
+- `dever package update bot`：更新已安装 package；默认要求 git 工作区干净并执行 `git pull --ff-only`。
+- `dever build [target]`：发布构建；默认构建当前项目，`target` 可传目录或 `main.go`；默认先构建前端插件，再构建 Go 二进制。用户禁止 build 时不要运行。
+- `dever build --skip-front`：只构建 Go 二进制，跳过 package/module 前端插件。
 
 本地 replace 项目用 `go run ./dever/cmd/dever <cmd>`；普通项目用安装后的 `dever`。
 
@@ -65,6 +70,9 @@ Dever 扫描 `module/*`。如果 `module/<name>/main.go` 有：
 ```
 
 这个 module 是 package 引入 shim，真实源码来自 package。应用开发时不要复制 package 代码，也不要改 package 源码；只通过引入、配置、page JSON、Provider hook 等公开能力复用。只有明确维护 package 本身时，新增页面、model、service、api 才放到真实 package。
+
+可复用 Go package 与 package 自带前端插件的结构和命令看 `references/package-plugin.md`。
+package 前端插件静态服务走 `package/front/service/plugin`，不要在每个组件里复制 `service/frontplugin`。
 
 ## 路由生成
 

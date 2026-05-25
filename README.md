@@ -11,6 +11,7 @@ Dever Go 项目开发 skill。目标是简单、稳定、和真实框架一致�
 - `references/model.md`：Model 文件、字段、Options、Relations、索引。
 - `references/module.md`：Service、Provider、API、middleware。
 - `references/page.md`：`package/front` 后台 page JSON。
+- `references/package-plugin.md`：Go package 组件、package/module 前端插件、`dever front build`、`dever build`。
 - `scripts/boot.sh`：补齐最小 Dever 项目骨架。
 - `scripts/module.sh`：默认只生成 model；可选 `--provider` / `--api`。
 - `scripts/audit.sh`：静态检查常见 Dever skill 错误。
@@ -51,6 +52,27 @@ dever run
 
 ```bash
 dever build
+```
+
+构建 package/module 前端插件：
+
+```bash
+dever front build
+dever front build bot
+```
+
+引入 package 组件：
+
+```bash
+dever package add bot
+dever package update bot
+```
+
+发布构建默认会先构建插件前端；只构建 Go 时显式跳过：
+
+```bash
+dever build
+dever build --skip-front
 ```
 
 如果用户要求不跑 build/test，就不要跑。

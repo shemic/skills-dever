@@ -17,8 +17,9 @@ description: Use when working on Dever Go projects, including framework setup, g
 4. `references/model.md`：数据表、model 命名、Options、Relations、索引。
 5. `references/module.md`：Service、Provider、API、middleware、业务代码。
 6. `references/page.md`：`package/front` 后台 page JSON。
+7. `references/package-plugin.md`：可复用 Go package、`dever package add/update`、package/module 前端插件、`dever front build` / `dever build`。
 
-后台、admin、CRUD、列表、编辑、详情、导入导出默认都读 `page.md`。业务规则、状态流转、跨表保存再读 `module.md`。
+后台、admin、CRUD、列表、编辑、详情、导入导出默认都读 `page.md`。业务规则、状态流转、跨表保存再读 `module.md`。维护可复用 package 或 package 自带前端时读 `package-plugin.md`。
 
 ## 不可违反
 
