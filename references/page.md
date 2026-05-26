@@ -175,7 +175,8 @@ nav-tab
           "rowKey": "id",
           "columns": [
             {"value": "name", "type": "show-base"},
-            {"value": "status", "type": "show-tag"},
+            {"value": "status", "type": "form-switch", "meta": {"trueValue": 1, "falseValue": 2}},
+            {"value": "sort", "type": "show-base", "editor": "form-number", "trigger": "doubleClick"},
             {"value": "created_at", "type": "show-date"}
           ]
         }
@@ -199,6 +200,11 @@ nav-tab
 
 标准列表页 `data.table` 不写 `list`。
 
+状态、排序这类列表维护字段放在列表页内联维护，不放进编辑页表单：
+
+- `status`：列表列用 `form-switch`。
+- `sort`：列表列用 `show-base` + `editor: "form-number"` + `trigger: "doubleClick"`。
+
 ## 7. 标准编辑页
 
 ```json
@@ -221,15 +227,13 @@ nav-tab
   "nodes": {
     "form-main": [
       {"type": "form-input", "value": "form.name", "mode": "form", "meta": {"required": true}},
-      {"type": "form-switch", "value": "form.status", "mode": "form"},
       {"type": "show-button", "name": "保存", "action": {"click": "submit"}}
     ]
   },
   "data": {
     "form": {
       "id": 0,
-      "name": "",
-      "status": 1
+      "name": ""
     }
   },
   "state": {},
@@ -243,6 +247,7 @@ nav-tab
 ```
 
 标准编辑页不写 `_model/_use/submit.use`。
+标准编辑页只放主要业务字段；`status`、`sort` 不放进编辑表单，统一在列表页内联维护。
 
 ## 8. 非标准页显式 model
 
