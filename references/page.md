@@ -205,6 +205,8 @@ nav-tab
 - `status`：列表列用 `form-switch`。
 - `sort`：列表列用 `show-base` + `editor: "form-number"` + `trigger: "doubleClick"`。
 
+子表 `form-array` 如果已经配置 `meta.drag: "sort"`，排序由父表内的拖拽交互维护；子编辑页只保留业务字段，不再放 `form.sort` 输入框。
+
 ## 7. 标准编辑页
 
 ```json
