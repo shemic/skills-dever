@@ -35,15 +35,19 @@ find module package -maxdepth 4 -type f 2>/dev/null
    - 项目业务放 `module/<name>`。
    - `package/<name>` 和 `backend/dever` 作为已上线框架/package 参考或复用；应用开发不要改它们。
    - `module/<name>/main.go` 有 `// dever:import ...` 时，真实代码在 package。应用层只通过 module 引入和配置复用，不复制 package 代码。
-3. 数据是否需要新表？
+3. front 页面属于哪个站点？
+   - 读 `config/front.json.sites`，确认 `siteKey/page/api/access/public`。
+   - 页面放 `front/page/{page}/...`，`page` 只选物理目录，不进入 route。
+   - 登录页和主框架页使用当前站点的 `{api}/login`、`{api}/main`。
+4. 数据是否需要新表？
    - 需要就先写 model。
    - 页面字段、Options、Relations 都从 model 开始。
-4. 是否是后台页面？
+5. 是否是后台页面？
    - 是就默认 `package/front + page JSON`。
    - 普通 CRUD 不写 API/Service。
-5. 是否有真实业务规则？
+6. 是否有真实业务规则？
    - 状态流转、跨表保存、强校验、外部协议、异步任务、聚合查询才写 Service/API。
-6. 是否需要刷新生成文件？
+7. 是否需要刷新生成文件？
    - 改 model/service/api 后让 `dever run` 自动刷新，或手动用 `dever model/service/routes` 调试。
    - 不手改生成文件。
 
@@ -53,9 +57,11 @@ find module package -maxdepth 4 -type f 2>/dev/null
 2. 列出要改文件。
 3. 先写 model。
 4. 再写必要 Service/Provider/API。
-5. 再写 page JSON。
-6. 最后补 config/menu。
-7. 跑静态 audit。
+5. 再补 `config/front.json.sites`、`page`、`access/public` 配置。
+6. 再写 page JSON 到 `front/page/{page}/...`。
+7. 前端通过 `/{siteKey}/runtime.js` 获取 `basePath/apiHost/siteKey/appearance/runtime`。
+8. 最后补 config/menu。
+9. 跑静态 audit；用户禁止 build/test 时，不运行 `dever build`、`dever front build`、`npm run build`、测试命令。
 
 ## 4. 交付格式
 

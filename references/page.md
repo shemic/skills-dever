@@ -17,14 +17,52 @@
 
 | 文件 | path |
 | --- | --- |
-| `package/front/page/account/list.json` | `front/account/list` |
-| `package/front/page/account/update.json` | `front/account/update` |
-| `package/bot/front/page/agent/agent/list.json` | `bot/agent/agent/list` |
-| `package/bot/front/page/brain/brain/list.json` | `bot/brain/brain/list` |
-| `module/user/front/page/list.json` | `user/list` |
-| `module/work/front/page/type/list.json` | `work/type/list` |
+| `package/front/page/{page}/account/list.json` | `front/account/list` |
+| `package/front/page/{page}/login.json` | `front/login` |
+| `package/front/page/{page}/main.json` | `front/main` |
+| `package/bot/front/page/{page}/team/workspace.json` | `bot/team/workspace` |
+| `module/huabu/front/page/huabu/home.json` | `huabu/home` |
 
 页面归属跟代码归属走。`module/<name>/main.go` 如果只是 `// dever:import ...`，页面仍放真实 package。
+
+多站点 front 使用 `front/page/{page}/...` 做物理隔离。`{page}` 来自 `config/front.json.sites.*.page`，不进入最终 route。新增站点时只改 `front.json` 和对应页面目录。
+
+`login` 和 `main` 是站点系统页，route 前缀跟当前站点的 `api` 一致：
+
+- `admin` 的 `api` 是 `front`，所以读取 `front/login`、`front/main`。
+- `huabu` 的 `api` 是 `huabu`，所以读取 `huabu/login`、`huabu/main`。
+- `*/login` 未登录可读取，只用于登录界面。
+- `*/main` 登录后读取，用于组合当前站点 Shell。
+- 后台左右结构、前台顶部导航、全屏页面都应该通过 `main.json` 组合 `app-*` 节点实现，不要在业务页面里复制全局框架。
+
+站点展示信息、前端 setting 和资源放 `config/front.json`。`assets.logo`、`assets.favicon` 支持外部 URL、绝对路径，或相对路径；相对路径映射到 `backend/config/front/assets/{siteKey}/`：
+
+```json
+{
+  "sites": {
+    "admin": {
+      "name": "管理后台",
+      "subtitle": "平台配置",
+      "assets": {
+        "logo": "assets/images/logo.svg",
+        "favicon": "assets/images/favicon.svg"
+      },
+      "setting": {
+        "appearance": {
+          "theme": "light",
+          "sidebar": "floating",
+          "layout": "compact",
+          "direction": "ltr"
+        },
+        "runtime": {
+          "skin": "default",
+          "routerMode": "history"
+        }
+      }
+    }
+  }
+}
+```
 
 ## 2. 顶层结构
 
@@ -105,6 +143,7 @@ show-title, show-base, show-date, show-tag, show-table, show-button, show-page
 form-input, form-textarea, form-number, form-switch, form-select, form-date
 feedback-modal, feedback-drawer, feedback-confirm
 nav-tab
+app-site-brand, app-login-form, app-sidebar, app-topbar, app-outlet, app-assistant
 ```
 
 不确定支持不支持时，先查现有 `package/front/page` 和 `package/bot/front/page`，不要发明节点。
@@ -128,7 +167,7 @@ nav-tab
 
 `action` 放命名动作。保存动作优先叫 `submit`。
 
-后端 `/front/route/action` 只直接处理 `save/delete`。复杂规范化、强校验、跨表保存写 service hook。
+后端 route/action 由当前站点 runtime 的 API 前缀决定，例如 `runtime.apiHost + "route/action"`。页面 JSON 里不要写死 `/front/route/action`；复杂规范化、强校验、跨表保存写 service hook。
 
 ## 6. 标准列表页
 
@@ -250,6 +289,7 @@ nav-tab
 
 标准编辑页不写 `_model/_use/submit.use`。
 标准编辑页只放主要业务字段；`status`、`sort` 不放进编辑表单，统一在列表页内联维护。
+`auth` 父级优先级：单条 `auth.parent` > `page.parent` > 从 `create/update/edit` 自动推断同路径 `list`。
 
 ## 8. 非标准页显式 model
 
@@ -277,6 +317,7 @@ nav-tab
 ## 9. 自查
 
 - 文件位置是否对应 path？
+- 文件是否放在正确的 `front/page/{page}/...` 目录？
 - 顶层 6 个对象是否都存在？
 - 标准页是否没有显式 model？
 - `data.table` 是否有 `page/pageSize/total`？

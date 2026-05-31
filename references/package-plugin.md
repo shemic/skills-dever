@@ -12,7 +12,7 @@ backend/package/<name>/
   model/
   service/
   api/
-  front/page/
+  front/page/{page}/
 ```
 
 应用只放 shim：
@@ -28,7 +28,7 @@ package <name>
 
 - Model / Service / API / Page 仍按 `model.md`、`module.md`、`page.md`。
 - 不手改 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
-- package 的 page JSON 放 `backend/package/<name>/front/page`，path 仍归 package。
+- package 的 page JSON 放 `backend/package/<name>/front/page/{page}`，path 仍归 package。`{page}` 规则见 `page.md`。
 - `go:embed front/page` 放在 package 自己的 `fs.go`。
 
 ## 2. 项目引入 package
@@ -100,7 +100,7 @@ package 需要前端插件静态资源时，在应用 `main.go` 使用 `package/
 
 ```txt
 backend/package/<name>/front/
-  page/
+  page/{page}/
   src/
     plugin.ts
     runtime.ts
@@ -114,11 +114,11 @@ module 也可用同样结构：
 
 ```txt
 backend/module/<name>/front/
-  page/
+  page/{page}/
   src/plugin.ts
 ```
 
-开发态 `front/pnpm dev` 会直接扫描：
+开发态 `cd front && pnpm dev` 会直接扫描：
 
 ```txt
 backend/package/*/front/src/plugin.ts
@@ -126,6 +126,8 @@ backend/module/*/front/src/plugin.ts
 ```
 
 所以开发时改 `front/src` 不需要先打包插件。
+
+多站点 front 只记一条：站点配置在 `config/front.json.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
 
 ## 4. 插件入口模板
 
@@ -144,7 +146,7 @@ export default defineFrontPlugin({
 })
 ```
 
-`runtime.ts` 只给发布态注册：
+`runtime.ts` 只给发布态注册已有插件能力：
 
 ```ts
 import plugin from './plugin'
@@ -218,12 +220,7 @@ var PageFS embed.FS
 var FrontFS embed.FS
 ```
 
-如果插件要被主后台运行时加载，使用 `package/front/service/plugin` 提供静态入口，例如：
-
-```txt
-/_admin/plugins/<name>/manifest.json
-/_admin/plugins/<name>/assets/...
-```
+复杂 React 节点放 package/module 自己的 `front/src/plugin.ts`，通过 `lazyNode` 按需加载；页面 JSON 没引用对应 node 时，不应加载对应业务 chunk。
 
 注册示例：
 
