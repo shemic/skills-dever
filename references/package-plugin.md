@@ -103,7 +103,6 @@ backend/package/<name>/front/
   page/{page}/
   src/
     plugin.ts
-    runtime.ts
     nodes/
     components/
   dist/
@@ -118,56 +117,56 @@ backend/module/<name>/front/
   src/plugin.ts
 ```
 
-开发态 `cd front && pnpm dev` 会直接扫描：
+开发态有两种：
+
+1. 主 front 源码开发：`cd front && pnpm dev`，访问 5173。
+2. 应用开发者模式：`dever run`，访问 8085；主 front 使用 `package/front/html`，插件源码由 `package/front/compiler` 编译，8085 代理后按需加载。
+
+两种模式都会扫描：
 
 ```txt
 backend/package/*/front/src/plugin.ts
 backend/module/*/front/src/plugin.ts
 ```
 
-所以开发时改 `front/src` 不需要先打包插件。
+所以开发时改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 `package/front/compiler`，再通过 `{site}/plugins-src/{name}/manifest.json` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
 
 多站点 front 只记一条：站点配置在 `config/front.json.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
 
 ## 4. 插件入口模板
 
-`plugin.ts` 只注册能力，不做副作用：
+`plugin.ts` 只注册能力，不做副作用。插件只能依赖公开 SDK，不要依赖主 `front/src` 的 `@/...` 路径：
 
 ```ts
-import { defineFrontPlugin, lazyNode } from '@/lib/plugin/types'
+import { defineFrontPlugin, lazyNode } from "@dever/front-plugin";
 
 export default defineFrontPlugin({
-  name: 'bot',
+  name: "bot",
   nodes: {
-    'show-agent': lazyNode(() =>
-      import('./nodes/show/agent').then((mod) => ({ default: mod.ShowAgent }))
+    "show-agent": lazyNode(() =>
+      import("./nodes/show/agent").then((mod) => ({ default: mod.ShowAgent })),
     ),
   },
-})
+});
 ```
 
-`runtime.ts` 只给发布态注册已有插件能力：
+不要再写 `runtime.ts`；`package/front/compiler` 会按 `plugin.ts` 自动生成开发态和发布态注册入口。
+
+节点组件使用 `@dever/front-plugin` 暴露的 SDK 和组件：
 
 ```ts
-import plugin from './plugin'
-
-window.DeverFront?.registerPlugin(plugin)
+import type { NodeItemProps } from "@dever/front-plugin";
+import { Button, request } from "@dever/front-plugin";
 ```
 
-节点组件使用主 front 的 SDK 和组件：
-
-```ts
-import type { NodeItemProps } from '@/page/nodes'
-import { Button } from '@/components/ui/button'
-```
-
-不要在插件里复制主 front 的 UI、请求、上传、agent runner、类型。
+不要在插件里复制主 front 的 UI、请求、上传、agent runner、类型，也不要直接 import 主 `front/src`。旧插件里的 `@/...` 会由 compiler 兼容，但新代码必须用 `@dever/front-plugin`。
 
 ## 5. React 依赖规则
 
 插件前端不能自己打包一份 React。
 
-- 开发态：主 `front` 的 Vite alias / dedupe 提供同一份 React。
+- 主 front 源码开发态：主 `front` 的 Vite alias / dedupe 提供同一份 React。
+- 8085 源码插件开发态：`package/front/compiler` 编译插件，后端代理会把 Vite 的 React 依赖映射到主 front 暴露的 `window.React`。
 - 发布态：插件构建必须 external `react`，由主 front 暴露 `window.React`。
 - 不要在插件 `package.json` 里单独升级 React。
 
@@ -175,11 +174,30 @@ import { Button } from '@/components/ui/button'
 
 ## 6. 构建命令
 
-开发：
+主 front 开发：
 
 ```bash
 cd front
 pnpm dev
+```
+
+应用开发者模式：
+
+```bash
+dever run
+```
+
+`dever run` 检测到 `package/*/front/src/plugin.ts` 或 `module/*/front/src/plugin.ts` 后，会自动安装/复用 `package/front/compiler` 依赖并启动插件源码编译服务，后端站点仍访问：
+
+```txt
+http://host:8085/admin/
+http://host:8085/huabu/
+```
+
+临时关闭插件源码模式：
+
+```bash
+DEVER_FRONT_PLUGIN_DEV=0 dever run
 ```
 
 发布前构建所有插件前端：
@@ -192,6 +210,13 @@ dever front build
 
 ```bash
 dever front build bot
+```
+
+主 `front` 运行时单独构建，输出到 `backend/package/front/html`。它只包含基础框架和基础组件，不把 `backend/package/*/front/src`、`backend/module/*/front/src` 编进主包：
+
+```bash
+cd front
+pnpm run build:backend
 ```
 
 完整发布。`target` 可选，能传目录或 `main.go`；不传就构建当前项目：
@@ -210,7 +235,7 @@ dever build --skip-front
 
 ## 7. 前端产物服务与二进制
 
-插件构建产物输出到自己的 `front/dist`。page JSON 放 `front/page`。package 用 `go:embed` 带进二进制：
+插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`，并通过 `{site}/plugins/{name}/manifest.json` 加载。`dever run` 开发态优先发现源码插件，并通过 `{site}/plugins-src/{name}/manifest.json` 加载。page JSON 放 `front/page`。package 需要进二进制时用 `go:embed` 带进产物：
 
 ```go
 //go:embed front/page
@@ -221,14 +246,3 @@ var FrontFS embed.FS
 ```
 
 复杂 React 节点放 package/module 自己的 `front/src/plugin.ts`，通过 `lazyNode` 按需加载；页面 JSON 没引用对应 node 时，不应加载对应业务 chunk。
-
-注册示例：
-
-```go
-frontplugin.Register(s, frontplugin.Options{
-  Name: "bot",
-  FS: botroot.FrontFS,
-})
-```
-
-注册顺序要在 `frontsite.Register(s)` 之前，避免被后台 SPA 路由吞掉。不要给每个 package 复制一份 `service/frontplugin`。

@@ -41,6 +41,7 @@ dever.Run(func(s server.Server) {
 - `dever model`：只生成 `data/load/model.go`。
 - `dever service`：只生成 `data/load/service.go`。
 - `dever migrate default`：按 `data/table` 应用表结构。
+- `cd front && pnpm run build:backend`：构建主 `front` 运行时，输出到 `backend/package/front/html`；不包含 module/package 插件源码。
 - `dever front build`：构建所有 `backend/package/*/front` 与 `backend/module/*/front` 插件前端。
 - `dever front build bot`：只构建 `bot` 前端插件，输出到对应 `front/dist`。
 - `dever package add bot`：从 `github.com/dever-package/bot` 拉取 package，创建 `module/bot/main.go` shim，并刷新生成文件。
