@@ -103,7 +103,10 @@ func (Order) PostCancel -> POST /<module>/order/cancel
 
 ## 5. Middleware / Config / Observe
 
-- middleware 统一在 `middleware.Register()` 挂载。
+- 项目 middleware 是可选目录；只有需要项目级横切逻辑时才在 `middleware/*.go` 里提供 `Register()`。
+- package/module 自带 middleware 放自己的 `middleware/init.go`，通过 module shim 自动注册。
+- middleware 内部用 `sync.Once` 防止重复挂载。
+- 不要在项目 middleware 里调用 `coremiddleware.Init()`；框架默认中间件已经自动注册。
 - JWT 优先用 `dever/auth/jwt`。
 - 日志用 `dever/log`，观测用 `dever/observe`。
 - 配置从 `config/setting.json(c)` 走框架配置，不在业务代码里造第二套配置读取。

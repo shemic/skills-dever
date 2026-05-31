@@ -35,6 +35,7 @@ description: Use when working on Dever Go projects, including framework setup, g
 - 多站点 front 以 `config/front.json.sites` 为配置来源；站点路径、API 前缀、资源、access/public 都从这里读。
 - 页面目录使用 `front/page/{page}/...`；`{page}` 来自 `sites.*.page`，只隔离物理目录，不进入最终 route。
 - `module/<name>/main.go` 如果只是 `// dever:import ...`，真实代码放 package，不复制到 module。
+- 项目 `middleware` 可选；package/module 自带 middleware 放自己的 `middleware/init.go` 并提供 `Register()`，路由生成器会自动注册。
 - Provider/API/Model 的注册名以生成规则为准，不猜、不手改 load 文件。
 
 ## 工作方式

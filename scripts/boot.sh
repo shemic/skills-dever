@@ -66,7 +66,7 @@ ensure_gitignore() {
 
 TARGET_FILES=(
   "main.go"
-  "middleware/init.go"
+  "middleware/readme.txt"
   "module/main/api/ping.go"
   "module/main/api/debug.go"
   "module/main/service/echo.go"
@@ -112,22 +112,11 @@ func main() {
 }
 EOF
 
-cat > middleware/init.go <<'EOF'
-package middleware
+cat > middleware/readme.txt <<'EOF'
+项目自定义 middleware 是可选目录。
 
-import (
-	"sync"
-
-	coremiddleware "github.com/shemic/dever/middleware"
-)
-
-var registerOnce sync.Once
-
-func Register() {
-	registerOnce.Do(func() {
-		coremiddleware.UseGlobal(coremiddleware.Init())
-	})
-}
+如需项目级中间件，在本目录增加 Go 文件并提供 Register() 函数。
+Dever 生成 data/router.go 时会自动导入并调用。
 EOF
 
 cat > module/main/api/ping.go <<'EOF'

@@ -9,6 +9,7 @@
 ```txt
 backend/package/<name>/
   <name>fs.go
+  middleware/
   model/
   service/
   api/
@@ -30,6 +31,8 @@ package <name>
 - 不手改 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
 - package 的 page JSON 放 `backend/package/<name>/front/page/{page}`，path 仍归 package。`{page}` 规则见 `page.md`。
 - `go:embed front/page` 放在 package 自己的 `fs.go`。
+- package 自带中间件放 `middleware/init.go`，提供 `Register()`；Dever 通过 module shim 自动发现并注册。
+- package middleware 内部必须 `sync.Once`，只写组件自己的横切逻辑，不写项目私有路径规则。
 
 ## 2. 项目引入 package
 
@@ -92,7 +95,7 @@ dever init --skip-tidy
 
 如果 package 来自独立 Go module，不要复制代码；在 `go.mod` 配好 `require/replace`，shim 的 import 写真实 Go import path。Dever 会通过 `go list` 解析真实源码目录。
 
-package 需要前端插件静态资源时，在应用 `main.go` 使用 `package/front/service/plugin` 注册，并放在 `frontsite.Register(s)` 之前。
+package 自带前端插件会由 `package/front` 的站点服务发现；不要在每个组件里复制插件静态服务。
 
 ## 3. Package 前端插件目录
 

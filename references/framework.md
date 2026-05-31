@@ -98,6 +98,22 @@ id := util.ToUint64(c.Input("id", "required", "ID"))
 return c.JSON(result)
 ```
 
+## Middleware 自动注册
+
+`data/router.go` 由 Dever 生成，不手改。生成器会在注册路由前自动执行：
+
+- `devermiddleware.UseDefault()`：框架默认 `Recover + Log`，每个项目都会有。
+- `middleware/*.go`：项目根 middleware 可选；目录里有 `func Register()` 才导入调用。
+- `module/package` 真实源码的 `middleware/*.go`：组件自带 middleware 可选；例如 `package/front/middleware/init.go` 会随 `module/front` shim 自动注册。
+
+规则：
+
+- 普通项目不需要写 `middleware/init.go`。
+- 项目自定义 middleware 只放项目自己的横切逻辑，不复制 package 的鉴权、站点或插件逻辑。
+- 项目自定义 `Register()` 不要再调用 `coremiddleware.Init()`；默认 `Recover + Log` 已由生成器统一挂载。
+- package/module middleware 必须用 `Register()`，内部用 `sync.Once` 防止重复注册。
+- 生成器只在 `dever init/routes/run` 阶段扫描目录，请求期没有目录扫描开销。
+
 ## Load 注册
 
 Model 扫描 `model` 目录里的导出函数，注册名：
