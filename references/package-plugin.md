@@ -33,6 +33,9 @@ package <name>
 - `go:embed front/page` 放在 package 自己的 `fs.go`。
 - package 自带中间件放 `middleware/init.go`，提供 `Register()`；Dever 通过 module shim 自动发现并注册。
 - package middleware 内部必须 `sync.Once`，只写组件自己的横切逻辑，不写项目私有路径规则。
+- package 内部运行时缓存优先复用 `dever/cache`，并通过组件自己的统一失效入口管理。
+- `package/front` 的页面、权限、option 等 runtime 缓存统一接入 `runtimecache.Register`；保存、删除、导入等写操作成功后主动失效。
+- front 插件仍按页面实际 node 按需加载，不要因为缓存或预热改成全量加载插件。
 
 ## 2. 项目引入 package
 
@@ -132,7 +135,7 @@ backend/package/*/front/src/plugin.ts
 backend/module/*/front/src/plugin.ts
 ```
 
-所以开发时改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 `package/front/compiler`，再通过 `{site}/plugins-src/{name}/manifest.json` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
+所以开发时改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 `package/front/compiler`，再按页面实际 node 通过 `{site}/plugins-src/{name}/runtime.js` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
 
 多站点 front 只记一条：站点配置在 `config/front.json.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
 
@@ -154,6 +157,8 @@ export default defineFrontPlugin({
 ```
 
 不要再写 `runtime.ts`；`package/front/compiler` 会按 `plugin.ts` 自动生成开发态和发布态注册入口。
+
+`nodes` 和 `depends` 都从 `plugin.ts` 自动提取，用于运行时按需加载插件。不要在 `front.json` 里手写插件 node 清单；页面 JSON 引用了某个插件 node，主 front 才会加载对应插件。
 
 节点组件使用 `@dever/front-plugin` 暴露的 SDK 和组件：
 
@@ -238,7 +243,7 @@ dever build --skip-front
 
 ## 7. 前端产物服务与二进制
 
-插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`，并通过 `{site}/plugins/{name}/manifest.json` 加载。`dever run` 开发态优先发现源码插件，并通过 `{site}/plugins-src/{name}/manifest.json` 加载。page JSON 放 `front/page`。package 需要进二进制时用 `go:embed` 带进产物：
+插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`；`dever run` 开发态优先发现源码插件。运行时会先根据页面 schema 的 node 类型判断需要哪些插件，再加载对应插件入口。page JSON 放 `front/page`。package 需要进二进制时用 `go:embed` 带进产物：
 
 ```go
 //go:embed front/page

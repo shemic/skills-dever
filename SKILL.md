@@ -36,6 +36,7 @@ description: Use when working on Dever Go projects, including framework setup, g
 - 页面目录使用 `front/page/{page}/...`；`{page}` 来自 `sites.*.page`，只隔离物理目录，不进入最终 route。
 - `module/<name>/main.go` 如果只是 `// dever:import ...`，真实代码放 package，不复制到 module。
 - 项目 `middleware` 可选；package/module 自带 middleware 放自己的 `middleware/init.go` 并提供 `Register()`，路由生成器会自动注册。
+- 维护 `backend/dever` 或 `backend/package/front` 性能问题时，先查已有 cache、runtimecache、middleware 机制，不新增平行缓存或硬编码接口。
 - Provider/API/Model 的注册名以生成规则为准，不猜、不手改 load 文件。
 
 ## 工作方式

@@ -112,6 +112,8 @@ return c.JSON(result)
 - 项目自定义 middleware 只放项目自己的横切逻辑，不复制 package 的鉴权、站点或插件逻辑。
 - 项目自定义 `Register()` 不要再调用 `coremiddleware.Init()`；默认 `Recover + Log` 已由生成器统一挂载。
 - package/module middleware 必须用 `Register()`，内部用 `sync.Once` 防止重复注册。
+- package/module middleware 可在 `Register()` 阶段做一次性预热；请求期不要做目录扫描、全量同步或重初始化。
+- 高频 middleware 状态检查用 `sync.Once`、atomic 或已有缓存快路径，避免每个请求抢锁。
 - 生成器只在 `dever init/routes/run` 阶段扫描目录，请求期没有目录扫描开销。
 
 ## Load 注册
