@@ -126,7 +126,7 @@ backend/module/<name>/front/
 开发态有两种：
 
 1. 主 front 源码开发：`cd front && pnpm dev`，访问 5173。
-2. 应用开发者模式：`dever run`，访问 8085；主 front 使用 `package/front/html`，插件源码由 `package/front/compiler` 编译，8085 代理后按需加载。
+2. 应用开发者模式：`dever run`，访问 8085；主 front 使用 `package/front/html`，插件源码由 Dever CLI 内置的 `compiler/front` 编译，8085 代理后按需加载。
 
 两种模式都会扫描：
 
@@ -135,7 +135,7 @@ backend/package/*/front/src/plugin.ts
 backend/module/*/front/src/plugin.ts
 ```
 
-所以开发时改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 `package/front/compiler`，再按页面实际 node 通过 `{site}/plugins-src/{name}/runtime.js` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
+所以开发时改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 Dever CLI 的前端插件编译器，再按页面实际 node 通过 `{site}/plugins-src/{name}/runtime.js` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
 
 多站点 front 只记一条：站点配置在 `config/front.json.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
 
@@ -156,7 +156,7 @@ export default defineFrontPlugin({
 });
 ```
 
-不要再写 `runtime.ts`；`package/front/compiler` 会按 `plugin.ts` 自动生成开发态和发布态注册入口。
+不要再写 `runtime.ts`；Dever CLI 前端插件编译器会按 `plugin.ts` 自动生成开发态和发布态注册入口。
 
 `nodes` 和 `depends` 都从 `plugin.ts` 自动提取，用于运行时按需加载插件。不要在 `front.json` 里手写插件 node 清单；页面 JSON 引用了某个插件 node，主 front 才会加载对应插件。
 
@@ -174,7 +174,7 @@ import { Button, request } from "@dever/front-plugin";
 插件前端不能自己打包一份 React。
 
 - 主 front 源码开发态：主 `front` 的 Vite alias / dedupe 提供同一份 React。
-- 8085 源码插件开发态：`package/front/compiler` 编译插件，后端代理会把 Vite 的 React 依赖映射到主 front 暴露的 `window.React`。
+- 8085 源码插件开发态：Dever CLI 前端插件编译器编译插件，后端代理会把 Vite 的 React 依赖映射到主 front 暴露的 `window.React`。
 - 发布态：插件构建必须 external `react`，由主 front 暴露 `window.React`。
 - 不要在插件 `package.json` 里单独升级 React。
 
@@ -195,7 +195,7 @@ pnpm dev
 dever run
 ```
 
-`dever run` 检测到 `package/*/front/src/plugin.ts` 或 `module/*/front/src/plugin.ts` 后，会自动安装/复用 `package/front/compiler` 依赖并启动插件源码编译服务，后端站点仍访问：
+`dever run` 检测到 `package/*/front/src/plugin.ts` 或 `module/*/front/src/plugin.ts` 后，会自动安装/复用 Dever CLI 前端插件编译器依赖并启动插件源码编译服务，后端站点仍访问：
 
 ```txt
 http://host:8085/admin/
