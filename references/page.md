@@ -21,7 +21,7 @@
 | `package/front/page/{page}/login.json` | `front/login` |
 | `package/front/page/{page}/main.json` | `front/main` |
 | `package/bot/front/page/{page}/team/workspace.json` | `bot/team/workspace` |
-| `module/huabu/front/page/huabu/home.json` | `huabu/home` |
+| `module/work/front/page/work/home.json` | `work/home` |
 
 页面归属跟代码归属走。`module/<name>/main.go` 如果只是 `// dever:import ...`，页面仍放真实 package。
 
@@ -30,7 +30,7 @@
 `login` 和 `main` 是站点系统页，route 前缀跟当前站点的 `api` 一致：
 
 - `admin` 的 `api` 是 `front`，所以读取 `front/login`、`front/main`。
-- `huabu` 的 `api` 是 `huabu`，所以读取 `huabu/login`、`huabu/main`。
+- `work` 的 `api` 是 `work`，所以读取 `work/login`、`work/main`。
 - `*/login` 未登录可读取，只用于登录界面。
 - `*/main` 登录后读取，用于组合当前站点 Shell。
 - 后台左右结构、前台顶部导航、全屏页面都应该通过 `main.json` 组合 `app-*` 节点实现，不要在业务页面里复制全局框架。

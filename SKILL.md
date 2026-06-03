@@ -12,14 +12,15 @@ description: Use when working on Dever Go projects, including framework setup, g
 每次使用本 skill，按需求只读必要文件：
 
 1. `references/workflow.md`：统一工作流和决策顺序。
-2. `references/development.md`：通用开发规范、复用、职责、命名、清理。
-3. `references/framework.md`：Dever 命令、入口、生成文件、路由、Load 注册。
-4. `references/model.md`：数据表、model 命名、Options、Relations、索引。
-5. `references/module.md`：Service、Provider、API、middleware、业务代码。
-6. `references/page.md`：`package/front` 后台 page JSON。
-7. `references/package-plugin.md`：可复用 Go package、`dever package add/update`、package/module 前端插件、`dever front build` / `dever build`。
+2. `references/empty-project.md`：空项目/最小项目接多站点系统、安装 `front` + `bot`、参考 `dever-project/demo`。
+3. `references/development.md`：通用开发规范、复用、职责、命名、清理。
+4. `references/framework.md`：Dever 命令、入口、生成文件、路由、Load 注册。
+5. `references/model.md`：数据表、model 命名、Options、Relations、索引。
+6. `references/module.md`：Service、Provider、API、middleware、业务代码。
+7. `references/page.md`：`package/front` 后台 page JSON。
+8. `references/package-plugin.md`：可复用 Go package、`dever package add/update`、package/module 前端插件、`dever front build` / `dever build`。
 
-后台、admin、CRUD、列表、编辑、详情、导入导出默认读 `page.md`。多站点 front 任务先读 `config/front.json`，确认 `siteKey/page/api/access`，再读 `page.md`。维护可复用 package 或 package 前端插件时读 `package-plugin.md`。业务规则、状态流转、跨表保存再读 `module.md`。
+用户说“空项目”、“新建项目”、“搭系统”、“搭站点”、“搭后台”、“admin”、“work”、“使用 front 组件”时先读 `empty-project.md`；空项目 site 基线默认同时接入 `front` 和 `bot`。后台、admin、CRUD、列表、编辑、详情、导入导出默认读 `page.md`。多站点 front 任务先读 `config/front.json`，确认 `siteKey/page/api/access`，再读 `page.md`。维护可复用 package 或 package 前端插件时读 `package-plugin.md`。业务规则、状态流转、跨表保存再读 `module.md`。
 
 ## 不可违反
 
@@ -27,6 +28,7 @@ description: Use when working on Dever Go projects, including framework setup, g
 - 应用项目开发时不修改 `backend/dever` 和 `backend/package/*`；它们只能作为框架/package 参考或复用对象。只有明确要求维护框架或 package 本身时，才进入这些目录改源码。
 - 不默认写 CRUD API；后台普通 CRUD 走 `Model + package/front + page JSON`。
 - 不默认写 Service；只有真实业务规则才写 Service。
+- 空项目 site 系统基线不要只装 `front`；按当前约定 `front` 和 `bot` 两个 package 都要通过 `dever package add` 引入，除非用户明确排除。
 - Model 一表一文件；文件名、struct、`NewXxxModel` 对齐。
 - 表 model 不写进 `main.go`。
 - 长文本用 `type:text`，不要用 `longtext`。

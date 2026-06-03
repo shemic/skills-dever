@@ -47,6 +47,16 @@ dever package add bot
 
 它会从 `https://github.com/dever-package/bot.git` 拉取到 `package/bot`，创建 `module/bot/main.go` shim，并刷新 routes/model/service 注册。换组件时把 `bot` 换成对应名称。
 
+空项目只要用户要基于 site 建系统，按当前 site 基线同时引入 `front` 和 `bot`，不要只装 `front`：
+
+```bash
+dever package add --skip-init front
+dever package add --skip-init bot
+dever init --skip-tidy
+```
+
+`front` 提供站点运行时、页面、路由、上传、导入导出等通用能力；`bot` 提供当前 site 基线需要的 AI/agent 相关 package 能力。一次补多个 package 时先 `--skip-init`，最后只刷新一次生成文件。
+
 可选项：
 
 ```bash
@@ -95,6 +105,8 @@ package <name>
 ```bash
 dever init --skip-tidy
 ```
+
+如果 package 模板里仍是 `my/package/<name>`，应用项目中要替换为当前 `go.mod` 的 module path；至少用 `rg 'my/package/' package module` 检查一次。
 
 如果 package 来自独立 Go module，不要复制代码；在 `go.mod` 配好 `require/replace`，shim 的 import 写真实 Go import path。Dever 会通过 `go list` 解析真实源码目录。
 
@@ -199,7 +211,7 @@ dever run
 
 ```txt
 http://host:8085/admin/
-http://host:8085/huabu/
+http://host:8085/work/
 ```
 
 临时关闭插件源码模式：

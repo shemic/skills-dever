@@ -6,6 +6,7 @@ Dever Go 项目开发 skill。目标是简单、稳定、和真实框架一致�
 
 - `SKILL.md`：入口规则。
 - `references/workflow.md`：统一工作流。
+- `references/empty-project.md`：空项目/最小项目搭多站点系统，接入 `front` + `bot`。
 - `references/development.md`：通用开发规范、复用、职责、命名、清理。
 - `references/framework.md`：Dever 入口、命令、生成文件、路由、Load 注册。
 - `references/model.md`：Model 文件、字段、Options、Relations、索引。
@@ -66,6 +67,14 @@ dever front build bot
 ```bash
 dever package add bot
 dever package update bot
+```
+
+空项目搭 site 系统：
+
+```bash
+dever package add --skip-init front
+dever package add --skip-init bot
+dever init --skip-tidy
 ```
 
 发布构建默认会先构建插件前端；只构建 Go 时显式跳过：
