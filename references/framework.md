@@ -37,7 +37,7 @@ dever.Run(func(s server.Server) {
 ## 命令
 
 - `dever install`：安装本地 `dever` 启动脚本。
-- `dever run`：热重载；启动前会执行 `init --skip-tidy`，model/service/api 变更后会再次刷新生成文件。
+- `dever run`：热重载；启动前会执行 `init --skip-tidy`，model/service/api 变更后会再次刷新生成文件。存在 package/module 前端源码插件时，会启动插件 dev server；默认端口从后端 `http.port + 10000` 派生，例如 `8085 -> 18085`、`8082 -> 18082`，避免多项目都抢 `5174`。`DEVER_FRONT_PLUGIN_DEV_PORT` 可显式覆盖。
 - `dever init --skip-tidy`：生成 routes/model/service 注册文件。
 - `dever routes`：只生成 `data/router.go`。
 - `dever model`：只生成 `data/load/model.go`。
