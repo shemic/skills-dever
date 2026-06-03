@@ -89,7 +89,7 @@ fi
 
 go get "github.com/shemic/dever@${DEVER_VERSION}"
 
-mkdir -p config module/main/{api,service,model} middleware data/load package
+mkdir -p config module/main/{api,service,model} middleware data/{load,log} package
 touch data/readme.txt package/readme.txt
 ensure_gitignore
 
@@ -180,7 +180,9 @@ cat > config/setting.jsonc <<EOF
     "level": "info",
     "development": false,
     "enabled": true,
-    "output": "stdout"
+    "output": "file",
+    "successFile": "data/log/access.log",
+    "errorFile": "data/log/error.log"
   },
   "observe": {
     "enabled": false,

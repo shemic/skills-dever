@@ -151,7 +151,65 @@ backend/module/*/front/src/plugin.ts
 
 多站点 front 只记一条：站点配置在 `config/front.json.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
 
-## 4. 插件入口模板
+## 4. 最小 front 插件流程
+
+以 `work` 前台站点为例：
+
+```txt
+backend/module/work/front/
+  page/work/home.json
+  src/plugin.ts
+  src/nodes/home/home-shell.tsx
+```
+
+`src/plugin.ts`：
+
+```ts
+import { defineFrontPlugin, lazyNode } from "@dever/front-plugin";
+
+export default defineFrontPlugin({
+  name: "work",
+  nodes: {
+    "work-home-shell": lazyNode(() =>
+      import("./nodes/home/home-shell").then((mod) => ({
+        default: mod.WorkHomeShell,
+      })),
+    ),
+  },
+});
+```
+
+`page/work/home.json` 引用插件节点：
+
+```json
+{
+  "page": { "name": "工作台首页", "type": 1 },
+  "layout": {
+    "type": "container",
+    "children": {
+      "content": { "type": "container" }
+    }
+  },
+  "nodes": {
+    "content": [
+      { "type": "work-home-shell" }
+    ]
+  },
+  "data": {},
+  "state": {},
+  "action": {}
+}
+```
+
+规则：
+
+- `plugin.ts` 只注册节点，不请求接口、不读配置、不做全局副作用。
+- 节点名要有 package/module 前缀，例如 `work-home-shell`，避免和 package/front 内置节点冲突。
+- 组件只从 `@dever/front-plugin` 引入 SDK、类型、UI、request，不直接 import 主 `front/src`。
+- 页面 JSON 引用了插件 node，运行时才加载对应插件；不要手写插件清单。
+- 普通后台列表/表单不写插件；只有强交互、复杂布局、图形化编辑器、工作台 Shell 等场景才写。
+
+## 5. 插件入口模板
 
 `plugin.ts` 只注册能力，不做副作用。插件只能依赖公开 SDK，不要依赖主 `front/src` 的 `@/...` 路径：
 
@@ -181,7 +239,26 @@ import { Button, request } from "@dever/front-plugin";
 
 不要在插件里复制主 front 的 UI、请求、上传、agent runner、类型，也不要直接 import 主 `front/src`。旧插件里的 `@/...` 会由 compiler 兼容，但新代码必须用 `@dever/front-plugin`。
 
-## 5. React 依赖规则
+## 6. 前台站点和后台站点怎么分工
+
+后台 `admin`：
+
+- 配置在 `config/front.json.sites.admin`。
+- `api` 通常是 `front`，`access.mode` 通常是 `rbac`。
+- 页面放 `module/<biz>/front/page/admin/...`。
+- 普通 CRUD 用 page JSON 和 model 元信息，不写 front 插件。
+
+前台 `work` / `portal` / `shop`：
+
+- 配置在 `config/front.json.sites.<siteKey>`。
+- `api` 可以是业务分组，例如 `work`。
+- 页面放 `module/<biz>/front/page/{page}/...`。
+- 登录、注册、复杂动作可以写 `module/<biz>/api`。
+- 需要完整 React 体验时，在同一个 module/package 下写 `front/src/plugin.ts`。
+
+可复用业务能力放 `package/<name>`；项目私有业务放 `module/<name>`。应用开发不要为了改一个页面复制 package 源码。
+
+## 7. React 依赖规则
 
 插件前端不能自己打包一份 React。
 
@@ -192,7 +269,7 @@ import { Button, request } from "@dever/front-plugin";
 
 如果出现 hook 报错，先查是否打了两份 React。
 
-## 6. 构建命令
+## 8. 构建命令
 
 主 front 开发：
 
@@ -253,7 +330,7 @@ dever build --skip-front
 
 用户说不要 build/test 时，不运行这些命令。
 
-## 7. 前端产物服务与二进制
+## 9. 前端产物服务与二进制
 
 插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`；`dever run` 开发态优先发现源码插件。运行时会先根据页面 schema 的 node 类型判断需要哪些插件，再加载对应插件入口。page JSON 放 `front/page`。package 需要进二进制时用 `go:embed` 带进产物：
 

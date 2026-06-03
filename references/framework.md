@@ -51,6 +51,35 @@ dever.Run(func(s server.Server) {
 
 本地 replace 项目用 `go run ./dever/cmd/dever <cmd>`；普通项目用安装后的 `dever`。
 
+## 源码定位
+
+Dever 框架源码主仓库在 GitHub：
+
+- 源码仓库：[shemic/dever](https://github.com/shemic/dever)
+- Go 模块路径：`github.com/shemic/dever`。
+- CLI 源码：`cmd/dever`，`dever run/init/routes/model/service/front/build/package` 都在这里。
+- 应用运行入口库：`cmd`，业务入口通常 `import dever "github.com/shemic/dever/cmd"`。
+- package/module front 插件编译器：`compiler/front`。
+
+当前 `/data/project/shemic` 是特殊形态：本地放了 `backend/dever`，并用 `replace github.com/shemic/dever => ./dever` 指向本地源码。因此当前项目里还要知道：
+
+- `backend/dever`：本地 Dever 框架源码。
+- `backend/dever/cmd/dever`：当前项目正在使用的 CLI 源码。
+- `backend/dever/cmd`：当前项目正在使用的应用运行入口库。
+- `backend/dever/compiler/front`：当前项目正在使用的 front 插件编译器。
+- `backend/package/front`：当前项目内置的站点运行时、后台页面、插件服务、上传、导入导出等通用 package。
+- `backend/package/bot`：当前项目内置的 bot package。
+- package 拉取来源：`https://github.com/dever-package/<name>.git`。
+- `front`：主 front 运行时源码，构建产物输出到 `backend/package/front/html`。
+
+如果 `go.mod` 有：
+
+```go
+replace github.com/shemic/dever => ./dever
+```
+
+应用使用的是本地 `./dever` 源码。当前服务器上的 `/usr/local/bin/dever` 也可能是进入 `backend/dever` 后执行 `go run ./cmd/dever "$@"`，遇到当前项目的 CLI 行为问题时先查 `backend/dever/cmd/dever`。
+
 ## 生成文件
 
 永远不要手改：
@@ -118,11 +147,13 @@ return c.JSON(result)
 
 ## Load 注册
 
-Model 扫描 `model` 目录里的导出函数，注册名：
+Model 只注册 `model` 目录里的零参数 `New*Model` 构造函数，注册名：
 
 ```txt
-<module>[.<model子目录>].<FuncName>
+<module>[.<model子目录>].NewXxxModel
 ```
+
+普通导出 helper、Options、Normalize、DefaultRuntimeConfig 之类函数不会作为 Model 注册。
 
 Provider 扫描 `service` 目录里 `Provider` 开头的方法，注册名：
 
@@ -149,5 +180,20 @@ func (Hook) ProviderBeforeSaveUser(c *server.Context, params []any) any
 - `redis`
 - `auth`
 - `frontSite`
+
+日志默认写文件，不输出到 `dever run` 屏幕：
+
+```jsonc
+{
+  "log": {
+    "level": "info",
+    "development": false,
+    "enabled": true,
+    "output": "file",
+    "successFile": "data/log/access.log",
+    "errorFile": "data/log/error.log"
+  }
+}
+```
 
 不要在业务代码里重复造配置系统。

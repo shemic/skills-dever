@@ -32,7 +32,7 @@ find module package -maxdepth 4 -type f 2>/dev/null
 1. 项目能否被 Dever 启动？
    - 没有 `go.mod`：初始化。
    - 没有 `main.go`：补 Dever 入口。
-   - 没有 `config/setting.json(c)`：补最小配置。
+   - 没有 `config/setting.json(c)`：补最小配置，日志默认写 `data/log/access.log` 和 `data/log/error.log`，不输出到 `dever run` 屏幕。
 2. 是否是空项目要搭 site 系统？
    - 先读 `empty-project.md`。
    - 空项目 site 基线同时引入 `front` 和 `bot`。
@@ -62,15 +62,35 @@ find module package -maxdepth 4 -type f 2>/dev/null
 1. 搜索同类实现。
 2. 列出要改文件。
 3. 空项目先安装 `front` 和 `bot`，并补 `frontSite`、`config/front.json(c).sites`、入口注册。
-4. 先写 model。
-5. 再写必要 Service/Provider/API。
-6. 再补 `config/front.json.sites`、`page`、`access/public` 配置。
-7. 再写 page JSON 到 `front/page/{page}/...`。
+4. 后台站点先写 model，再写 `front/page/admin/...` page JSON。
+5. 前台站点先确认 `sites.<siteKey>.api/page/access/public`，再写 `front/page/{page}/...`。
+6. 需要完整 React 交互时，写 `module/<name>/front/src/plugin.ts` 和插件节点；页面 JSON 只引用 node type。
+7. 真实业务规则再写 Service/Provider/API；普通 CRUD 不写。
 8. 前端通过 `/{siteKey}/runtime.js` 获取 `basePath/apiHost/siteKey/appearance/runtime`。
-9. 最后补 config/menu。
+9. 最后补 menu/auth 配置。
 10. 跑静态 audit；用户禁止 build/test 时，不运行 `dever build`、`dever front build`、`npm run build`、测试命令。
 
-## 4. 交付格式
+## 4. 快速路径
+
+后台 admin：
+
+```txt
+module/<biz>/model/<resource>.go
+module/<biz>/front/page/admin/<resource>/list.json
+module/<biz>/front/page/admin/<resource>/update.json
+```
+
+前台 work：
+
+```txt
+config/front.json.sites.work
+module/work/front/page/work/main.json
+module/work/front/page/work/home.json
+module/work/front/src/plugin.ts          # 只有复杂 React 节点才需要
+module/work/api/*.go                     # 只有登录、注册、业务动作等真实 API 才需要
+```
+
+## 5. 交付格式
 
 ```md
 结构风险：

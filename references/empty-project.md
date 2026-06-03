@@ -55,11 +55,30 @@ dever init --skip-tidy
 
 先配置 `config/setting.jsonc`：
 
+- `log.output="file"`，不要用 `stdout`。
+- `log.successFile="data/log/access.log"`。
+- `log.errorFile="data/log/error.log"`。
+- 常规访问日志和错误日志写到 `data/log`，不要刷到 `dever run` 屏幕。
 - `http.port`、`http.appName` 使用项目值。
 - `frontSite.enabled=true`。
 - `frontSite.path` 使用项目主入口，例如 `/admin`、`/work` 或用户指定路径。
 - `frontSite.dir` 指向 `package/front/html`。
 - 数据库按用户指定环境配置；如果用户指定 PostgreSQL，直接设置 `driver=postgres`、目标 `dbname`、项目 `prefix`，不要先落 SQLite 再切。
+
+最小日志配置：
+
+```jsonc
+{
+  "log": {
+    "level": "info",
+    "development": false,
+    "enabled": true,
+    "output": "file",
+    "successFile": "data/log/access.log",
+    "errorFile": "data/log/error.log"
+  }
+}
+```
 
 再配置 `config/front.jsonc`：
 
@@ -69,6 +88,50 @@ dever init --skip-tidy
 - `sites.<siteKey>.access` 使用该系统需要的登录、RBAC 或公开访问模式。
 - `public` 保留上传、站点信息、bot 回调/请求等 package 需要的公开路径。
 - 菜单只放当前 site 的真实功能分组；bot 自带页面按 package 能力接入，不要复制页面实现。
+
+一个后台 `admin` 加一个前台 `work` 的最小形态：
+
+```jsonc
+{
+  "public": [
+    "/upload/*",
+    "/site/info",
+    "/bot/energon/request",
+    "/bot/energon/demo"
+  ],
+  "sites": {
+    "admin": {
+      "name": "管理后台",
+      "api": "front",
+      "page": "admin",
+      "access": {
+        "mode": "rbac",
+        "authProvider": "front"
+      },
+      "public": ["auth/login"],
+      "auth": []
+    },
+    "work": {
+      "name": "工作台",
+      "api": "work",
+      "page": "work",
+      "access": {
+        "mode": "login",
+        "authProvider": "work"
+      },
+      "public": ["auth/login", "auth/register"],
+      "auth": []
+    }
+  }
+}
+```
+
+含义：
+
+- `admin` 是后台站点，普通 CRUD 走 `Model + page JSON`，页面放 `front/page/admin`。
+- `work` 是前台站点，页面放 `front/page/work`，登录注册和复杂业务动作可放 `module/work/api`。
+- `siteKey` 决定访问路径和 runtime，例如 `/admin/runtime.js`、`/work/runtime.js`。
+- `page` 只决定物理页面目录，不进入最终 route。
 
 ## 5. 入口注册
 
@@ -108,6 +171,23 @@ func main() {
 4. `dever init --skip-tidy`
 
 普通列表、录入、编辑、详情不要默认写 API/Service。只有状态流转、跨表保存、强校验、外部协议、异步任务、聚合查询等真实业务规则，才补 Service/API。
+
+后台页面例子：
+
+```txt
+module/product/model/goods.go
+module/product/front/page/admin/goods/list.json
+module/product/front/page/admin/goods/update.json
+```
+
+前台页面例子：
+
+```txt
+module/work/front/page/work/main.json
+module/work/front/page/work/home.json
+module/work/front/src/plugin.ts              # 可选，复杂 React 节点才需要
+module/work/front/src/nodes/home/home.tsx    # 可选
+```
 
 ## 7. 交付检查
 

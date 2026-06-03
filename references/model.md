@@ -86,11 +86,13 @@ orm.Relation{
 
 ## 5. 注册规则
 
-Dever 扫描 `model` 目录里的导出函数。注册名：
+Dever 只扫描 `model` 目录里的零参数 `New*Model` 构造函数。注册名：
 
 ```txt
 <module>[.<model子目录>].NewXxxModel
 ```
+
+可以在 model 包里写普通导出 helper、Options、Normalize 函数，但它们不会进 `data/load/model.go`，也不能当 model 注册名给 page JSON 使用。
 
 例子：
 
