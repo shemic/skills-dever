@@ -31,6 +31,8 @@ go.mod
 main.go
 config/setting.jsonc
 config/front.jsonc
+config/front/assets/admin/images/logo.svg
+config/front/assets/admin/images/favicon.svg
 data/readme.txt
 package/readme.txt
 module/main/api/ping.go      # 可选健康检查
@@ -94,6 +96,7 @@ dever init --skip-tidy
 - `sites.<siteKey>.api` 使用该系统的 API 分组；后台通常为 `front`，业务前台可按 demo 的 `work` 站点方式配置。
 - `sites.<siteKey>.page` 决定物理页面目录，页面放到 `front/page/{page}/...`；`siteKey` 和 `page` 可以同名，也可以不同名。
 - `sites.<siteKey>.access` 使用该系统需要的登录、RBAC 或公开访问模式。
+- `sites.<siteKey>.assets.logo/favicon` 的相对路径映射到 `config/front/assets/{siteKey}/`；admin 默认图标可从 `skills/skills-dever/files/config/front/assets/admin/images/` 复制。
 - `public` 保留上传、站点信息、bot 回调/请求等 package 需要的公开路径。
 - 菜单只放当前 site 的真实功能分组；bot 自带页面按 package 能力接入，不要复制页面实现。
 

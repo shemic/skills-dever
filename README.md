@@ -107,6 +107,7 @@ dever init --skip-tidy
 - `main.go` 注册了 `data.RegisterRoutes` 和 `package/front/service/site.Register`。
 - `config/setting.jsonc` 开启 `frontSite`，日志写到 `data/log/access.log`、`data/log/error.log`。
 - `config/front.json` 或 `config/front.jsonc` 有 `sites.admin`、`sites.work` 等站点。
+- `config/front/assets/admin/images/logo.svg`、`config/front/assets/admin/images/favicon.svg` 可从 `files/config/front/assets/admin/images/` 复制，`boot.sh` 会在缺失时自动补齐。
 - `module/front/main.go`、`module/bot/main.go` 是 package shim。
 - `data/router.go`、`data/load/*.go`、`data/table/*.json` 由命令生成，不手改。
 

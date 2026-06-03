@@ -35,7 +35,7 @@
 - `*/main` 登录后读取，用于组合当前站点 Shell。
 - 后台左右结构、前台顶部导航、全屏页面都应该通过 `main.json` 组合 `app-*` 节点实现，不要在业务页面里复制全局框架。
 
-站点展示信息、前端 setting 和资源放 `config/front.json`。`assets.logo`、`assets.favicon` 支持外部 URL、绝对路径，或相对路径；相对路径映射到 `backend/config/front/assets/{siteKey}/`：
+站点展示信息、前端 setting 和资源放 `config/front.json`。`assets.logo`、`assets.favicon` 支持外部 URL、绝对路径，或相对路径；相对路径映射到 `backend/config/front/assets/{siteKey}/`。admin 默认 `logo.svg` / `favicon.svg` 模板在 `skills/skills-dever/files/config/front/assets/admin/images/`：
 
 ```json
 {
@@ -140,13 +140,20 @@
 
 ```txt
 show-title, show-base, show-date, show-tag, show-table, show-button, show-page
-form-input, form-textarea, form-number, form-switch, form-select, form-date
+form-input, form-textarea, form-number, form-switch, form-radio, form-checkbox, form-select, form-date
 feedback-modal, feedback-drawer, feedback-confirm
 nav-tab
 app-site-brand, app-login-form, app-sidebar, app-topbar, app-outlet, app-assistant
 ```
 
 不确定支持不支持时，先查现有 `package/front/page` 和 `package/bot/front/page`，不要发明节点。
+
+表单选择控件选择：
+
+- 固定少量单选枚举，优先 `form-radio`；通常 2-4 个选项都不要写成 `form-select`。
+- 选项很多、来自 Relations/远程数据、需要搜索、将来明显会增长时，才用 `form-select`。
+- 固定少量多选枚举用 `form-checkbox`。
+- 二值开关型字段用 `form-switch`；如果是 `status/sort` 这类列表维护字段，按列表页内联维护规则处理，不放进 update 表单。
 
 ## 5. Data / State / Action
 
@@ -289,6 +296,7 @@ app-site-brand, app-login-form, app-sidebar, app-topbar, app-outlet, app-assista
 
 标准编辑页不写 `_model/_use/submit.use`。
 标准编辑页只放主要业务字段；`status`、`sort` 不放进编辑表单，统一在列表页内联维护。
+编辑页里来自 model Options 的固定少量单选字段用 `form-radio`，例如类型、模式、来源、是否启用某个业务能力；不要因为它是枚举就默认用 `form-select`。关系字段、账号/角色/分类等数量可能增长的选择仍用 `form-select`。
 `auth` 父级优先级：单条 `auth.parent` > `page.parent` > 从 `create/update/edit` 自动推断同路径 `list`。
 
 ## 8. 非标准页显式 model
@@ -322,6 +330,7 @@ app-site-brand, app-login-form, app-sidebar, app-topbar, app-outlet, app-assista
 - 标准页是否没有显式 model？
 - `data.table` 是否有 `page/pageSize/total`？
 - 表单字段是否都绑定 `form.*` 且 `mode: "form"`？
+- update 表单里的固定少量单选枚举是否用了 `form-radio`，而不是默认 `form-select`？
 - 运行态是否放 `state`，业务数据是否放 `data`？
 - 是否没有发明节点或 action？
 - 复杂业务是否放 Service/Provider？

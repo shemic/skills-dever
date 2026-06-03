@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 GITIGNORE_TEMPLATE="${SKILL_ROOT}/files/gitignore"
+ADMIN_ASSET_TEMPLATE_DIR="${SKILL_ROOT}/files/config/front/assets/admin/images"
 
 FORCE=0
 ARGS=()
@@ -72,6 +73,21 @@ ensure_gitignore() {
   cat "$GITIGNORE_TEMPLATE" >> "$file"
 }
 
+ensure_admin_assets() {
+  local target_dir="config/front/assets/admin/images"
+  if [[ ! -d "$ADMIN_ASSET_TEMPLATE_DIR" ]]; then
+    echo "Missing admin asset template: $ADMIN_ASSET_TEMPLATE_DIR"
+    exit 1
+  fi
+
+  mkdir -p "$target_dir"
+  for file in logo.svg favicon.svg; do
+    if [[ ! -f "${target_dir}/${file}" ]]; then
+      cp "${ADMIN_ASSET_TEMPLATE_DIR}/${file}" "${target_dir}/${file}"
+    fi
+  done
+}
+
 TARGET_FILES=(
   "main.go"
   "middleware/readme.txt"
@@ -100,6 +116,7 @@ go get "github.com/shemic/dever@${DEVER_VERSION}"
 mkdir -p config module/main/{api,service,model} middleware data/{load,log} package
 touch data/readme.txt package/readme.txt
 ensure_gitignore
+ensure_admin_assets
 
 cat > main.go <<EOF
 package main
