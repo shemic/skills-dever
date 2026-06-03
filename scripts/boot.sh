@@ -15,14 +15,21 @@ for arg in "$@"; do
   fi
 done
 
-MODULE_NAME="${ARGS[0]:-}"
+REQUESTED_MODULE_NAME="${ARGS[0]:-}"
+MODULE_NAME="my"
 DEVER_VERSION="${ARGS[1]:-main}"
 APP_NAME="${ARGS[2]:-dever-app}"
 PORT="${ARGS[3]:-8082}"
 
-if [[ -z "$MODULE_NAME" ]]; then
+if [[ -z "$REQUESTED_MODULE_NAME" ]]; then
   echo "Usage: bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]"
+  echo "Note: Dever application projects always use Go module path: my"
   exit 1
+fi
+
+if [[ "$REQUESTED_MODULE_NAME" != "$MODULE_NAME" ]]; then
+  echo "Ignoring requested module path: $REQUESTED_MODULE_NAME"
+  echo "Dever application projects always use Go module path: $MODULE_NAME"
 fi
 
 if [[ ! -f go.mod ]]; then
@@ -31,8 +38,9 @@ else
   EXISTING_MODULE="$(awk '/^module /{print $2; exit}' go.mod)"
   if [[ -n "$EXISTING_MODULE" && "$EXISTING_MODULE" != "$MODULE_NAME" ]]; then
     echo "Detected go.mod module path: $EXISTING_MODULE"
-    echo "Use existing module path instead of input: $MODULE_NAME"
-    MODULE_NAME="$EXISTING_MODULE"
+    echo "Dever package components require module path: $MODULE_NAME"
+    echo "Refuse to continue instead of generating incompatible imports."
+    exit 1
   fi
 fi
 

@@ -30,7 +30,8 @@ find module package -maxdepth 4 -type f 2>/dev/null
 ## 2. 决策顺序
 
 1. 项目能否被 Dever 启动？
-   - 没有 `go.mod`：初始化。
+   - 没有 `go.mod`：初始化为固定 `module my`。
+   - 已有 `go.mod`：保留 `module my`，不要按项目名、域名或目录名改 module 名；发现不是 `my` 时先说明组件 import 风险，不继续按新名字生成 package shim。
    - 没有 `main.go`：补 Dever 入口。
    - 没有 `config/setting.json(c)`：补最小配置，日志默认写 `data/log/access.log` 和 `data/log/error.log`，不输出到 `dever run` 屏幕。
 2. 是否是空项目要搭 site 系统？

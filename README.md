@@ -103,6 +103,7 @@ dever init --skip-tidy
 
 然后确认：
 
+- `go.mod` 第一行固定是 `module my`，不要改成项目名、域名或目录名。
 - `main.go` 注册了 `data.RegisterRoutes` 和 `package/front/service/site.Register`。
 - `config/setting.jsonc` 开启 `frontSite`，日志写到 `data/log/access.log`、`data/log/error.log`。
 - `config/front.json` 或 `config/front.jsonc` 有 `sites.admin`、`sites.work` 等站点。

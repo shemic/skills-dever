@@ -16,6 +16,14 @@
 
 ## 2. 空项目最小骨架
 
+Dever 应用项目的 Go module 固定使用 `my`。不要按项目名、公司域名或目录名改成其他 module path；`module/front`、`module/bot` 等组件 shim 依赖 `my/package/...`，改名会导致 package 组件不可用。
+
+`go.mod` 第一行保持：
+
+```go
+module my
+```
+
 空项目先补项目骨架，再按 site 补系统和业务：
 
 ```txt
@@ -47,9 +55,9 @@ dever init --skip-tidy
 安装后确认：
 
 - `package/front`、`package/bot` 已存在。
-- `module/front/main.go` 是 `// dever:import <module>/package/front` shim。
-- `module/bot/main.go` 是 `// dever:import <module>/package/bot` shim。
-- 如果 package 源里带 `my/package/front` 或 `my/package/bot` 模板路径，统一替换为当前 `go.mod` module path。
+- `module/front/main.go` 是 `// dever:import my/package/front` shim。
+- `module/bot/main.go` 是 `// dever:import my/package/bot` shim。
+- package 源和 shim 里的 `my/package/front`、`my/package/bot` 是固定路径，不要替换成项目名或当前目录名。
 
 ## 4. 配置顺序
 
@@ -141,9 +149,9 @@ dever init --skip-tidy
 import (
 	"log"
 
-	"<module>/data"
-	_ "<module>/data/load"
-	frontsite "<module>/package/front/service/site"
+	"my/data"
+	_ "my/data/load"
+	frontsite "my/package/front/service/site"
 
 	dever "github.com/shemic/dever/cmd"
 	"github.com/shemic/dever/server"

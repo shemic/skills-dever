@@ -2,6 +2,8 @@
 
 ## 项目入口
 
+Dever 应用项目的 Go module 固定为 `my`。标准入口、业务代码 import、package shim 都按 `my/...` 写；不要把 `module my` 改成项目名、域名或目录名。
+
 标准入口：
 
 ```go
@@ -99,7 +101,7 @@ Dever 扫描 `module/*`。如果 `module/<name>/main.go` 有：
 // dever:import my/package/bot
 ```
 
-这个 module 是 package 引入 shim，真实源码来自 package。应用开发时不要复制 package 代码，也不要改 package 源码；只通过引入、配置、page JSON、Provider hook 等公开能力复用。只有明确维护 package 本身时，新增页面、model、service、api 才放到真实 package。
+这个 module 是 package 引入 shim，真实源码来自 package。`my/package/...` 是应用项目固定 import 路径，不要替换成项目名。应用开发时不要复制 package 代码，也不要改 package 源码；只通过引入、配置、page JSON、Provider hook 等公开能力复用。只有明确维护 package 本身时，新增页面、model、service、api 才放到真实 package。
 
 可复用 Go package 与 package 自带前端插件的结构和命令看 `references/package-plugin.md`。
 package 前端插件静态服务走 `package/front/service/plugin`，不要在每个组件里复制 `service/frontplugin`。

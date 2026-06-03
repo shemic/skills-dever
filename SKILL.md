@@ -32,6 +32,7 @@ description: Use when working on Dever Go projects, including framework setup, g
 
 - 不手改生成文件：`data/router.go`、`data/load/model.go`、`data/load/service.go`、`data/table/*.json`。
 - 应用项目开发时不修改 `backend/dever` 和 `backend/package/*`；它们只能作为框架/package 参考或复用对象。只有明确要求维护框架或 package 本身时，才进入这些目录改源码。
+- 应用项目的 Go module 固定使用 `module my`；不要按项目名、域名或目录名改 module 名。组件 shim 和内置 package 依赖 `my/package/...`，改名会导致组件不可用。
 - 不默认写 CRUD API；后台普通 CRUD 走 `Model + package/front + page JSON`。
 - 不默认写 Service；只有真实业务规则才写 Service。
 - 空项目 site 系统基线不要只装 `front`；按当前约定 `front` 和 `bot` 两个 package 都要通过 `dever package add` 引入，除非用户明确排除。
@@ -51,7 +52,7 @@ description: Use when working on Dever Go projects, including framework setup, g
 ## 快速决策
 
 1. 先用 `rg` / `find` 看入口、config、module、package、model、service、api、page、front 插件。
-2. 空项目：补 `go.mod/main.go/config`，安装 `front` + `bot`，配置 `frontSite` 和 `config/front.json.sites`。
+2. 空项目：补固定 `module my` 的 `go.mod/main.go/config`，安装 `front` + `bot`，配置 `frontSite` 和 `config/front.json.sites`。
 3. 后台资源：先写 model，再写 `front/page/{page}/...`，普通 CRUD 不写 API/Service。
 4. 前台站点：先确认 `sites.<siteKey>.api/page/access/public`，页面放 `front/page/{page}`，复杂交互才写插件或 API。
 5. 真实业务规则：Service 承载业务，API/Provider 只适配。

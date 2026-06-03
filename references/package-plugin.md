@@ -106,7 +106,7 @@ package <name>
 dever init --skip-tidy
 ```
 
-如果 package 模板里仍是 `my/package/<name>`，应用项目中要替换为当前 `go.mod` 的 module path；至少用 `rg 'my/package/' package module` 检查一次。
+应用项目的 `go.mod` 固定是 `module my`，所以 package 模板、shim 和项目内 import 里的 `my/package/<name>` 要保持不变；不要替换成项目名、域名或目录名。
 
 如果 package 来自独立 Go module，不要复制代码；在 `go.mod` 配好 `require/replace`，shim 的 import 写真实 Go import path。Dever 会通过 `go list` 解析真实源码目录。
 
