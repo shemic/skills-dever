@@ -35,6 +35,17 @@
 - `*/main` 登录后读取，用于组合当前站点 Shell。
 - 后台左右结构、前台顶部导航、全屏页面都应该通过 `main.json` 组合 `app-*` 节点实现，不要在业务页面里复制全局框架。
 
+这里的 route 前缀不是物理 `page` 目录名。`sites.<siteKey>.api` 决定系统页逻辑路径，`sites.<siteKey>.page` 决定物理目录。比如 `api: "work", page: "work"` 时，请求的是 `work/main`，读取 `front/page/work/main.json`；如果 `api: "ops", page: "admin"`，系统页仍是 `ops/main`，不会自动变成 `front/main`。
+
+复用 admin 样式时，不要只改 `page: "admin"`。更稳的做法是在新站点自己的 page 目录放同构 `main.json` / `login.json`：
+
+```txt
+module/work/front/page/work/main.json   # 可参考 package/front/page/admin/main.json
+module/work/front/page/work/login.json  # 可参考 package/front/page/admin/login.json
+```
+
+`app-login-form` 会按当前站点 runtime 请求 `auth/login`，所以 `work` 站点会走 `/work/auth/login`。只要业务 API 返回兼容的 `{token, user}`，就可以复用 admin 登录表单；不要在页面 JSON 里写死 `/front/auth/login`。
+
 站点展示信息、前端 setting 和资源放 `config/front.json`。`assets.logo`、`assets.favicon` 支持外部 URL、绝对路径，或相对路径；相对路径映射到 `backend/config/front/assets/{siteKey}/`。admin 默认 `logo.svg` / `favicon.svg` 模板在 `skills/skills-dever/files/config/front/assets/admin/images/`：
 
 ```json

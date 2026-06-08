@@ -144,7 +144,29 @@ dever init --skip-tidy
 - `siteKey` 决定访问路径和 runtime，例如 `/admin/runtime.js`、`/work/runtime.js`。
 - `page` 只决定物理页面目录，不进入最终 route。
 
-## 5. 入口注册
+## 5. 多站点复用决策
+
+`package/front/html` 和主 React runtime 是所有 `sites` 共享的。每个站点的差异来自 `config/front.json.sites.<siteKey>` 注入的 runtime：`siteKey`、`api`、`page`、`access`、资源和展示信息。
+
+不要把“复用 admin 样式”和“复用 admin 账号权限”混为一件事：
+
+- 复用 admin 样式：复用 `app-sidebar`、`app-topbar`、`app-outlet`、`app-login-form` 等内置节点，在新站点自己的 `main.json` / `login.json` 里组合。
+- 独立账号：新站点使用独立 `api` 和 `access.authProvider`，登录接口放业务模块，例如 `module/work/api/auth.go` 暴露 `/work/auth/login`。
+- 独立权限：如果只是登录后可访问，优先用 `access.mode: "login"`；业务权限放业务 Service 校验。
+- 完整 RBAC：当前 `front` RBAC 绑定 `front` 账号、角色、权限模型。不要承诺纯配置即可给每个站点一套独立 RBAC；需要维护 `package/front` 做 provider/scope 级扩展，或新增业务自己的权限体系。
+
+两种常见方案：
+
+| 目标 | 推荐做法 |
+| --- | --- |
+| 后台型系统，想像 admin 一样的侧栏、顶栏、列表表单 | 新站点保留自己的 `api/page/access`，在自己的 page 目录复制/抽取 admin `main.json` 和 `login.json` 壳，业务页面继续用 Page JSON。 |
+| 工作台、门户、画布、C 端业务界面 | `main.json` 做薄壳或自定义壳，普通页面用 Page JSON，复杂体验用 `module/<site>/front/src/plugin.ts` 注册业务节点。 |
+
+不能只把新站点配置成 `page: "admin"` 就认为会复用 admin 系统页。`main/login` 的逻辑 route 前缀跟当前站点 `api` 走，例如 `api: "work"` 时系统页是 `work/main`、`work/login`；`page` 只决定这些页面从哪个物理目录读取。
+
+如果复用 admin 顶栏，注意它可能包含账户资料入口。业务账号独立时，要么让业务登录返回兼容的 `user.id/name/account`，要么提供站点自己的 profile 页面/节点，不要让前台账号误用 `/front/account/profile` 这类管理员页面。
+
+## 6. 入口注册
 
 空项目安装 `front` 后，入口要注册站点服务：
 
@@ -172,7 +194,7 @@ func main() {
 
 `bot` 通过 package/module shim、生成注册和页面/接口能力接入；没有 package 文档要求时，不在 `main.go` 里额外硬编码 bot 注册。
 
-## 6. 后续业务资源
+## 7. 后续业务资源
 
 空项目 site 立住后，新增普通资源走标准路径：
 
@@ -200,7 +222,7 @@ module/work/front/src/plugin.ts              # 可选，复杂 React 节点才�
 module/work/front/src/nodes/home/home.tsx    # 可选
 ```
 
-## 7. 交付检查
+## 8. 交付检查
 
 交付前至少静态确认：
 

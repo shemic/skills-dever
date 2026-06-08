@@ -23,6 +23,7 @@ description: Use when working on Dever Go projects, including framework setup, g
 触发规则：
 
 - “空项目 / 新建项目 / 搭系统 / 搭站点 / 搭后台 / admin / work / 前台站点”：先读 `empty-project.md`。
+- “多站点 / 复用 admin / 独立账号 / 独立权限 / 其他界面”：先读 `empty-project.md`，再读 `page.md` 和 `package-plugin.md`。
 - “后台 / CRUD / 列表 / 编辑 / 详情 / 导入导出”：先读 `page.md`，默认 `Model + package/front + page JSON`。
 - “front 插件 / React 节点 / 自定义前端 / package 插件”：读 `package-plugin.md`。
 - “状态流转 / 跨表保存 / 业务动作 / 回调 / 登录注册 API”：读 `module.md`。
@@ -55,10 +56,11 @@ description: Use when working on Dever Go projects, including framework setup, g
 1. 先用 `rg` / `find` 看入口、config、module、package、model、service、api、page、front 插件。
 2. 空项目：补固定 `module my` 的 `go.mod/main.go/config`，安装 `front` + `bot`，配置 `frontSite` 和 `config/front.json.sites`。
 3. 后台资源：先写 model，再写 `front/page/{page}/...`，普通 CRUD 不写 API/Service。
-4. 前台站点：先确认 `sites.<siteKey>.api/page/access/public`，页面放 `front/page/{page}`，复杂交互才写插件或 API。
-5. 真实业务规则：Service 承载业务，API/Provider 只适配。
-6. 改 model/service/api 后刷新生成文件，或让 `dever run` 自动刷新。
-7. 写完删除重复、临时代码，保持职责边界。
+4. 多站点：先决定复用 admin 壳还是自定义壳；复用 admin 壳也要在该站点 page 目录放自己的 `main/login`，独立账号优先用 `login` 模式和业务 API。
+5. 前台站点：先确认 `sites.<siteKey>.api/page/access/public`，页面放 `front/page/{page}`，复杂交互才写插件或 API。
+6. 真实业务规则：Service 承载业务，API/Provider 只适配。
+7. 改 model/service/api 后刷新生成文件，或让 `dever run` 自动刷新。
+8. 写完删除重复、临时代码，保持职责边界。
 
 能跑静态检查时执行：
 

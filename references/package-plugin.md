@@ -258,7 +258,34 @@ import { Button, request } from "@dever/front-plugin";
 
 可复用业务能力放 `package/<name>`；项目私有业务放 `module/<name>`。应用开发不要为了改一个页面复制 package 源码。
 
-## 7. React 依赖规则
+## 7. 复用 admin 形式还是做自定义界面
+
+其他站点不是从零写整套前端，也不是自动复用 admin 的 `main.json`。它们共用主 front runtime、Page JSON 渲染器、请求封装、插件按需加载；站点壳由该站点的 `main.json` 决定。
+
+复用 admin 形式：
+
+- 适合后台型系统、运营系统、内部工作台。
+- `config/front.json.sites.<siteKey>` 使用自己的 `api/page/access/authProvider`。
+- 在该站点 page 目录放自己的 `main.json` / `login.json`，结构参考 `package/front/page/admin/main.json` 和 `login.json`。
+- `main.json` 组合 `app-sidebar`、`app-topbar`、`app-outlet`、按需 `app-assistant`。
+- `login.json` 可复用 `app-site-brand`、`app-login-form`；登录接口由当前站点 `api` 决定。
+- 独立账号优先写业务模块 `api/auth.go` 和 `service/auth.go`，返回兼容的 `token`、`user.id`、`user.name`、`user.account`。
+- 如果顶部账户资料、角色切换、权限管理需要独立，提供站点自己的节点或页面；不要让业务站点误用管理员 `/front/account/profile`。
+
+做一套其他界面：
+
+- 适合门户、C 端、画布、项目空间、强交互工作台。
+- `main.json` 可以只是薄壳，例如全屏 container + `app-outlet`，或组合自定义顶部导航。
+- 简单内容页继续用 Page JSON 和内置节点，不要上来就写插件。
+- 复杂体验才写 `front/src/plugin.ts` 和业务节点，例如 `work-login-page`、`work-home-shell`、`work-space-page`。
+- 插件节点只承载 UI 和交互，登录、注册、保存、业务动作放 module API/Service。
+
+权限边界：
+
+- `access.mode: "login"` 会绕过 `front` RBAC，菜单来自当前站点可扫描到的 page/auth 记录，适合独立业务账号。
+- `access.mode: "rbac"` 走 `package/front` 的账号、角色、权限模型。除非正在维护 `package/front`，不要承诺多站点各自一套完整 RBAC 只靠配置即可完成。
+
+## 8. React 依赖规则
 
 插件前端不能自己打包一份 React。
 
@@ -269,7 +296,7 @@ import { Button, request } from "@dever/front-plugin";
 
 如果出现 hook 报错，先查是否打了两份 React。
 
-## 8. 构建命令
+## 9. 构建命令
 
 主 front 开发：
 
@@ -330,7 +357,7 @@ dever build --skip-front
 
 用户说不要 build/test 时，不运行这些命令。
 
-## 9. 前端产物服务与二进制
+## 10. 前端产物服务与二进制
 
 插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`；`dever run` 开发态优先发现源码插件，并按后端 `http.port + 10000` 派生插件 dev server 端口，例如 `8085 -> 18085`、`8082 -> 18082`。运行时会先根据页面 schema 的 node 类型判断需要哪些插件，再加载对应插件入口。page JSON 放 `front/page`。package 需要进二进制时用 `go:embed` 带进产物：
 
