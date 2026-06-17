@@ -1,4 +1,10 @@
 {
+  "public": [
+    "/upload/*",
+    "/site/info",
+    "/bot/energon/request",
+    "/bot/energon/demo"
+  ],
   "sites": {
     "admin": {
       "name": "管理后台",
@@ -6,8 +12,11 @@
       "api": "front",
       "page": "admin",
       "access": {
-        "mode": "rbac"
+        "mode": "rbac",
+        "authProvider": "front"
       },
+      "public": ["auth/login"],
+      "auth": [],
       "assets": {
         "logo": "assets/images/logo.svg",
         "favicon": "assets/images/favicon.svg"
@@ -31,8 +40,11 @@
       "api": "work",
       "page": "work",
       "access": {
-        "mode": "login"
+        "mode": "login",
+        "authProvider": "work"
       },
+      "public": ["auth/login", "auth/register"],
+      "auth": [],
       "assets": {
         "logo": "assets/images/logo.svg",
         "favicon": "assets/images/favicon.svg"

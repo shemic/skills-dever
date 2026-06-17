@@ -13,6 +13,7 @@ version: 1.0.0
 只读取当前任务需要的 reference：
 
 - `references/workflow.md`：决策顺序和任务分流。
+- `references/product.md`：业务产品拆分、模块边界、页面/API/Service 选择。
 - `references/framework.md`：Dever CLI、生成文件、route/model/service 注册、middleware。
 - `references/development.md`：复用、命名、职责边界、清理。
 - `references/model.md`：model 文件、comment、Options、Relations、索引。
@@ -27,7 +28,9 @@ version: 1.0.0
 
 ## 任务分流
 
-- 空项目、安装、新站点、admin/work/site 搭建：读 `workflow.md`、`framework.md`、`files.md`、`component.md`。
+- 空项目、安装、新站点、admin/work/site 搭建：读 `workflow.md`、`empty-project.md`、`framework.md`、`files.md`、`component.md`。
+- 旧项目、已有项目、迁移、升级、历史组件、老页面改造：读 `workflow.md`、`migration.md`，再按涉及面读取 `front-page.md`、`service-api.md`、`component.md`。
+- 新产品、业务系统、业务模块、需求拆分、产品功能设计：读 `workflow.md`、`product.md`，再按资源类型读取 `model.md`、`front-page.md`、`service-api.md`。
 - 后端 model 或表结构修改：读 `model.md`；涉及页面时再读 `front-page.md`。
 - 后台页面、CRUD、列表/编辑/详情、左分类右列表、权限或 option 错误：读 `front-page.md`、`model.md`、`security.md`。
 - Provider、Service、API、回调、登录、注册、workflow、外部请求、事务：读 `service-api.md`、`security.md`。
@@ -53,6 +56,10 @@ version: 1.0.0
 - Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；不要在脚本里散落 heredoc 模板或硬编码资产。
 - 修改 `package/<name>` 或 `module/<name>` 前，先检查并遵守 `package/<name>/skills/**/SKILL.md` 或 `module/<name>/skills/**/SKILL.md`。
 - 当前本地代码是事实来源。参考顺序：当前 `package/front`、当前 `package/bot`、当前 `package/user`、当前 module/package 示例、`backend/dever`；外部 demo 只作为兜底。
+- 开始实现前必须先判断项目模式：`empty-project`、`existing-project`、`app-feature`、`package-dev`、`framework-dev`。模式不明时先盘点，不生成、不迁移、不删除。
+- 旧项目和已有项目默认只做增量迁移。除非用户明确要求，不全量重写页面、Service、API、配置或组件。
+- 删除旧 Service/API/Provider/page 配置前，必须确认当前 `package/front`、组件能力或真实业务 Service 已覆盖同等行为。
+- `scripts/boot.sh` 只用于空项目初始化；已有项目不能用它覆盖骨架。
 - 如果用户禁止 build/test，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价测试。只有确实有用时才跑静态文本 audit。
 
 ## 必须流程

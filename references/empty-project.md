@@ -264,7 +264,7 @@ module/work/front/src/nodes/home/home.tsx    # 可选
 
 ```bash
 rg -n "my/package/(front|bot)|module/front|module/bot|frontSite|sites" .
-bash skills/skills-dever/scripts/audit.sh <改动文件或目录>
+bash skills/skills-dever/scripts/audit.sh --changed
 ```
 
 如果用户明确禁止 build/test，不运行 `dever build`、`dever front build`、`npm run build`、测试命令。若为了验证临时启动服务，结束前要关闭进程，除非用户明确要求保留。

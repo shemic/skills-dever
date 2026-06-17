@@ -14,6 +14,8 @@ version: 0.1.0
 - 组件页面：`package/{{COMPONENT_NAME}}/front/page`
 - 组件 front 插件：`package/{{COMPONENT_NAME}}/front/src/plugin.ts`
 - 组件元数据：`package/{{COMPONENT_NAME}}/dever.json`
+- 核心 model：维护本组件后补充具体路径。
+- 核心 Service/API：维护本组件后补充具体路径。
 
 ## 规则
 
@@ -22,9 +24,39 @@ version: 0.1.0
 - 不修改生成文件或编译后的 front 产物。
 - 组件专属行为留在本组件内，不散落到全局。
 - 任何公开 API、权限或迁移行为，都要在这里写清楚。
+- 新增菜单、权限、公开路径、站点资源时，优先写入组件 `dever.json`。
+- 删除或改名页面、model、Service/API 前，先写清迁移影响和旧项目升级步骤。
+
+## 允许写 Service/API 的场景
+
+- 跨表事务。
+- 状态流转。
+- 外部系统调用。
+- 登录、注册、回调、webhook。
+- front 插件需要的自定义交互接口。
+- package/front 标准 page action 无法表达的真实业务动作。
+
+普通列表、新增、编辑、删除、详情不要写 Service/API。
+
+## Front 插件规则
+
+- 只有 page JSON 表达不了交互时才写插件节点。
+- `plugin.ts` 只注册节点，不做请求、配置读取或全局副作用。
+- 节点名加组件前缀，避免和内置节点冲突。
+- 插件只依赖公开 SDK，不直接 import 主 `front/src`。
 
 ## 常见检查
 
 - 修改 page JSON 前先读现有 model。
 - 新增 Provider/API 前先读现有 service。
 - 修改后台页面前先检查组件权限。
+- 修改 `dever.json` 后检查 `skills`、`public`、`sites`、`depends` 是否仍有效。
+
+## 迁移说明
+
+旧项目接入或升级本组件时，需要记录：
+
+- 需要新增或更新的 package/module。
+- 需要写入的 `dever.json` 元数据。
+- 是否需要迁移旧 `config/front.json(c)` 菜单、权限或 public 配置。
+- 是否有破坏性数据变更。

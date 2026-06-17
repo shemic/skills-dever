@@ -110,7 +110,7 @@ app-site-brand, app-login-form, app-sidebar, app-topbar, app-outlet, app-assista
 
 - 使用 `show-table` 加远程数据。
 - 搜索状态放在 `data.search` 或 `data.table.searchFields`。
-- 不定义 `data.table.list`；运行时会加载。
+- 可以初始化 `data.table.list: []` 作为空容器；不要在这里硬编码 model、`_use`、URL 或固定业务数据，运行时会加载。
 - `status/sort` 这类列表维护字段保留在表格内联维护。
 - 不要只为了切换状态或排序新增 update 表单。
 

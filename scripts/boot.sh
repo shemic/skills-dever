@@ -6,10 +6,13 @@ SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 FILES_DIR="${SKILL_ROOT}/files"
 
 FORCE=0
+ADOPT_EXISTING=0
 ARGS=()
 for arg in "$@"; do
   if [[ "$arg" == "--force" ]]; then
     FORCE=1
+  elif [[ "$arg" == "--adopt-existing" ]]; then
+    ADOPT_EXISTING=1
   else
     ARGS+=("$arg")
   fi
@@ -22,7 +25,7 @@ APP_NAME="${ARGS[2]:-dever-app}"
 PORT="${ARGS[3]:-8082}"
 
 if [[ -z "$REQUESTED_MODULE_NAME" ]]; then
-  echo "用法：bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force]"
+  echo "用法：bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force] [--adopt-existing]"
   echo "说明：Dever 应用项目固定使用 Go 模块路径：my"
   exit 1
 fi
@@ -71,6 +74,25 @@ render_template() {
     "$src" > "$dest"
 }
 
+ensure_empty_project() {
+  if [[ "$ADOPT_EXISTING" == "1" ]]; then
+    return
+  fi
+
+  local existing=()
+  for path in go.mod main.go config/setting.json config/setting.jsonc config/front.json config/front.jsonc module package; do
+    [[ -e "$path" ]] && existing+=("$path")
+  done
+  if (( ${#existing[@]} == 0 )); then
+    return
+  fi
+
+  echo "检测到已有 Dever 项目文件：${existing[*]}"
+  echo "boot.sh 只用于空项目初始化，避免覆盖已有项目。"
+  echo "已有项目请按 references/migration.md 增量接入；确需补齐骨架时显式加 --adopt-existing。"
+  exit 1
+}
+
 ensure_go_mod() {
   if [[ ! -f go.mod ]]; then
     render_template "${FILES_DIR}/go/go.mod.tmpl" "go.mod"
@@ -105,6 +127,25 @@ ensure_gitignore() {
   cat "$template" >> "$file"
 }
 
+write_package_shim() {
+  local name="$1"
+  local src="${FILES_DIR}/go/package-shim.go.tmpl"
+  local target="module/${name}/main.go"
+  if [[ ! -f "$src" ]]; then
+    echo "模板不存在：$src"
+    exit 1
+  fi
+  if [[ -e "$target" && "$FORCE" != "1" ]]; then
+    return
+  fi
+  if [[ -e "$target" && "$FORCE" == "1" ]]; then
+    cp "$target" "${target}.bak"
+  fi
+  mkdir -p "$(dirname "$target")"
+  sed -e "s/{{PACKAGE_NAME}}/${name}/g" "$src" > "$target"
+}
+
+ensure_empty_project
 mkdir -p config/front/assets/{admin,work}/images middleware data/{load,log} package module/main/model
 ensure_go_mod
 ensure_gitignore
@@ -122,5 +163,9 @@ for site in admin work; do
   done
 done
 
+write_package_shim front
+write_package_shim bot
+
 echo "已生成最小 Dever 项目骨架。"
+echo "已生成 module/front 和 module/bot package shim；请执行 dever package add --skip-init front/bot 或按项目 package 管理流程补齐源码。"
 echo "未生成任何业务 API 或 Service。"

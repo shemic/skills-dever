@@ -18,6 +18,7 @@ skills/skills-dever/
   README.md
   references/
     workflow.md
+    product.md
     framework.md
     development.md
     model.md
@@ -63,7 +64,8 @@ rsync -a --exclude .git skills/skills-dever/ ~/.agents/skills/shemic-dever/
 Dever CLI 已提供：
 
 ```bash
-dever skill install         # 优先使用已安装 shemic-dever；缺失时从 github.com/shemic/skills-dever 拉取
+dever skill install         # 从项目本地 skill 或 github.com/shemic/skills-dever 同步
+dever skill install --force # 忽略已安装旧版全局 skill，按当前 ref 重新同步
 dever skill doctor
 dever install              # 默认调用 dever skill install，只同步全局 skill 和 agent 提示
 dever install --skip-skills
@@ -71,7 +73,7 @@ dever install --skip-skills
 
 `dever skill install` 做三件事：
 
-1. 优先读取已安装的全局 `shemic-dever`；没有时读取当前项目 `skills/skills-dever`；都没有时从 `github.com/shemic/skills-dever` 拉取。
+1. 优先读取当前项目附近的 `skills/skills-dever`；没有时按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取或更新；只有拉取失败且未指定 `--force` 时，才使用已安装的全局 `shemic-dever` 兜底。
 2. 把 skill 同步到常见全局 skill 目录。
 3. 用 `files/AGENTS.dever.md` 的 managed block 更新 `AGENTS.md`、`CLAUDE.md`、`.codex/AGENTS.md`、`.opencode/AGENTS.md`，不覆盖用户原内容。
 
@@ -102,6 +104,18 @@ dever skill install --project=true
 6. 外部 demo 只作为兜底
 
 不要默认先看 demo。当前项目代码才是事实来源。
+
+## 按任务读取
+
+| 任务 | 必读 |
+| --- | --- |
+| 空项目、新后台、新站点 | `SKILL.md`、`workflow.md`、`empty-project.md`、`files.md` |
+| 旧项目改功能或迁移 | `SKILL.md`、`workflow.md`、`migration.md`，再按涉及面读 page/service/model |
+| 新产品或业务模块 | `SKILL.md`、`workflow.md`、`product.md`、`model.md`、`front-page.md` |
+| 后台 CRUD | `SKILL.md`、`front-page.md`、`model.md` |
+| 状态流转、跨表事务、外部调用 | `SKILL.md`、`service-api.md`、`security.md` |
+| 组件维护 | `SKILL.md`、`component.md`、组件自己的 `skills/**/SKILL.md` |
+| Dever 框架维护 | `SKILL.md`、`framework.md`、`troubleshooting.md` |
 
 ## 后台页面开发
 
@@ -172,16 +186,19 @@ bash skills/skills-dever/scripts/boot.sh my v0.1.2 my-app 8082
 它会生成：
 
 - `go.mod`
-- `main.go`
+- `main.go`，包含 `frontsite.Register`
 - `config/setting.jsonc`
 - `config/front.jsonc`
 - `config/front/assets/admin/images/*`
 - `config/front/assets/work/images/*`
+- `module/front/main.go`
+- `module/bot/main.go`
 - `middleware/readme.txt`
 - `data/readme.txt`
 - `package/readme.txt`
 
 它不会生成业务 API 或 Service。
+`boot.sh` 只用于空项目；检测到已有项目时会拒绝执行。确实要给已有项目补齐骨架时，显式加 `--adopt-existing`。
 `go.mod` 来自 `files/go/go.mod.tmpl`，是正式项目模板，不包含本地 `replace github.com/shemic/dever => ./dever`。
 
 ### `scripts/module.sh`
@@ -238,7 +255,8 @@ package/user/skills/user/SKILL.md
 静态检查常见反模式：
 
 ```bash
-bash skills/skills-dever/scripts/audit.sh package/bot module/work
+bash skills/skills-dever/scripts/audit.sh --changed
+bash skills/skills-dever/scripts/audit.sh --legacy package/bot module/work
 ```
 
 检查内容包括：
@@ -253,7 +271,7 @@ bash skills/skills-dever/scripts/audit.sh package/bot module/work
 - model 文件命名问题。
 - `longtext` 使用问题。
 
-它不是 build/test，不会启动项目。
+推荐日常使用 `--changed` 只检查本次改动文件。旧项目盘点使用 `--legacy`，错误降级为警告，避免为了历史问题触发全量重构。它不是 build/test，不会启动项目。
 
 ## 组件规则
 

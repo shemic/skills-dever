@@ -20,6 +20,7 @@ files/
   go/
     go.mod.tmpl
     main.go.tmpl
+    package-shim.go.tmpl
     model.go.tmpl
     middleware/readme.txt
     data/readme.txt
@@ -41,6 +42,7 @@ files/
 {{PORT}}
 {{MODULE_NAME}}
 {{DEVER_VERSION}}
+{{PACKAGE_NAME}}
 {{TYPE_NAME}}
 {{RESOURCE_FILE}}
 {{MODEL_FUNC}}
@@ -61,6 +63,7 @@ files/
 - `config/setting.jsonc` 来自 `files/config/setting.jsonc.tmpl`。
 - `config/front.jsonc` 来自 `files/config/front.jsonc.tmpl`。
 - 空项目 `go.mod` 来自 `files/go/go.mod.tmpl`。
+- 空项目 `main.go` 来自 `files/go/main.go.tmpl`，默认注册 `data.RegisterRoutes` 和 `frontsite.Register`。
 
 目标配置已存在时，默认不覆盖。使用 `--force` 时必须先备份旧文件。
 
@@ -72,6 +75,7 @@ files/
 - `go.sum` 由 Go 工具生成，不能作为模板维护。
 - 日志默认写文件：`data/log/access.log`、`data/log/error.log`。
 - 站点配置放 `config/front.json(c)`，不放 package/front 源码。
+- 全局公开路径、站点公开登录路径和站点 access 配置放 `config/front.json(c)`，不要散落到业务代码。
 - 项目运行数据放 `data/`，不放 `package/`。
 
 ## Logo 和 Favicon

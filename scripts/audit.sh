@@ -7,15 +7,36 @@ if ! command -v rg &>/dev/null; then
   exit 1
 fi
 
-if (( $# == 0 )); then
-  echo "用法：bash scripts/audit.sh <file-or-dir> [...]"
+fail=0
+warn_count=0
+LEGACY=0
+CHANGED=0
+TARGETS=()
+
+for arg in "$@"; do
+  case "$arg" in
+    --legacy) LEGACY=1 ;;
+    --changed) CHANGED=1 ;;
+    --help|-h)
+      echo "用法：bash scripts/audit.sh [--changed] [--legacy] <file-or-dir> [...]"
+      echo "  --changed  只检查 git 已修改/新增文件"
+      echo "  --legacy   旧项目盘点模式：错误降级为警告"
+      exit 0
+      ;;
+    *) TARGETS+=("$arg") ;;
+  esac
+done
+
+if (( CHANGED == 0 && ${#TARGETS[@]} == 0 )); then
+  echo "用法：bash scripts/audit.sh [--changed] [--legacy] <file-or-dir> [...]"
   exit 2
 fi
 
-fail=0
-warn_count=0
-
 err() {
+  if (( LEGACY == 1 )); then
+    warn "$*"
+    return
+  fi
   echo "错误：$*"
   fail=1
 }
@@ -32,15 +53,86 @@ pascal_to_snake() {
 }
 
 collect_files() {
-  for target in "$@"; do
+  if (( CHANGED == 1 )); then
+    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+      err "--changed 需要在 git 仓库内执行"
+      return
+    fi
+    if (( ${#TARGETS[@]} > 0 )); then
+      git_changed_files "${TARGETS[@]}" |
+        filter_audit_files
+      git_untracked_files "${TARGETS[@]}" |
+        filter_audit_files
+    else
+      git_changed_files |
+        filter_audit_files
+      git_untracked_files |
+        filter_audit_files
+    fi
+    return
+  fi
+
+  for target in "${TARGETS[@]}"; do
     if [[ -d "$target" ]]; then
-      find "$target" -type f \( -name '*.go' -o -name '*.json' -o -name '*.jsonc' -o -name '*.js' -o -name '*.css' -o -name '*.ts' -o -name '*.tsx' \)
+      find "$target" -type f \( -name '*.go' -o -name '*.json' -o -name '*.jsonc' -o -name '*.js' -o -name '*.css' -o -name '*.ts' -o -name '*.tsx' \) |
+        filter_audit_files |
+        skip_generated_or_built_files
     elif [[ -f "$target" ]]; then
       echo "$target"
     else
       err "路径不存在：$target"
     fi
   done
+}
+
+git_has_head() {
+  git rev-parse --verify HEAD &>/dev/null
+}
+
+git_changed_files() {
+  if git_has_head; then
+    git diff --name-only --diff-filter=ACMRTUXB HEAD -- "$@"
+    return
+  fi
+  git diff --name-only --cached --diff-filter=ACMRTUXB -- "$@"
+  git ls-files --modified -- "$@"
+}
+
+git_untracked_files() {
+  git ls-files --others --exclude-standard -- "$@"
+}
+
+filter_audit_files() {
+  awk '
+    /\.(go|json|jsonc|js|css|ts|tsx)$/ { print }
+  '
+}
+
+skip_generated_or_built_files() {
+  while IFS= read -r file; do
+    is_generated_or_built_file "$file" && continue
+    echo "$file"
+  done
+}
+
+is_generated_or_built_file() {
+  case "$1" in
+    */data/router.go|data/router.go|*/data/load/model.go|data/load/model.go|*/data/load/service.go|data/load/service.go|*/data/table/*.json|data/table/*.json)
+      return 0
+      ;;
+    */package/front/html/assets/*|package/front/html/assets/*|*/front/dist/*|front/dist/*|*/package/*/front/dist/*|package/*/front/dist/*|*/module/*/front/dist/*|module/*/front/dist/*)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+is_explicit_target() {
+  local file="$1"
+  for target in "${TARGETS[@]}"; do
+    [[ "$file" == "$target" ]] && return 0
+  done
+  return 1
 }
 
 domain_for_model_file() {
@@ -63,6 +155,10 @@ domain_for_model_file() {
 }
 
 check_generated() {
+  if (( CHANGED == 0 )) && ! is_explicit_target "$1"; then
+    return
+  fi
+
   case "$1" in
     */data/router.go|data/router.go|*/data/load/model.go|data/load/model.go|*/data/load/service.go|data/load/service.go|*/data/table/*.json|data/table/*.json)
       err "$1: 生成文件不能手动编辑"
@@ -204,7 +300,7 @@ while IFS= read -r file; do
   check_model "$file"
   check_page "$file"
   check_service_api "$file"
-done < <(collect_files "$@")
+done < <(collect_files)
 
 if (( fail != 0 )); then
   exit 1
