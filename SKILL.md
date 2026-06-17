@@ -1,83 +1,71 @@
 ---
 name: shemic-dever
-description: Use when working on Dever Go projects, including framework setup, generated route/load files, model/service/provider/api code, config, middleware, package imports, package/front page JSON, admin pages, and Dever registration or page errors.
+description: 用于 Dever Go 项目开发；修改 model、service、provider、api、page JSON、front 插件、package/module 组件、config/front.json、Dever CLI、生成路由/load 文件、package/front 后台页、package/bot、package/user，或排查注册、权限、页面、option、logo、install、build、run、plugin 错误时必须使用。
+version: 1.0.0
 ---
 
 # shemic-dever
 
-这是 Dever Go 项目的开发 skill。目标是让 AI 按真实框架规则做事：先看项目现状，复用已有 module/package，用最小代码补齐业务，不手改生成文件，不为普通后台 CRUD 乱写 API/Service。
+使用本 skill 开发 Dever 项目时，必须优先复用框架能力，而不是绕过框架另写一套。代码要保持简单直接：先检查当前项目结构，复用已有 `package/front` 行为，只写必要的 model/page/service 代码，不手改生成文件和编译产物。
 
-## 读取顺序
+## 阅读顺序
 
-每次使用本 skill，只读当前任务需要的文件：
+只读取当前任务需要的 reference：
 
-1. `references/workflow.md`：统一工作流和决策顺序。
-2. `references/framework.md`：Dever 命令、入口、源码位置、生成文件、路由、Load 注册。
-3. `references/development.md`：复用、职责、命名、清理。
-4. `references/model.md`：数据表、model 命名、Options、Relations、索引。
-5. `references/page.md`：`package/front` 后台 page JSON。
-6. `references/module.md`：Service、Provider、API、middleware。
-7. `references/empty-project.md`：空项目、多站点、安装 `front` + `bot`。
-8. `references/package-plugin.md`：Go package、package/module front 插件、`dever front build` / `dever build`。
+- `references/workflow.md`：决策顺序和任务分流。
+- `references/framework.md`：Dever CLI、生成文件、route/model/service 注册、middleware。
+- `references/development.md`：复用、命名、职责边界、清理。
+- `references/model.md`：model 文件、comment、Options、Relations、索引。
+- `references/front-page.md`：`package/front` page JSON 规则、自动推导、后台/站点页面。
+- `references/service-api.md`：什么时候允许写 Provider、Service、API。
+- `references/files.md`：配置模板、logo/favicon、AGENTS block、静态文件。
+- `references/component.md`：package/module 组件、组件 skill、`dever.json`。
+- `references/package-plugin.md`：package/module front 插件源码和构建产物。
+- `references/security.md`：权限、action、公开路由、密钥、上传安全。
+- `references/troubleshooting.md`：常见 Dever 错误和优先排查点。
+- `references/migration.md`：旧项目和旧组件升级规则。
 
-触发规则：
+## 任务分流
 
-- “空项目 / 新建项目 / 搭系统 / 搭站点 / 搭后台 / admin / work / 前台站点”：先读 `empty-project.md`。
-- “多站点 / 复用 admin / 独立账号 / 独立权限 / 其他界面”：先读 `empty-project.md`，再读 `page.md` 和 `package-plugin.md`。
-- “后台 / CRUD / 列表 / 编辑 / 详情 / 导入导出”：先读 `page.md`，默认 `Model + package/front + page JSON`。
-- “front 插件 / React 节点 / 自定义前端 / package 插件”：读 `package-plugin.md`。
-- “状态流转 / 跨表保存 / 业务动作 / 回调 / 登录注册 API”：读 `module.md`。
-- “model 未注册 / 路由没有 / Provider 找不到 / dever run”：读 `framework.md`。
+- 空项目、安装、新站点、admin/work/site 搭建：读 `workflow.md`、`framework.md`、`files.md`、`component.md`。
+- 后端 model 或表结构修改：读 `model.md`；涉及页面时再读 `front-page.md`。
+- 后台页面、CRUD、列表/编辑/详情、左分类右列表、权限或 option 错误：读 `front-page.md`、`model.md`、`security.md`。
+- Provider、Service、API、回调、登录、注册、workflow、外部请求、事务：读 `service-api.md`、`security.md`。
+- config、logo、favicon、AGENTS、静态资产、公开文件：读 `files.md`。
+- `package/front`、`package/bot`、`package/user`、module/package 组件：读 `component.md`；如果组件自带 `skills/**/SKILL.md`，继续读组件 skill。
+- Front plugin 或 React node：读 `package-plugin.md`；除非确实需要自定义交互节点，否则优先用 page JSON。
+- Dever CLI、生成文件、import cycle、run/build/install 问题：读 `framework.md`、`troubleshooting.md`。
 
-## 不可违反
+## 硬规则
 
+- `shemic-dever` 的唯一维护源是 `github.com/shemic/skills-dever`; Dever 框架仓库只负责安装和检查，不维护完整内嵌副本。
 - 不手改生成文件：`data/router.go`、`data/load/model.go`、`data/load/service.go`、`data/table/*.json`。
-- 应用项目开发时不修改 `backend/dever` 和 `backend/package/*`；它们只能作为框架/package 参考或复用对象。只有明确要求维护框架或 package 本身时，才进入这些目录改源码。
-- 应用项目的 Go module 固定使用 `module my`；不要按项目名、域名或目录名改 module 名。组件 shim 和内置 package 依赖 `my/package/...`，改名会导致组件不可用。
-- 不默认写 CRUD API；后台普通 CRUD 走 `Model + package/front + page JSON`。
-- 不默认写 Service；只有真实业务规则才写 Service。
-- 空项目 site 系统基线不要只装 `front`；按当前约定 `front` 和 `bot` 两个 package 都要通过 `dever package add` 引入，除非用户明确排除。
-- 空项目默认日志写文件：`log.output=file`，`successFile=data/log/access.log`，`errorFile=data/log/error.log`；不要让常规请求日志刷到 `dever run` 屏幕。
-- Model 一表一文件；文件名、struct、`NewXxxModel` 对齐。
-- 表 model 不写进 `main.go`。
-- 长文本用 `type:text`，不要用 `longtext`。
-- 标准 page path 自动推导 model；标准页不写 `_model/_use/<<Model>>/submit.use`。
-- page JSON 顶层必须有 `page/layout/nodes/data/state/action` 六个对象。
-- 后台 update 表单里，固定少量单选枚举优先用 `form-radio`，不要默认都写 `form-select`。
-- 多站点 front 以 `config/front.json.sites` 为配置来源；站点路径、API 前缀、资源、access/public 都从这里读。
-- 页面目录使用 `front/page/{page}/...`；`{page}` 来自 `sites.*.page`，只隔离物理目录，不进入最终 route。
-- `module/<name>/main.go` 如果只是 `// dever:import ...`，真实代码放 package，不复制到 module。
-- 项目 `middleware` 可选；package/module 自带 middleware 放自己的 `middleware/init.go` 并提供 `Register()`，路由生成器会自动注册。
-- 维护 `backend/dever` 或 `backend/package/front` 性能问题时，先查已有 cache、runtimecache、middleware 机制，不新增平行缓存或硬编码接口。
-- Provider/API/Model 的注册名以生成规则为准，不猜、不手改 load 文件。
+- 不通过修改 `package/front/html/assets/index*.js` 等编译产物来改行为、logo、文案或样式。
+- 应用项目 Go module 固定使用 `my`；不要改成项目名、域名或目录名。
+- 空项目 `go.mod` 来自 `files/go/go.mod.tmpl`。普通外部项目不能包含 `replace github.com/shemic/dever => ./dever`；只有本地框架开发才加这个 replace。
+- 普通后台 CRUD 走 `Model + package/front + page JSON`；不要写 CRUD API 或 CRUD Service。
+- 标准 page path 自动推导 model；标准 list/update/create/view/detail/info 页不要硬编码 `_model`、`_use`、`<<NewXxxModel>>` 或 `submit.use`。
+- Model comments、Options、Relations 是标签、枚举、关联选项的来源；除非有意覆盖展示文案，否则不要在 page JSON 重复写。
+- `status`、`sort` 和简单列表维护字段使用 front 标准列表 action；不要为它们额外写 update 表单 service。
+- Provider 只用于真实 page/load hook、校验、规范化、保存生命周期或适配；不要创建空 passthrough Provider。
+- Service 只用于真实业务流程：事务、状态流转、外部调用、异步编排、跨表规则；不要创建 CRUD wrapper service。
+- API 只用于真实 HTTP 能力：登录、注册、回调、外部端点、workflow action、复杂前端交互；API 必须薄。
+- Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；不要在脚本里散落 heredoc 模板或硬编码资产。
+- 修改 `package/<name>` 或 `module/<name>` 前，先检查并遵守 `package/<name>/skills/**/SKILL.md` 或 `module/<name>/skills/**/SKILL.md`。
+- 当前本地代码是事实来源。参考顺序：当前 `package/front`、当前 `package/bot`、当前 `package/user`、当前 module/package 示例、`backend/dever`；外部 demo 只作为兜底。
+- 如果用户禁止 build/test，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价测试。只有确实有用时才跑静态文本 audit。
 
-## 快速决策
+## 必须流程
 
-1. 先用 `rg` / `find` 看入口、config、module、package、model、service、api、page、front 插件。
-2. 空项目：补固定 `module my` 的 `go.mod/main.go/config`，安装 `front` + `bot`，配置 `frontSite` 和 `config/front.json.sites`。
-3. 后台资源：先写 model，再写 `front/page/{page}/...`，普通 CRUD 不写 API/Service。
-4. 多站点：先决定复用 admin 壳还是自定义壳；复用 admin 壳也要在该站点 page 目录放自己的 `main/login`，独立账号优先用 `login` 模式和业务 API。
-5. 前台站点：先确认 `sites.<siteKey>.api/page/access/public`，页面放 `front/page/{page}`，复杂交互才写插件或 API。
-6. 真实业务规则：Service 承载业务，API/Provider 只适配。
-7. 改 model/service/api 后刷新生成文件，或让 `dever run` 自动刷新。
-8. 写完删除重复、临时代码，保持职责边界。
-
-能跑静态检查时执行：
+1. 设计代码前，先用 `rg` 或 `find` 检查现有文件。
+2. 判断任务应由 model metadata、page JSON、已有 `package/front` action、Provider hook、Service、API、front plugin、config 或静态模板解决。
+3. 选择满足需求的最低能力层，不升级到更重的实现。
+4. 改动尽量靠近所属 module/package。
+5. 实现后删除重复代码和临时代码。
+6. 允许且有价值时运行静态 audit：
 
 ```bash
-bash skills/skills-dever/scripts/audit.sh <改动文件或目录>
+bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>
 ```
 
-如果用户禁止 build/test，不运行 `dever build`、`dever front build`、`npm run build`、测试命令。静态 audit 是否执行要在最终回复说明。
-
-## 错误定位
-
-| 现象 | 先查 |
-| --- | --- |
-| `model 未注册` | model 初始化是否 panic、文件/构造函数/page path 是否对齐、生成注册是否刷新 |
-| `expected record, received null` | page JSON 是否缺 `data/state/action` 顶层对象 |
-| label/option 缺失 | model comment、Options、Relations |
-| API 路由没有出现 | receiver/method 是否符合 `Get/Post/Put/DeleteXxx`，是否刷新 routes |
-| Provider 调不到 | 方法是否 `ProviderXxx`，receiver 是否导出，是否刷新 service |
-
-最终回复用中文，列改动文件、影响的 model/page/service/api、是否触及生成文件、执行过/跳过的验证。
+7. 最终回复列出改动文件、影响的 model/page/service/api/component、是否触及生成文件、执行或跳过的验证。

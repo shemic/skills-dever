@@ -1,4 +1,4 @@
-# Package / Front Plugin 规则
+# Package 和 Front 插件规则
 
 用于维护可复用 Go 组件，或给 package/module 增加前端插件。普通业务开发不要改 `backend/package/*`，除非用户明确要求维护 package。
 
@@ -27,9 +27,12 @@ package <name>
 
 规则：
 
-- Model / Service / API / Page 仍按 `model.md`、`module.md`、`page.md`。
+- Model 按 `model.md`。
+- Page JSON 按 `front-page.md`。
+- Provider、Service 和 API 按 `service-api.md`。
+- 组件元数据和组件 skill 按 `component.md`。
 - 不手改 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
-- package 的 page JSON 放 `backend/package/<name>/front/page/{page}`，path 仍归 package。`{page}` 规则见 `page.md`。
+- package 的 page JSON 放 `backend/package/<name>/front/page/{page}`，path 仍归 package。`{page}` 规则见 `front-page.md`。
 - `go:embed front/page` 放在 package 自己的 `fs.go`。
 - package 自带中间件放 `middleware/init.go`，提供 `Register()`；Dever 通过 module shim 自动发现并注册。
 - package middleware 内部必须 `sync.Once`，只写组件自己的横切逻辑，不写项目私有路径规则。
@@ -47,22 +50,13 @@ dever package add bot
 
 它会从 `https://github.com/dever-package/bot.git` 拉取到 `package/bot`，创建 `module/bot/main.go` shim，并刷新 routes/model/service 注册。换组件时把 `bot` 换成对应名称。
 
-空项目只要用户要基于 site 建系统，按当前 site 基线同时引入 `front` 和 `bot`，不要只装 `front`：
-
-```bash
-dever package add --skip-init front
-dever package add --skip-init bot
-dever init --skip-tidy
-```
-
-`front` 提供站点运行时、页面、路由、上传、导入导出等通用能力；`bot` 提供当前 site 基线需要的 AI/agent 相关 package 能力。一次补多个 package 时先 `--skip-init`，最后只刷新一次生成文件。
+空项目 site 基线安装顺序见 `empty-project.md`，那里统一维护 `front` + `bot` 的初始化流程。本文只描述 package 组件结构、更新和插件规则。
 
 可选项：
 
 ```bash
 dever package add --project-root=backend bot
 dever package add --repo-base=https://github.com/dever-package bot
-dever package add --skip-init bot
 ```
 
 更新已安装组件：
@@ -111,6 +105,14 @@ dever init --skip-tidy
 如果 package 来自独立 Go module，不要复制代码；在 `go.mod` 配好 `require/replace`，shim 的 import 写真实 Go import path。Dever 会通过 `go list` 解析真实源码目录。
 
 package 自带前端插件会由 `package/front` 的站点服务发现；不要在每个组件里复制插件静态服务。
+
+复杂 package 应该带自己的组件 skill：
+
+```txt
+package/<name>/skills/<name>/SKILL.md
+```
+
+维护该 package 前先读组件 skill。
 
 ## 3. Package 前端插件目录
 
@@ -209,22 +211,9 @@ export default defineFrontPlugin({
 - 页面 JSON 引用了插件 node，运行时才加载对应插件；不要手写插件清单。
 - 普通后台列表/表单不写插件；只有强交互、复杂布局、图形化编辑器、工作台 Shell 等场景才写。
 
-## 5. 插件入口模板
+## 5. 插件入口规则
 
-`plugin.ts` 只注册能力，不做副作用。插件只能依赖公开 SDK，不要依赖主 `front/src` 的 `@/...` 路径：
-
-```ts
-import { defineFrontPlugin, lazyNode } from "@dever/front-plugin";
-
-export default defineFrontPlugin({
-  name: "bot",
-  nodes: {
-    "show-agent": lazyNode(() =>
-      import("./nodes/show/agent").then((mod) => ({ default: mod.ShowAgent })),
-    ),
-  },
-});
-```
+`plugin.ts` 只注册能力，不做副作用。插件只能依赖公开 SDK，不要依赖主 `front/src` 的 `@/...` 路径。完整入口示例见上一节的最小插件流程。
 
 不要再写 `runtime.ts`；Dever CLI 前端插件编译器会按 `plugin.ts` 自动生成开发态和发布态注册入口。
 

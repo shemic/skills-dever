@@ -1,0 +1,99 @@
+# 组件、Package、Module 和 Skill
+
+在 Dever 里，从架构角度看 `module` 和 `package` 都是组件。`package` 是可复用、可分发组件；`module` 是项目本地业务组件，或者是引入 package 的 shim。
+
+## 归属
+
+- 应用业务代码放在 `module/<name>`。
+- 可复用组件代码放在 `package/<name>`。
+- 如果 `module/<name>/main.go` 只有 `// dever:import my/package/<name>`，真实源码属于 `package/<name>`。
+- 不要为了定制行为把 package 代码复制到 module；优先用配置、page JSON、Provider hook、已暴露的 Service/API 或组件扩展点。
+
+## 组件 Skill
+
+复杂组件必须自带组件 skill：
+
+```txt
+package/bot/skills/bot/SKILL.md
+package/user/skills/user/SKILL.md
+package/<name>/skills/<name>/SKILL.md
+```
+
+修改组件前，先检查组件内是否存在 `skills/**/SKILL.md` 并阅读。没有组件 skill 时，按 `shemic-dever` 和当前项目本地示例执行。
+
+简单 CRUD 组件可以不带组件 skill。只要组件包含自定义 Service/API、多 model、权限、front 插件、外部集成或特殊生命周期，就应该有组件 skill。
+
+组件内置 skill 在组件 `dever.json` 里声明，路径相对组件根目录：
+
+```json
+{
+  "skills": [
+    "skills/bot/SKILL.md"
+  ]
+}
+```
+
+新增或移动组件 skill 后运行 `dever skill doctor`。它只校验 active 组件，所以未启用的 package 不会阻塞当前项目。
+
+## dever.json
+
+组件元数据应该随组件发布，不要求每个项目都重写 `front.json`。
+
+`dever.json` 可以描述：
+
+- name/title/version
+- dependencies
+- auth/menu entries
+- sites/pages
+- public paths
+- static assets
+- 必要的 install/update hook
+- bundled skills
+
+`dever.json` 必须保持声明式，不放业务逻辑。
+
+## 依赖
+
+安装组件时：
+
+- 缺少依赖且安全时，先自动安装依赖。
+- 依赖冲突必须清晰报错。
+- 其他组件仍依赖时，不要删除共享依赖。
+
+卸载组件时：
+
+- 检查反向依赖。
+- 只移除组件自己拥有的 menu/auth/page/static 条目。
+- 用户数据删除必须作为显式破坏性操作，不跟随普通卸载自动执行。
+
+## Front 资源和插件
+
+组件 front 源码属于：
+
+```txt
+package/<name>/front/src/plugin.ts
+module/<name>/front/src/plugin.ts
+```
+
+Page JSON 属于：
+
+```txt
+package/<name>/front/page/<page>/...
+module/<name>/front/page/<page>/...
+```
+
+不要为了组件功能修改全局 `front/src`。不要修改 `front/dist` 里的编译产物。
+
+## 组件 Skill 骨架
+
+使用 `scripts/component-skill.sh` 或 `files/component/skills/SKILL.md.tmpl` 创建组件 skill。组件 skill 应包含：
+
+- 组件用途。
+- 事实来源文件。
+- 核心 model。
+- 已有页面。
+- 允许写 Service/API 的场景。
+- 禁止的捷径。
+- front 插件规则。
+- 常见错误。
+- 迁移说明。

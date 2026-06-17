@@ -1,6 +1,6 @@
 # Dever 统一工作流
 
-先识别项目当前状态，再按缺失层补齐。
+先识别项目当前状态，再选择最低成本的 Dever 能力。不要从“写代码”开始，要先判断 Model、page JSON、package/front 标准 action、Provider、Service、API、front 插件、配置模板哪一层能解决问题。
 
 ## 1. 先识别现状
 
@@ -50,10 +50,11 @@ find module package -maxdepth 4 -type f 2>/dev/null
    - 需要就先写 model。
    - 页面字段、Options、Relations 都从 model 开始。
 6. 是否是后台页面？
-   - 是就默认 `package/front + page JSON`。
+   - 是就默认 `Model + package/front + page JSON`，细则见 `front-page.md`。
    - 普通 CRUD 不写 API/Service。
+   - 标准页优先自动推导 model，不写 `_model/_use/submit.use`。
 7. 是否有真实业务规则？
-   - 状态流转、跨表保存、强校验、外部协议、异步任务、聚合查询才写 Service/API。
+   - 状态流转、跨表保存、强校验、外部协议、异步任务、聚合查询才写 Provider/Service/API，细则见 `service-api.md`。
 8. 是否需要刷新生成文件？
    - 改 model/service/api 后让 `dever run` 自动刷新，或手动用 `dever model/service/routes` 调试。
    - 不手改生成文件。
@@ -69,7 +70,7 @@ find module package -maxdepth 4 -type f 2>/dev/null
 7. 真实业务规则再写 Service/Provider/API；普通 CRUD 不写。
 8. 前端通过 `/{siteKey}/runtime.js` 获取 `basePath/apiHost/siteKey/appearance/runtime`。
 9. 最后补 menu/auth 配置。
-10. 跑静态 audit；用户禁止 build/test 时，不运行 `dever build`、`dever front build`、`npm run build`、测试命令。
+10. 跑静态 audit；用户禁止 build/test 时，不运行 `dever build`、`dever front build`、`npm run build`、`go test`、测试命令。
 
 ## 4. 快速路径
 
@@ -90,6 +91,8 @@ module/work/front/page/work/home.json
 module/work/front/src/plugin.ts          # 只有复杂 React 节点才需要
 module/work/api/*.go                     # 只有登录、注册、业务动作等真实 API 才需要
 ```
+
+配置、logo、favicon、AGENTS block、标准页面骨架都从 `files/` 模板生成，规则见 `files.md`。不要在脚本里复制大段 heredoc。
 
 ## 5. 交付格式
 

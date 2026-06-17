@@ -72,8 +72,26 @@
 - 复杂校验、规范化、跨表保存写 Service/Provider hook。
 - 不发明节点、action、meta。
 - 不复制整页复杂 JSON；按当前需求生成最小页面。
+- 标准 list/update/create/view/detail/info 页优先自动推导 model。
+- 能从 Model comment、Options、Relations 推导的标签和选项，不在 JSON 重复写。
+- `status/sort` 这类列表维护字段优先使用 package/front 标准列表 action。
 
-## 8. 缓存与性能边界
+## 8. Provider、Service 和 API 边界
+
+- Provider 只做模型生命周期、选项、page/load 适配；禁止空 passthrough Provider。
+- Service 只做真实业务流程；禁止普通 CRUD wrapper。
+- API 只做 HTTP 适配；禁止为了后台普通页面新增 CRUD API。
+- API 里不写事务、外部调用和复杂业务，调用 Service 完成。
+- 具体决策表见 `service-api.md`。
+
+## 9. 文件和资源边界
+
+- 配置、logo、favicon、AGENTS block、page 骨架从 `files/` 模板生成。
+- 不修改 `package/front/html/assets/index*.js`、`front/dist` 等编译产物。
+- 站点 logo 放 `config/front/assets/<site>/images/logo.svg`，默认透明背景。
+- favicon 可带背景。
+
+## 10. 缓存与性能边界
 
 - 优先复用 `dever/cache`、现有 runtime cache 或已存在的 service 缓存，不在业务里造平行缓存。
 - 适合缓存：配置、权限元数据、page/schema 解析结果、小型 option 结果。
@@ -82,7 +100,7 @@
 - 缓存值是 `map` / `slice` 时，返回给请求前要 clone，避免请求间互相污染。
 - 高频请求路径不要做目录扫描、全量同步、重复初始化；这类工作放启动预热、生成期或带失效机制的缓存里。
 
-## 9. 清理检查
+## 11. 清理检查
 
 实现后检查并删除：
 
@@ -98,7 +116,7 @@
 - 表达了清晰业务概念。
 - 降低了复杂度或未来修改面。
 
-## 10. 最终自查
+## 12. 最终自查
 
 交付前确认：
 

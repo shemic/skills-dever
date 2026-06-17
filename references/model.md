@@ -67,7 +67,7 @@ func NewArticleModel() *orm.Model[Article] {
 - 关联字段优先写 `Relations`，页面会自动生成 option 和关联展示。
 - 密码/隐藏字段写 `ModelConfig.Fields`。
 
-## 4. Relation
+## 4. Relation 规则
 
 ```go
 orm.Relation{

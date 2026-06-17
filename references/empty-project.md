@@ -4,15 +4,16 @@
 
 ## 1. 参考源
 
-主要对照 `dever-project/demo`：
+优先参考当前项目源码和本 skill 模板：
 
-- 仓库：https://github.com/dever-project/demo
-- 入口参考：`main.go`
-- 配置参考：`config/setting.jsonc`、`config/front.json`
-- package shim 参考：`module/front/main.go`、`module/bot/main.go`
-- 页面参考：`module/*/front/page/{page}/...`
+1. `skills/skills-dever/files`
+2. 当前 `package/front`
+3. 当前 `package/bot`
+4. 当前 `package/user`
+5. 当前项目已有 `module/*` / `package/*`
+6. 当前 `backend/dever`
 
-参考 demo 的结构和配置意图，不要复制 demo 的业务模块。demo 的重点是：项目入口注册 `front` 站点服务，`config/front.json` 用 `sites` 定义不同系统，业务页面放在 `front/page/{page}` 目录下。当前页面目录按本 skill 的规则放到 `front/page/{page}`，不要退回旧的 `module/<name>/page` 写法。
+外部 demo 只作为兜底参考，不作为首选来源。不要从 demo 复制业务模块、旧页面写法或旧配置结构。
 
 ## 2. 空项目最小骨架
 
@@ -33,18 +34,47 @@ config/setting.jsonc
 config/front.jsonc
 config/front/assets/admin/images/logo.svg
 config/front/assets/admin/images/favicon.svg
+config/front/assets/work/images/logo.svg
+config/front/assets/work/images/favicon.svg
 data/readme.txt
 package/readme.txt
-module/main/api/ping.go      # 可选健康检查
 module/front/main.go         # package/front shim
 module/bot/main.go           # package/bot shim
 ```
 
 `data/router.go`、`data/load/*.go`、`data/table/*.json` 都由 Dever 生成，不手写、不手改。
 
+空项目 `go.mod` 从 `files/go/go.mod.tmpl` 生成，默认依赖当前 skill 绑定的 Dever 版本，例如：
+
+```go
+module my
+
+go 1.25.3
+
+require github.com/shemic/dever v0.1.2
+```
+
+这个模板是正式外部项目模板，不包含本地开发用的：
+
+```go
+replace github.com/shemic/dever => ./dever
+```
+
+`go.sum` 不放模板，后续由 Go 工具生成。
+
 ## 3. 空项目默认 package
 
 用户说“新建项目”、“空项目”、“搭系统”、“搭站点”、“搭后台”、“admin”、“work”、“使用 front 组件”时，site 系统基线同时引入 `front` 和 `bot`，不要只装 `front`：
+
+如果本机还没有 `dever` 命令，先使用 Go 直接调用当前版本 CLI：
+
+```bash
+go run github.com/shemic/dever/cmd/dever@v0.1.2 package add --skip-init front
+go run github.com/shemic/dever/cmd/dever@v0.1.2 package add --skip-init bot
+go run github.com/shemic/dever/cmd/dever@v0.1.2 init --skip-tidy
+```
+
+已安装 `dever` 命令时可简写：
 
 ```bash
 dever package add --skip-init front
@@ -63,6 +93,13 @@ dever init --skip-tidy
 
 ## 4. 配置顺序
 
+空项目配置优先从模板生成：
+
+```txt
+skills/skills-dever/files/config/setting.jsonc.tmpl
+skills/skills-dever/files/config/front.jsonc.tmpl
+```
+
 先配置 `config/setting.jsonc`：
 
 - `log.output="file"`，不要用 `stdout`。
@@ -71,8 +108,7 @@ dever init --skip-tidy
 - 常规访问日志和错误日志写到 `data/log`，不要刷到 `dever run` 屏幕。
 - `http.port`、`http.appName` 使用项目值。
 - `frontSite.enabled=true`。
-- `frontSite.path` 使用项目主入口，例如 `/admin`、`/work` 或用户指定路径。
-- `frontSite.dir` 指向 `package/front/html`。
+- `frontSite.enabled=true` 是站点服务开关；站点细节放 `config/front.jsonc`。
 - 数据库按用户指定环境配置；如果用户指定 PostgreSQL，直接设置 `driver=postgres`、目标 `dbname`、项目 `prefix`，不要先落 SQLite 再切。
 
 最小日志配置：
@@ -96,11 +132,11 @@ dever init --skip-tidy
 - `sites.<siteKey>.api` 使用该系统的 API 分组；后台通常为 `front`，业务前台可按 demo 的 `work` 站点方式配置。
 - `sites.<siteKey>.page` 决定物理页面目录，页面放到 `front/page/{page}/...`；`siteKey` 和 `page` 可以同名，也可以不同名。
 - `sites.<siteKey>.access` 使用该系统需要的登录、RBAC 或公开访问模式。
-- `sites.<siteKey>.assets.logo/favicon` 的相对路径映射到 `config/front/assets/{siteKey}/`；admin 默认图标可从 `skills/skills-dever/files/config/front/assets/admin/images/` 复制。
+- `sites.<siteKey>.assets.logo/favicon` 的相对路径映射到 `config/front/assets/{siteKey}/`；默认图标从 `skills/skills-dever/files/config/front/assets/<site>/images/` 复制。
 - `public` 保留上传、站点信息、bot 回调/请求等 package 需要的公开路径。
 - 菜单只放当前 site 的真实功能分组；bot 自带页面按 package 能力接入，不要复制页面实现。
 
-一个后台 `admin` 加一个前台 `work` 的最小形态：
+一个后台 `admin` 加一个前台 `work` 的最小形态可直接使用 `files/config/front.jsonc.tmpl`，需要新增站点时再按同样结构扩展：
 
 ```jsonc
 {
