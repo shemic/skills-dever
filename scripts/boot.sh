@@ -20,12 +20,11 @@ done
 
 REQUESTED_MODULE_NAME="${ARGS[0]:-}"
 MODULE_NAME="my"
-DEVER_VERSION="${ARGS[1]:-v0.1.2}"
-APP_NAME="${ARGS[2]:-dever-app}"
-PORT="${ARGS[3]:-8082}"
+APP_NAME="${ARGS[1]:-dever-app}"
+PORT="${ARGS[2]:-8082}"
 
 if [[ -z "$REQUESTED_MODULE_NAME" ]]; then
-  echo "用法：bash scripts/boot.sh <module_name> [dever_version] [app_name] [port] [--force] [--adopt-existing]"
+  echo "用法：bash scripts/boot.sh <module_name> [app_name] [port] [--force] [--adopt-existing]"
   echo "说明：Dever 应用项目固定使用 Go 模块路径：my"
   exit 1
 fi
@@ -68,7 +67,6 @@ render_template() {
   mkdir -p "$(dirname "$dest")"
   sed \
     -e "s/{{MODULE_NAME}}/${MODULE_NAME}/g" \
-    -e "s/{{DEVER_VERSION}}/${DEVER_VERSION}/g" \
     -e "s/{{APP_NAME}}/${APP_NAME}/g" \
     -e "s/{{PORT}}/${PORT}/g" \
     "$src" > "$dest"
@@ -96,7 +94,6 @@ ensure_empty_project() {
 ensure_go_mod() {
   if [[ ! -f go.mod ]]; then
     render_template "${FILES_DIR}/go/go.mod.tmpl" "go.mod"
-    return
   fi
   local existing_module
   existing_module="$(awk '/^module /{print $2; exit}' go.mod)"
@@ -106,6 +103,14 @@ ensure_go_mod() {
     echo "已停止，避免生成不兼容的 import。"
     exit 1
   fi
+}
+
+ensure_dever_module() {
+  if grep -Eq '^[[:space:]]*github.com/shemic/dever[[:space:]]+' go.mod; then
+    return
+  fi
+  echo "正在解析 github.com/shemic/dever@main 到 go.mod ..."
+  go get github.com/shemic/dever@main
 }
 
 ensure_gitignore() {
@@ -148,6 +153,7 @@ write_package_shim() {
 ensure_empty_project
 mkdir -p config/front/assets/{admin,work}/images middleware data/{load,log} package module/main/model
 ensure_go_mod
+ensure_dever_module
 ensure_gitignore
 
 render_template "${FILES_DIR}/go/main.go.tmpl" "main.go"

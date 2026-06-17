@@ -44,15 +44,15 @@ module/bot/main.go           # package/bot shim
 
 `data/router.go`、`data/load/*.go`、`data/table/*.json` 都由 Dever 生成，不手写、不手改。
 
-空项目 `go.mod` 从 `files/go/go.mod.tmpl` 生成，默认依赖当前 skill 绑定的 Dever 版本，例如：
+空项目 `go.mod` 从 `files/go/go.mod.tmpl` 生成。模板本身不写死 Dever 版本：
 
 ```go
 module my
 
 go 1.25.3
-
-require github.com/shemic/dever v0.1.2
 ```
+
+`scripts/boot.sh` 会随后执行 `go get github.com/shemic/dever@main`，由 Go 自动把当前 main 落成可复现的版本或伪版本。
 
 这个模板是正式外部项目模板，不包含本地开发用的：
 
@@ -69,9 +69,9 @@ replace github.com/shemic/dever => ./dever
 如果本机还没有 `dever` 命令，先使用 Go 直接调用当前版本 CLI：
 
 ```bash
-go run github.com/shemic/dever/cmd/dever@v0.1.2 package add --skip-init front
-go run github.com/shemic/dever/cmd/dever@v0.1.2 package add --skip-init bot
-go run github.com/shemic/dever/cmd/dever@v0.1.2 init --skip-tidy
+go run github.com/shemic/dever/cmd/dever@main package add --skip-init front
+go run github.com/shemic/dever/cmd/dever@main package add --skip-init bot
+go run github.com/shemic/dever/cmd/dever@main init --skip-tidy
 ```
 
 已安装 `dever` 命令时可简写：

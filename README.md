@@ -180,7 +180,7 @@ files/config/front/assets/<site>/images/favicon.svg
 初始化最小 Dever 项目骨架：
 
 ```bash
-bash skills/skills-dever/scripts/boot.sh my v0.1.2 my-app 8082
+bash skills/skills-dever/scripts/boot.sh my my-app 8082
 ```
 
 它会生成：
@@ -200,6 +200,7 @@ bash skills/skills-dever/scripts/boot.sh my v0.1.2 my-app 8082
 它不会生成业务 API 或 Service。
 `boot.sh` 只用于空项目；检测到已有项目时会拒绝执行。确实要给已有项目补齐骨架时，显式加 `--adopt-existing`。
 `go.mod` 来自 `files/go/go.mod.tmpl`，是正式项目模板，不包含本地 `replace github.com/shemic/dever => ./dever`。
+`boot.sh` 会执行 `go get github.com/shemic/dever@main`，把当前 main 对应的真实版本写入 `go.mod` / `go.sum`。
 
 ### `scripts/module.sh`
 

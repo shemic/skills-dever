@@ -41,7 +41,6 @@ files/
 {{APP_NAME}}
 {{PORT}}
 {{MODULE_NAME}}
-{{DEVER_VERSION}}
 {{PACKAGE_NAME}}
 {{TYPE_NAME}}
 {{RESOURCE_FILE}}
@@ -72,6 +71,7 @@ files/
 - 模板里不放真实密钥。
 - 占位值使用 `replace_me`。
 - `go.mod.tmpl` 是普通外部项目模板，不能包含 `replace github.com/shemic/dever => ./dever`。
+- `go.mod.tmpl` 不写死 Dever 版本；空项目初始化脚本用 `go get github.com/shemic/dever@main` 写入当前 main 对应的真实版本。
 - `go.sum` 由 Go 工具生成，不能作为模板维护。
 - 日志默认写文件：`data/log/access.log`、`data/log/error.log`。
 - 站点配置放 `config/front.json(c)`，不放 package/front 源码。
