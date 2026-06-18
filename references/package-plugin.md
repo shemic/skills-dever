@@ -109,7 +109,7 @@ package 自带前端插件会由 `package/front` 的站点服务发现；不要�
 复杂 package 应该带自己的组件 skill：
 
 ```txt
-package/<name>/skills/<name>/SKILL.md
+package/<name>/skills/SKILL.md
 ```
 
 维护该 package 前先读组件 skill。

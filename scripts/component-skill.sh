@@ -36,7 +36,7 @@ fi
 COMPONENT_NAME="$(echo "$COMPONENT_RAW" | tr '[:upper:]' '[:lower:]' | tr '-' '_')"
 COMPONENT_TITLE="${COMPONENT_TITLE:-$COMPONENT_NAME}"
 BASE_DIR="${OWNER_KIND}/${COMPONENT_NAME}"
-SKILL_DIR="${BASE_DIR}/skills/${COMPONENT_NAME}"
+SKILL_DIR="${BASE_DIR}/skills"
 
 render() {
   local src="$1"

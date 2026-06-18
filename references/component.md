@@ -14,9 +14,9 @@
 复杂组件必须自带组件 skill：
 
 ```txt
-package/bot/skills/bot/SKILL.md
-package/user/skills/user/SKILL.md
-package/<name>/skills/<name>/SKILL.md
+package/bot/skills/SKILL.md
+package/user/skills/SKILL.md
+package/<name>/skills/SKILL.md
 ```
 
 修改组件前，先检查组件内是否存在 `skills/**/SKILL.md` 并阅读。没有组件 skill 时，按 `shemic-dever` 和当前项目本地示例执行；如果改动涉及自定义 Service/API、多 model、权限、front 插件、外部集成或特殊生命周期，先补组件 skill，再改组件。
@@ -28,7 +28,7 @@ package/<name>/skills/<name>/SKILL.md
 ```json
 {
   "skills": [
-    "skills/bot/SKILL.md"
+    "skills/SKILL.md"
   ]
 }
 ```

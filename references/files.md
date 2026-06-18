@@ -151,7 +151,17 @@ https://...、/static/logo.svg、data:、blob: -> 原样使用
 
 ## AGENTS 提示块
 
-使用 `files/AGENTS.dever.md` 作为 `AGENTS.md`、`CLAUDE.md`、`.codex/AGENTS.md` 和 `.opencode/AGENTS.md` 的 managed block。
+使用 `files/AGENTS.dever.md` 作为项目根目录 `AGENTS.md` 的完整 managed block。
+
+项目根目录 `CLAUDE.md` 只保留一个 managed block，并通过 Claude Code 支持的 `@AGENTS.md` 引用读取同一份规则：
+
+```md
+<!-- dever-skill:start -->
+@AGENTS.md
+<!-- dever-skill:end -->
+```
+
+不要为 `.codex/`、`.opencode/`、`.trae/`、`.qoder/`、`.codebuddy/` 等工具子目录额外生成项目提示文件。项目提示以根目录 `AGENTS.md` 为准，Claude Code 通过根目录 `CLAUDE.md` 引用它。
 
 不要覆盖整个文件。只插入或替换：
 

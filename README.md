@@ -91,7 +91,7 @@ dever install --skip-skills
 
 1. 每次按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取临时副本；不读取项目本地 skill、不读取已安装全局 skill、不使用缓存或备用来源。
 2. 把真实 skill 同步到 `~/.agents/skills/shemic-dever`，再为 Codex、Claude、OpenCode、Trae、Qoder、CodeBuddy 等常见工具 skill 目录创建 symlink 引用。
-3. 用 `files/AGENTS.dever.md` 的 managed block 更新 `AGENTS.md`、`CLAUDE.md`、`.codex/AGENTS.md`、`.opencode/AGENTS.md`、`.trae/AGENTS.md`、`.qoder/AGENTS.md`、`.codebuddy/AGENTS.md`，不覆盖用户原内容。
+3. 用 `files/AGENTS.dever.md` 的 managed block 更新项目根目录 `AGENTS.md`，并在根目录 `CLAUDE.md` 写入 `@AGENTS.md` 引用，不覆盖用户原内容；不再生成各工具子目录的项目提示文件。
 
 默认不复制项目本地 `skills/skills-dever` 镜像。只有确实需要项目副本时才显式执行：
 
@@ -259,8 +259,8 @@ bash skills/skills-dever/scripts/component-skill.sh package user User
 复杂组件必须带自己的 skill，例如：
 
 ```txt
-package/bot/skills/bot/SKILL.md
-package/user/skills/user/SKILL.md
+package/bot/skills/SKILL.md
+package/user/skills/SKILL.md
 ```
 
 组件要在 `dever.json` 声明 skill，路径必须相对组件目录：
@@ -268,7 +268,7 @@ package/user/skills/user/SKILL.md
 ```json
 {
   "skills": [
-    "skills/bot/SKILL.md"
+    "skills/SKILL.md"
   ]
 }
 ```
@@ -314,7 +314,7 @@ bash skills/skills-dever/scripts/audit.sh package/bot module/work
 复杂组件规则放组件内，不塞进全局 skill：
 
 ```txt
-package/<name>/skills/<name>/SKILL.md
+package/<name>/skills/SKILL.md
 ```
 
 修改组件前先读组件 skill。
