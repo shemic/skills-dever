@@ -1,6 +1,6 @@
 ---
 name: shemic-dever
-description: 用于 Dever 项目开发；修改 model、service、provider、api、page JSON、front 插件、package/module 组件、dever.json front 配置、Dever CLI、生成路由/load 文件、package/front 后台页、package/bot、package/user，或排查注册、权限、页面、option、logo、install、build、run、plugin 错误时必须使用。
+description: Use when 修改或排查 Dever 项目：model、service、provider、api、page JSON、front 插件、package/module、dever.json、config/front、Dever CLI、生成路由/load、package/front 后台、package/bot/user、权限、option、logo、install、build、run、plugin。
 version: 1.0.0
 ---
 
@@ -42,6 +42,7 @@ version: 1.0.0
 ## 硬规则
 
 - `shemic-dever` 的唯一维护源是 `github.com/shemic/skills-dever`; Dever 框架仓库只负责安装和检查，不维护完整内嵌副本。
+- 维护 `skills/skills-dever` 自身时，`references/`、`files/`、`scripts/` 必须互相一致；模板和脚本不能生成被 reference 禁止的写法。
 - 不手改生成文件：`data/router.go`、`data/load/model.go`、`data/load/service.go`、`data/table/*.json`。
 - 不通过修改 `package/front/front/html/assets/index*.js` 等编译产物来改行为、logo、文案或样式。
 - 用户没有明确要求兼容旧格式时，不写兼容代码、不保留旧分支、不做双路径兜底；直接迁移到当前规则并清理旧代码。
@@ -58,7 +59,8 @@ version: 1.0.0
 - Service 只用于真实业务流程：事务、状态流转、外部调用、异步编排、跨表规则；不要创建 CRUD wrapper service。
 - API 只用于真实 HTTP 能力：登录、注册、回调、外部端点、workflow action、复杂前端交互；API 必须薄。
 - Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；front 站点运行契约随组件写在 `dever.json.front.sites`，项目只可通过 `config/front.json` 覆盖 `sites.<site>` 展示配置；不要在脚本里散落 heredoc 模板或硬编码资产。
-- 修改 `package/<name>` 或 `module/<name>` 前，先检查并遵守 `package/<name>/skills/**/SKILL.md` 或 `module/<name>/skills/**/SKILL.md`。
+- 修改 `package/<name>` 或 `module/<name>` 前，先检查并遵守 `package/<name>/skills/**/SKILL.md` 或 `module/<name>/skills/**/SKILL.md`。复杂组件没有 skill 时，先按 `component.md` 补齐约束再做大改。
+- `package/front` 是核心 runtime；维护它时必须同时读 `front-page.md`、`package-plugin.md`、`security.md`、`framework.md`，不要把业务组件逻辑塞进 front。
 - 当前本地代码是事实来源。参考顺序：当前 `package/front`、当前 `package/bot`、当前 `package/user`、当前 module/package 示例、`backend/dever`；外部 demo 只作为兜底。
 - 开始实现前必须先判断项目模式：`empty-project`、`existing-project`、`app-feature`、`package-dev`、`framework-dev`。模式不明时先盘点，不生成、不迁移、不删除。
 - 旧项目和已有项目默认只做增量迁移。除非用户明确要求，不全量重写页面、Service、API、配置或组件。

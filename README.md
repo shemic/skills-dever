@@ -216,11 +216,11 @@ bash skills/skills-dever/scripts/module.sh demo product
 生成标准 page JSON 骨架：
 
 ```bash
-bash skills/skills-dever/scripts/page.sh module/demo admin product list 产品
+bash skills/skills-dever/scripts/page.sh module/demo admin product list 产品 --parent=product-center
 bash skills/skills-dever/scripts/page.sh module/demo admin product update 产品
 ```
 
-生成的标准页面使用 model 自动推导，不写 Service/API。
+生成的标准页面使用 model 自动推导，不写 Service/API。`list` 页必须显式传 `--parent=<menu_key>`，避免权限同步把页面错误放到顶层菜单；`update/detail` 页默认把 `page.parent` 指向同资源 list route。
 
 ### `scripts/component-skill.sh`
 
@@ -264,6 +264,9 @@ bash skills/skills-dever/scripts/audit.sh --legacy package/bot module/work
 - 手改生成文件。
 - 手改编译产物。
 - 标准 page 硬编码 model。
+- 标准 page 缺少 `page.parent`。
+- 标准 update/create 缺少最小 `action.submit`。
+- 标准 list 使用内联编辑但缺少 `show-table.meta.savePath`。
 - page JSON 缺顶层对象。
 - 硬编码 `/front/route/action`。
 - 空 Provider。

@@ -19,7 +19,7 @@ package/user/skills/user/SKILL.md
 package/<name>/skills/<name>/SKILL.md
 ```
 
-修改组件前，先检查组件内是否存在 `skills/**/SKILL.md` 并阅读。没有组件 skill 时，按 `shemic-dever` 和当前项目本地示例执行。
+修改组件前，先检查组件内是否存在 `skills/**/SKILL.md` 并阅读。没有组件 skill 时，按 `shemic-dever` 和当前项目本地示例执行；如果改动涉及自定义 Service/API、多 model、权限、front 插件、外部集成或特殊生命周期，先补组件 skill，再改组件。
 
 简单 CRUD 组件可以不带组件 skill。只要组件包含自定义 Service/API、多 model、权限、front 插件、外部集成或特殊生命周期，就应该有组件 skill。
 
@@ -34,6 +34,16 @@ package/<name>/skills/<name>/SKILL.md
 ```
 
 新增或移动组件 skill 后运行 `dever skill doctor`。它只校验 active 组件，所以未启用的 package 不会阻塞当前项目。
+
+组件 skill 约束：
+
+- frontmatter `description` 用触发条件描述，优先以 `Use when` 开头，不写流程摘要。
+- 默认使用项目主要语言；当前项目面向中文协作时，组件 skill 正文使用中文。
+- `硬规则` 必须写清：禁止 CRUD wrapper、禁止生成文件/编译产物、公开 API 边界、权限边界、迁移影响。
+- `事实来源` 必须列出 model、service、api、front/page、front/src、dever.json 的真实路径；不要只写概念。
+- 公开路径、菜单、站点壳、依赖和 skill 声明必须回到组件 `dever.json`，不要散落到项目级配置。
+
+`package/front` 是特殊核心组件。它可以没有独立组件 skill，但维护前必须同时读取 `front-page.md`、`package-plugin.md`、`security.md` 和 `framework.md`；只能加入通用 runtime 能力，不能承载某个业务组件的私有逻辑。
 
 ## dever.json
 
@@ -131,6 +141,7 @@ module/<name>/front/page/<page>/...
 - 已有页面。
 - 允许写 Service/API 的场景。
 - 禁止的捷径。
+- 公开 API、权限和密钥边界。
 - front 插件规则。
 - 常见错误。
 - 迁移说明。

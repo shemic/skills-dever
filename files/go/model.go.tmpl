@@ -9,15 +9,9 @@ import (
 type {{TYPE_NAME}} struct {
 	ID        uint64    `dorm:"primaryKey;autoIncrement;comment:主键ID"`
 	Name      string    `dorm:"type:varchar(128);not null;comment:名称"`
-	Code      string    `dorm:"type:varchar(128);not null;comment:标识"`
 	Status    int16     `dorm:"type:smallint;not null;default:1;comment:状态"`
 	Sort      int       `dorm:"type:int;not null;default:100;comment:排序"`
 	CreatedAt time.Time `dorm:"comment:创建时间"`
-}
-
-type {{TYPE_NAME}}Index struct {
-	Code       struct{} `unique:"code"`
-	StatusSort struct{} `index:"status,sort,id"`
 }
 
 var {{RESOURCE_FILE}}StatusOptions = []map[string]any{
@@ -27,7 +21,6 @@ var {{RESOURCE_FILE}}StatusOptions = []map[string]any{
 
 func {{MODEL_FUNC}}() *orm.Model[{{TYPE_NAME}}] {
 	return orm.LoadModel[{{TYPE_NAME}}]("{{TYPE_NAME}}", "{{TABLE_NAME}}", orm.ModelConfig{
-		Index:    {{TYPE_NAME}}Index{},
 		Order:    "sort asc,id asc",
 		Database: "default",
 		Options: map[string]any{

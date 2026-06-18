@@ -1,7 +1,7 @@
 {
   "page": {
     "name": "编辑{{RESOURCE_TITLE}}",
-    "type": 2
+    "parent": "{{PARENT_ROUTE}}"
   },
   "layout": {
     "type": "container",
@@ -12,7 +12,6 @@
   "nodes": {
     "form-shell": [
       {"type": "form-input", "value": "form.name"},
-      {"type": "form-input", "value": "form.code"},
       {"type": "show-button", "name": "保存", "meta": {"submit": true}}
     ]
   },
@@ -20,5 +19,10 @@
     "form": {}
   },
   "state": {},
-  "action": {}
+  "action": {
+    "submit": {
+      "type": "save",
+      "params": "form"
+    }
+  }
 }

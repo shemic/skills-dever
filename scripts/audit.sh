@@ -74,7 +74,7 @@ collect_files() {
 
   for target in "${TARGETS[@]}"; do
     if [[ -d "$target" ]]; then
-      find "$target" -type f \( -name '*.go' -o -name '*.json' -o -name '*.jsonc' -o -name '*.js' -o -name '*.css' -o -name '*.ts' -o -name '*.tsx' \) |
+      find "$target" -type f \( -name '*.go' -o -name '*.json' -o -name '*.jsonc' -o -name '*.js' -o -name '*.css' -o -name '*.ts' -o -name '*.tsx' -o -name '*.go.tmpl' -o -name '*.json.tmpl' -o -name '*.jsonc.tmpl' \) |
         filter_audit_files |
         skip_generated_or_built_files
     elif [[ -f "$target" ]]; then
@@ -105,6 +105,7 @@ git_untracked_files() {
 filter_audit_files() {
   awk '
     /\.(go|json|jsonc|js|css|ts|tsx)$/ { print }
+    /\.(go|json|jsonc)\.tmpl$/ { print }
   '
 }
 
@@ -120,7 +121,7 @@ is_generated_or_built_file() {
     */data/router.go|data/router.go|*/data/load/model.go|data/load/model.go|*/data/load/service.go|data/load/service.go|*/data/table/*.json|data/table/*.json)
       return 0
       ;;
-    */package/front/html/assets/*|package/front/html/assets/*|*/front/dist/*|front/dist/*|*/package/*/front/dist/*|package/*/front/dist/*|*/module/*/front/dist/*|module/*/front/dist/*)
+    */package/front/front/html/*|package/front/front/html/*|*/package/front/html/assets/*|package/front/html/assets/*|*/front/dist/*|front/dist/*|*/package/*/front/dist/*|package/*/front/dist/*|*/module/*/front/dist/*|module/*/front/dist/*)
       return 0
       ;;
   esac
@@ -163,7 +164,7 @@ check_generated() {
     */data/router.go|data/router.go|*/data/load/model.go|data/load/model.go|*/data/load/service.go|data/load/service.go|*/data/table/*.json|data/table/*.json)
       err "$1: 生成文件不能手动编辑"
       ;;
-    */package/front/html/assets/*|package/front/html/assets/*|*/front/dist/*|front/dist/*|*/package/*/front/dist/*|package/*/front/dist/*|*/module/*/front/dist/*|module/*/front/dist/*)
+    */package/front/front/html/*|package/front/front/html/*|*/package/front/html/assets/*|package/front/html/assets/*|*/front/dist/*|front/dist/*|*/package/*/front/dist/*|package/*/front/dist/*|*/module/*/front/dist/*|module/*/front/dist/*)
       err "$1: 编译后的前端产物不能手动编辑"
       ;;
   esac
@@ -208,14 +209,21 @@ check_model() {
 }
 
 is_page_file() {
-  [[ "$1" == */page/*.json || "$1" == */page/*.jsonc ]]
+  [[ "$1" == */page/*.json || "$1" == */page/*.jsonc || "$1" == */page/*.json.tmpl || "$1" == */page/*.jsonc.tmpl ]]
+}
+
+page_kind() {
+  local name
+  name="$(basename "$1")"
+  name="${name%.tmpl}"
+  name="${name%.json}"
+  name="${name%.jsonc}"
+  echo "$name"
 }
 
 is_standard_page() {
   local name
-  name="$(basename "$1")"
-  name="${name%.json}"
-  name="${name%.jsonc}"
+  name="$(page_kind "$1")"
   case "$name" in
     list|update|create|view|detail|info) return 0 ;;
     *) return 1 ;;
@@ -233,11 +241,22 @@ check_page() {
   done
 
   if is_standard_page "$file"; then
+    local kind
+    kind="$(page_kind "$file")"
+    if ! rg -q '^[[:space:]]*"parent"[[:space:]]*:' "$file"; then
+      err "$file: 标准 ${kind} 页必须声明 page.parent，避免权限/菜单归属错误"
+    fi
     if rg -q '"_model"[[:space:]]*:|"_use"[[:space:]]*:|"<<[^"]*New[A-Za-z0-9_]*Model>>' "$file"; then
       err "$file: 标准页必须使用路径推导 model，不要写 _model/_use/<<Model>>"
     fi
     if has_direct_submit_model_use "$file"; then
       err "$file: 标准页 action 不能硬编码 submit.use"
+    fi
+    if [[ "$kind" == "update" || "$kind" == "create" ]] && ! rg -q '"submit"[[:space:]]*:' "$file"; then
+      err "$file: 标准 ${kind} 页必须声明最小 action.submit"
+    fi
+    if [[ "$kind" == "list" ]] && rg -q '"type"[[:space:]]*:[[:space:]]*"form-switch"|"editor"[[:space:]]*:' "$file" && ! rg -q '"savePath"[[:space:]]*:' "$file"; then
+      err "$file: 标准列表存在内联编辑/状态切换时必须声明 show-table.meta.savePath"
     fi
   fi
 

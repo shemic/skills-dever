@@ -1,6 +1,7 @@
 {
   "page": {
     "name": "{{RESOURCE_TITLE}}",
+    "parent": "{{PARENT_KEY}}",
     "icon": "list",
     "sort": 100
   },
@@ -34,6 +35,7 @@
         "meta": {
           "remote": true,
           "externalPagination": true,
+          "savePath": "{{UPDATE_ROUTE}}",
           "pagePath": "data.table.page",
           "pageSizePath": "data.table.pageSize",
           "totalPath": "data.table.total",
@@ -53,9 +55,6 @@
     "search": {"keyword": ""},
     "table": {
       "list": [],
-      "page": 1,
-      "pageSize": 10,
-      "total": 0,
       "searchFields": ["name"]
     }
   },
