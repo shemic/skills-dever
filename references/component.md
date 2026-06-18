@@ -43,14 +43,44 @@ package/<name>/skills/<name>/SKILL.md
 
 - name/title/version
 - dependencies
-- auth/menu entries
-- sites/pages
-- public paths
+- `front.sites` 站点壳、页面目录、API 前缀、访问模式、入口、菜单权限
+- `front.public` 全局公开 API path
 - static assets
 - 必要的 install/update hook
 - bundled skills
 
 `dever.json` 必须保持声明式，不放业务逻辑。
+
+front 配置归属于组件，不再读取项目级 `config/front.json`。示例：
+
+```json
+{
+  "front": {
+    "public": ["/user/auth/login"],
+    "sites": {
+      "work": {
+        "name": "工作台",
+        "api": "work",
+        "page": "work",
+        "access": {
+          "mode": "login",
+          "authProvider": "user"
+        },
+        "entry": "work/home",
+        "public": ["login"]
+      }
+    }
+  }
+}
+```
+
+站点 key 是全局命名空间：
+
+- `admin` 是共享站点，允许多个组件只追加 `auth/public`；站点壳字段由 `front` 组件定义。
+- 非 `admin` 站点默认只能有一个 owner 组件定义 `name/api/page/access/assets/setting/entry`。
+- 多个组件定义同一个非 `admin` 站点壳时必须报错，不允许按加载顺序覆盖。
+- 如果组件只是扩展别人拥有的站点，只写 `auth` 或 `public`，不要写壳字段。
+- `access.mode` 支持 `rbac`、`login`、`public`：`rbac` 登录并校验权限，`login` 只要求登录，`public` 整站匿名开放但仍走 page/action 的服务端安全边界。
 
 ## 依赖
 

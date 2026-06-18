@@ -23,7 +23,7 @@ find module package -maxdepth 4 -type f 2>/dev/null
 
 - `go.mod` 是否为 `module my`，是否有本地 `replace`。
 - `main.go` 是否注册了 `data.RegisterRoutes` 和需要的 front site。
-- `config/front.json(c)` 的 `sites/public/assets/access`。
+- 组件 `dever.json.front` 的 `sites/public/assets/access`。
 - `module/*` 是否只是 package shim。
 - page JSON 是否大量硬编码 `_model/_use/submit.use`。
 - Service/API 是否只是 CRUD wrapper。
@@ -61,8 +61,8 @@ find module package -maxdepth 4 -type f 2>/dev/null
 
 - 增加 `package/<name>/skills/<name>/SKILL.md`。
 - 在 `dever.json.skills` 声明组件 skill。
-- menu/auth/site/public/static 元数据逐步迁移到 `dever.json`。
-- install/update 支持迁移前，保留旧的项目级 `front.json` 配置。
+- menu/auth/site/public/static 元数据逐步迁移到 `dever.json.front`。
+- 旧项目若仍保留项目级 `front.json`，迁移时按组件归属拆回对应 package/module 的 `dever.json.front`。
 - 写清手动升级步骤，不让应用项目猜。
 
 ## 6. 资产迁移

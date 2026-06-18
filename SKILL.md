@@ -1,6 +1,6 @@
 ---
 name: shemic-dever
-description: 用于 Dever Go 项目开发；修改 model、service、provider、api、page JSON、front 插件、package/module 组件、config/front.json、Dever CLI、生成路由/load 文件、package/front 后台页、package/bot、package/user，或排查注册、权限、页面、option、logo、install、build、run、plugin 错误时必须使用。
+description: 用于 Dever 项目开发；修改 model、service、provider、api、page JSON、front 插件、package/module 组件、dever.json front 配置、Dever CLI、生成路由/load 文件、package/front 后台页、package/bot、package/user，或排查注册、权限、页面、option、logo、install、build、run、plugin 错误时必须使用。
 version: 1.0.0
 ---
 
@@ -48,12 +48,15 @@ version: 1.0.0
 - 空项目 `go.mod` 来自 `files/go/go.mod.tmpl`。普通外部项目不能包含 `replace github.com/shemic/dever => ./dever`；只有本地框架开发才加这个 replace。
 - 普通后台 CRUD 走 `Model + package/front + page JSON`；不要写 CRUD API 或 CRUD Service。
 - 标准 page path 自动推导 model；标准 list/update/create/view/detail/info 页不要硬编码 `_model`、`_use`、`<<NewXxxModel>>` 或 `submit.use`。
+- page JSON 能自动推导的字段（`page.type`、`page.title`、`data.table` 的 `page/pageSize/total/order`、`data.form` 的 `id`/`status`/`sort` 默认值、`option` 来源）不写；只有需要覆盖默认值或派生字段时才写。
+- `action.submit` 普通 CRUD 只写 `{ "type": "save", "params": "form" }`，不写 `data`/`before`/`after`。要写 `data` 模板就必须覆盖所有可被 partial save 触及的字段（至少 `id` + 编辑字段 + `status` + `sort`），否则 `statusChangeAction`、`sortChangeAction`、表格内联编辑会触发 `没有可保存的字段`。
+- update 页的 `before` hook 必须识别 `_partial`，跳过完整校验，只规范化实际存在的字段。
 - Model comments、Options、Relations 是标签、枚举、关联选项的来源；除非有意覆盖展示文案，否则不要在 page JSON 重复写。
 - `status`、`sort` 和简单列表维护字段使用 front 标准列表 action；不要为它们额外写 update 表单 service。
 - Provider 只用于真实 page/load hook、校验、规范化、保存生命周期或适配；不要创建空 passthrough Provider。
 - Service 只用于真实业务流程：事务、状态流转、外部调用、异步编排、跨表规则；不要创建 CRUD wrapper service。
 - API 只用于真实 HTTP 能力：登录、注册、回调、外部端点、workflow action、复杂前端交互；API 必须薄。
-- Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；不要在脚本里散落 heredoc 模板或硬编码资产。
+- Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；front 站点配置随组件写在 `dever.json.front`；不要在脚本里散落 heredoc 模板或硬编码资产。
 - 修改 `package/<name>` 或 `module/<name>` 前，先检查并遵守 `package/<name>/skills/**/SKILL.md` 或 `module/<name>/skills/**/SKILL.md`。
 - 当前本地代码是事实来源。参考顺序：当前 `package/front`、当前 `package/bot`、当前 `package/user`、当前 module/package 示例、`backend/dever`；外部 demo 只作为兜底。
 - 开始实现前必须先判断项目模式：`empty-project`、`existing-project`、`app-feature`、`package-dev`、`framework-dev`。模式不明时先盘点，不生成、不迁移、不删除。

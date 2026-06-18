@@ -74,7 +74,10 @@
 - 不复制整页复杂 JSON；按当前需求生成最小页面。
 - 标准 list/update/create/view/detail/info 页优先自动推导 model。
 - 能从 Model comment、Options、Relations 推导的标签和选项，不在 JSON 重复写。
+- page JSON 能自动推导的字段（`page.type`、`page.title`、`data.table` 默认值、`data.form` 默认值、`option` 来源）不写；只有需要覆盖默认值时才写。
 - `status/sort` 这类列表维护字段优先使用 package/front 标准列表 action。
+- `action.submit` 普通 CRUD 只写 `{ "type": "save", "params": "form" }`，不写 `data`/`before`/`after`。要写 `data` 模板就必须覆盖所有可被 partial save 触及的字段。
+- update 页的 `before` hook 必须识别 `_partial`，跳过完整校验，只规范化实际存在的字段。
 
 ## 8. Provider、Service 和 API 边界
 

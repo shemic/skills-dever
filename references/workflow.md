@@ -34,7 +34,7 @@ find module package -maxdepth 4 -type f 2>/dev/null
    - `module/<name>/main.go` 只有 `// dever:import ...` 时，真实代码在 package。
    - 应用开发不要复制 package 代码，也不要为了业务功能改 `backend/dever`。
 3. front 页面属于哪个站点？
-   - 读 `config/front.json(c).sites`，确认 `siteKey/page/api/access/public`。
+   - 读 active 组件的 `dever.json.front.sites`，确认 `siteKey/page/api/access/public`。
    - 页面放 `front/page/{page}/...`，`page` 只选物理目录，不进入 route。
 4. 是否是业务产品或新功能？
    - 先读 `product.md`，拆资源、流程、角色、页面和服务边界。
@@ -54,7 +54,7 @@ find module package -maxdepth 4 -type f 2>/dev/null
 ### empty-project
 
 - 可以使用 `scripts/boot.sh`。
-- 先安装 `front` 和 `bot`，再补 `frontSite`、`config/front.json(c).sites`、入口注册。
+- 先安装 `front` 和业务组件；站点细节由组件 `dever.json.front.sites` 声明，项目配置只保留 `setting.json(c).frontSite` 静态服务开关。
 - 业务页面放 `module/<biz>/front/page/{page}`。
 - 不生成业务 API/Service。
 
@@ -98,7 +98,7 @@ module/<biz>/front/page/admin/<resource>/update.json
 前台 work：
 
 ```txt
-config/front.json.sites.work
+module/work/dever.json                   # front.sites.work 声明 api/page/access/public/entry
 module/work/front/page/work/main.json
 module/work/front/page/work/home.json
 module/work/front/src/plugin.ts          # 只有复杂 React 节点才需要

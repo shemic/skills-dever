@@ -158,7 +158,6 @@ ensure_gitignore
 
 render_template "${FILES_DIR}/go/main.go.tmpl" "main.go"
 render_template "${FILES_DIR}/config/setting.jsonc.tmpl" "config/setting.jsonc"
-copy_file "${FILES_DIR}/config/front.jsonc.tmpl" "config/front.jsonc"
 copy_file "${FILES_DIR}/go/middleware/readme.txt" "middleware/readme.txt"
 copy_file "${FILES_DIR}/go/data/readme.txt" "data/readme.txt"
 copy_file "${FILES_DIR}/go/package/readme.txt" "package/readme.txt"

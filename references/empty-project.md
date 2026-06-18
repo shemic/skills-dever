@@ -31,7 +31,6 @@ module my
 go.mod
 main.go
 config/setting.jsonc
-config/front.jsonc
 config/front/assets/admin/images/logo.svg
 config/front/assets/admin/images/favicon.svg
 config/front/assets/work/images/logo.svg
@@ -97,7 +96,6 @@ dever init --skip-tidy
 
 ```txt
 skills/skills-dever/files/config/setting.jsonc.tmpl
-skills/skills-dever/files/config/front.jsonc.tmpl
 ```
 
 先配置 `config/setting.jsonc`：
@@ -108,7 +106,7 @@ skills/skills-dever/files/config/front.jsonc.tmpl
 - 常规访问日志和错误日志写到 `data/log`，不要刷到 `dever run` 屏幕。
 - `http.port`、`http.appName` 使用项目值。
 - `frontSite.enabled=true`。
-- `frontSite.enabled=true` 是站点服务开关；站点细节放 `config/front.jsonc`。
+- `frontSite.enabled=true` 是站点服务开关；站点细节放 active 组件的 `dever.json.front.sites`。
 - 数据库按用户指定环境配置；如果用户指定 PostgreSQL，直接设置 `driver=postgres`、目标 `dbname`、项目 `prefix`，不要先落 SQLite 再切。
 
 最小日志配置：
@@ -126,48 +124,48 @@ skills/skills-dever/files/config/front.jsonc.tmpl
 }
 ```
 
-再配置 `config/front.jsonc`：
+再检查 active 组件 `dever.json.front`：
 
-- 每个系统对应一个 `sites.<siteKey>`，例如 `admin`、`work`、`portal`、`shop`。
-- `sites.<siteKey>.api` 使用该系统的 API 分组；后台通常为 `front`，业务前台可按 demo 的 `work` 站点方式配置。
-- `sites.<siteKey>.page` 决定物理页面目录，页面放到 `front/page/{page}/...`；`siteKey` 和 `page` 可以同名，也可以不同名。
-- `sites.<siteKey>.access` 使用该系统需要的登录、RBAC 或公开访问模式。
-- `sites.<siteKey>.assets.logo/favicon` 的相对路径映射到 `config/front/assets/{siteKey}/`；默认图标从 `skills/skills-dever/files/config/front/assets/<site>/images/` 复制。
-- `public` 保留上传、站点信息、bot 回调/请求等 package 需要的公开路径。
+- 每个系统对应一个 `front.sites.<siteKey>`，例如 `admin`、`work`、`portal`、`shop`。
+- `front.sites.<siteKey>.api` 使用该系统的 API 分组；后台通常为 `front`。
+- `front.sites.<siteKey>.page` 决定物理页面目录，页面放到 `front/page/{page}/...`；`siteKey` 和 `page` 可以同名，也可以不同名。
+- `front.sites.<siteKey>.access` 使用该系统需要的 `rbac`、`login` 或 `public` 访问模式。
+- `front.sites.<siteKey>.assets.logo/favicon` 的相对路径映射到 `config/front/assets/{siteKey}/`。
+- `front.public` 保留上传、站点信息、bot 回调/请求等 package 需要的公开路径。
 - 菜单只放当前 site 的真实功能分组；bot 自带页面按 package 能力接入，不要复制页面实现。
 
-一个后台 `admin` 加一个前台 `work` 的最小形态可直接使用 `files/config/front.jsonc.tmpl`，需要新增站点时再按同样结构扩展：
+一个后台 `admin` 加一个前台 `work` 的最小形态应放在所属组件 `dever.json`：
 
 ```jsonc
 {
-  "public": [
-    "/upload/*",
-    "/site/info",
-    "/bot/energon/request",
-    "/bot/energon/demo"
-  ],
-  "sites": {
-    "admin": {
-      "name": "管理后台",
-      "api": "front",
-      "page": "admin",
-      "access": {
-        "mode": "rbac",
-        "authProvider": "front"
+  "front": {
+    "public": [
+      "/upload/*",
+      "/site/info"
+    ],
+    "sites": {
+      "admin": {
+        "name": "管理后台",
+        "api": "front",
+        "page": "admin",
+        "access": {
+          "mode": "rbac",
+          "authProvider": "front"
+        },
+        "public": ["auth/login"],
+        "auth": []
       },
-      "public": ["auth/login"],
-      "auth": []
-    },
-    "work": {
-      "name": "工作台",
-      "api": "work",
-      "page": "work",
-      "access": {
-        "mode": "login",
-        "authProvider": "work"
-      },
-      "public": ["auth/login", "auth/register"],
-      "auth": []
+      "work": {
+        "name": "工作台",
+        "api": "work",
+        "page": "work",
+        "access": {
+          "mode": "login",
+          "authProvider": "work"
+        },
+        "public": ["auth/login", "auth/register"],
+        "auth": []
+      }
     }
   }
 }
@@ -182,7 +180,7 @@ skills/skills-dever/files/config/front.jsonc.tmpl
 
 ## 5. 多站点复用决策
 
-`package/front/html` 和主 React runtime 是所有 `sites` 共享的。每个站点的差异来自 `config/front.json.sites.<siteKey>` 注入的 runtime：`siteKey`、`api`、`page`、`access`、资源和展示信息。
+`package/front/html` 和主 React runtime 是所有 `sites` 共享的。每个站点的差异来自 active 组件 `dever.json.front.sites.<siteKey>` 注入的 runtime：`siteKey`、`api`、`page`、`access`、资源和展示信息。
 
 不要把“复用 admin 样式”和“复用 admin 账号权限”混为一件事：
 

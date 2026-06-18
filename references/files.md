@@ -12,7 +12,6 @@ files/
   AGENTS.dever.md
   config/
     setting.jsonc.tmpl
-    front.jsonc.tmpl
     front/assets/admin/images/logo.svg
     front/assets/admin/images/favicon.svg
     front/assets/work/images/logo.svg
@@ -60,7 +59,6 @@ files/
 从模板生成配置：
 
 - `config/setting.jsonc` 来自 `files/config/setting.jsonc.tmpl`。
-- `config/front.jsonc` 来自 `files/config/front.jsonc.tmpl`。
 - 空项目 `go.mod` 来自 `files/go/go.mod.tmpl`。
 - 空项目 `main.go` 来自 `files/go/main.go.tmpl`，默认注册 `data.RegisterRoutes` 和 `frontsite.Register`。
 
@@ -74,8 +72,8 @@ files/
 - `go.mod.tmpl` 不写死 Dever 版本；空项目初始化脚本用 `go get github.com/shemic/dever@main` 写入当前 main 对应的真实版本。
 - `go.sum` 由 Go 工具生成，不能作为模板维护。
 - 日志默认写文件：`data/log/access.log`、`data/log/error.log`。
-- 站点配置放 `config/front.json(c)`，不放 package/front 源码。
-- 全局公开路径、站点公开登录路径和站点 access 配置放 `config/front.json(c)`，不要散落到业务代码。
+- front 站点配置放组件 `dever.json.front.sites`，全局公开路径放 `dever.json.front.public`。
+- `config/front/assets/<site>` 只放站点静态资产；不要用项目级 `config/front.json(c)` 维护站点。
 - 项目运行数据放 `data/`，不放 `package/`。
 
 ## Logo 和 Favicon
@@ -87,15 +85,17 @@ config/front/assets/<site>/images/logo.svg
 config/front/assets/<site>/images/favicon.svg
 ```
 
-`config/front.json(c)` 使用相对路径引用它们：
+组件 `dever.json.front.sites.<site>.assets` 使用相对路径引用它们：
 
 ```jsonc
 {
-  "sites": {
-    "admin": {
-      "assets": {
-        "logo": "assets/images/logo.svg",
-        "favicon": "assets/images/favicon.svg"
+  "front": {
+    "sites": {
+      "admin": {
+        "assets": {
+          "logo": "assets/images/logo.svg",
+          "favicon": "assets/images/favicon.svg"
+        }
       }
     }
   }

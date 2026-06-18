@@ -38,8 +38,8 @@ dever.Run(func(s server.Server) {
 
 - `dever install`：安装本地 `dever` 启动脚本，并默认安装/同步全局 `shemic-dever` skill 和项目 agent 提示块；不再默认复制项目本地 `skills/skills-dever` 镜像。
 - `dever install --skip-skills`：只安装 `dever` 启动脚本，跳过 AI skill 安装/同步。
-- `dever skill install`：优先读取当前项目附近的 `skills/skills-dever`，没有时按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取或更新；拉取失败且未指定 `--force` 时，才使用已安装的全局 `shemic-dever` 兜底；默认同步全局 skill 和 agent 提示块。
-- `dever skill install --force`：忽略已安装旧版全局 skill 作为来源，按当前项目 skill 或 Git ref 重新同步。
+- `dever skill install`：优先读取当前项目附近完整的 `skills/skills-dever`；没有完整项目 skill 时使用已安装的全局 `shemic-dever`；没有全局 skill 时按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取或更新；默认同步全局 skill 和 agent 提示块。
+- `dever skill install --force`：忽略已安装全局 skill 作为来源，按当前项目完整 skill 或 Git ref 重新同步。
 - `dever skill install --project=true`：额外在当前项目写入 `skills/skills-dever` 镜像，用于离线项目或需要固定本项目 skill 版本的场景。
 - `dever skill doctor`：检查全局/项目 skill、agent managed block、组件声明的 skill 文件。
 - `dever run`：热重载；启动前会执行 `init --skip-tidy`，model/service/api 变更后会再次刷新生成文件。存在 package/module 前端源码插件时，会启动插件 dev server；默认端口从后端 `http.port + 10000` 派生，例如 `8085 -> 18085`、`8082 -> 18082`，避免多项目都抢 `5174`。`DEVER_FRONT_PLUGIN_DEV_PORT` 可显式覆盖。

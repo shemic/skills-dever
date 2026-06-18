@@ -151,7 +151,7 @@ backend/module/*/front/src/plugin.ts
 
 所以开发时改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 Dever CLI 的前端插件编译器，再按页面实际 node 通过 `{site}/plugins-src/{name}/runtime.js` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
 
-多站点 front 只记一条：站点配置在 `config/front.json.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
+多站点 front 只记一条：站点配置在组件 `dever.json.front.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
 
 ## 4. 最小 front 插件流程
 
@@ -217,7 +217,7 @@ export default defineFrontPlugin({
 
 不要再写 `runtime.ts`；Dever CLI 前端插件编译器会按 `plugin.ts` 自动生成开发态和发布态注册入口。
 
-`nodes` 和 `depends` 都从 `plugin.ts` 自动提取，用于运行时按需加载插件。不要在 `front.json` 里手写插件 node 清单；页面 JSON 引用了某个插件 node，主 front 才会加载对应插件。
+`nodes` 和 `depends` 都从 `plugin.ts` 自动提取，用于运行时按需加载插件。不要在 `dever.json.front.sites` 里手写插件 node 清单；页面 JSON 引用了某个插件 node，主 front 才会加载对应插件。
 
 节点组件使用 `@dever/front-plugin` 暴露的 SDK 和组件：
 
@@ -232,14 +232,14 @@ import { Button, request } from "@dever/front-plugin";
 
 后台 `admin`：
 
-- 配置在 `config/front.json.sites.admin`。
+- 站点壳由 `package/front/dever.json.front.sites.admin` 定义，其它组件只追加 `auth/public`。
 - `api` 通常是 `front`，`access.mode` 通常是 `rbac`。
 - 页面放 `module/<biz>/front/page/admin/...`。
 - 普通 CRUD 用 page JSON 和 model 元信息，不写 front 插件。
 
 前台 `work` / `portal` / `shop`：
 
-- 配置在 `config/front.json.sites.<siteKey>`。
+- 配置在所属组件 `dever.json.front.sites.<siteKey>`。
 - `api` 可以是业务分组，例如 `work`。
 - 页面放 `module/<biz>/front/page/{page}/...`。
 - 登录、注册、复杂动作可以写 `module/<biz>/api`。
@@ -254,7 +254,7 @@ import { Button, request } from "@dever/front-plugin";
 复用 admin 形式：
 
 - 适合后台型系统、运营系统、内部工作台。
-- `config/front.json.sites.<siteKey>` 使用自己的 `api/page/access/authProvider`。
+- `dever.json.front.sites.<siteKey>` 使用自己的 `api/page/access/authProvider`。
 - 在该站点 page 目录放自己的 `main.json` / `login.json`，结构参考 `package/front/page/admin/main.json` 和 `login.json`。
 - `main.json` 组合 `app-sidebar`、`app-topbar`、`app-outlet`、按需 `app-assistant`。
 - `login.json` 可复用 `app-site-brand`、`app-login-form`；登录接口由当前站点 `api` 决定。

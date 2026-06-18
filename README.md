@@ -73,7 +73,7 @@ dever install --skip-skills
 
 `dever skill install` 做三件事：
 
-1. 优先读取当前项目附近的 `skills/skills-dever`；没有时按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取或更新；只有拉取失败且未指定 `--force` 时，才使用已安装的全局 `shemic-dever` 兜底。
+1. 优先读取当前项目附近完整的 `skills/skills-dever`；没有完整项目 skill 时使用已安装的全局 `shemic-dever`；没有全局 skill 或显式 `--force` 时，按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取或更新。
 2. 把 skill 同步到常见全局 skill 目录。
 3. 用 `files/AGENTS.dever.md` 的 managed block 更新 `AGENTS.md`、`CLAUDE.md`、`.codex/AGENTS.md`、`.opencode/AGENTS.md`，不覆盖用户原内容。
 
@@ -160,7 +160,6 @@ Service 方法必须表达业务行为，不写 `Save/List/Create/Update/Delete`
 
 ```txt
 files/config/setting.jsonc.tmpl
-files/config/front.jsonc.tmpl
 files/config/front/assets/<site>/images/logo.svg
 files/config/front/assets/<site>/images/favicon.svg
 ```
@@ -171,7 +170,7 @@ files/config/front/assets/<site>/images/favicon.svg
 - `favicon.svg` 可以带背景。
 - 不改 `package/front/html/assets/index*.js`。
 - 不改 `front/dist`。
-- 站点资产通过 `config/front.json(c).sites.<site>.assets` 引用。
+- 站点资产通过组件 `dever.json.front.sites.<site>.assets` 引用。
 
 ## 脚本
 
@@ -188,7 +187,6 @@ bash skills/skills-dever/scripts/boot.sh my my-app 8082
 - `go.mod`
 - `main.go`，包含 `frontsite.Register`
 - `config/setting.jsonc`
-- `config/front.jsonc`
 - `config/front/assets/admin/images/*`
 - `config/front/assets/work/images/*`
 - `module/front/main.go`

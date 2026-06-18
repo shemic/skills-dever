@@ -64,7 +64,7 @@
 
 - `config/front/assets/<site>/images/logo.svg` 用作侧栏/加载态 logo 时是否透明。
 - `favicon.svg` 可以带背景。
-- `config/front.json(c).sites.<site>.assets.logo` 是否指向正确文件。
+- 组件 `dever.json.front.sites.<site>.assets.logo` 是否指向正确文件。
 - 是否误改了编译产物 `package/front/html/assets/index*.js`。
 - front 源码是否故意把 logo 包在固定深色 icon 容器里。
 
