@@ -226,7 +226,7 @@ import type { NodeItemProps } from "@dever/front-plugin";
 import { Button, request } from "@dever/front-plugin";
 ```
 
-不要在插件里复制主 front 的 UI、请求、上传、agent runner、类型，也不要直接 import 主 `front/src`。旧插件里的 `@/...` 会由 compiler 兼容，但新代码必须用 `@dever/front-plugin`。
+不要在插件里复制主 front 的 UI、请求、上传、agent runner、类型，也不要直接 import 主 `front/src`。新代码必须使用 `@dever/front-plugin`。
 
 ## 6. 前台站点和后台站点怎么分工
 
@@ -258,7 +258,7 @@ import { Button, request } from "@dever/front-plugin";
 - 在该站点 page 目录放自己的 `main.json` / `login.json`，结构参考 `package/front/front/page/admin/main.json` 和 `login.json`。
 - `main.json` 组合 `app-sidebar`、`app-topbar`、`app-outlet`、按需 `app-assistant`。
 - `login.json` 可复用 `app-site-brand`、`app-login-form`；登录接口由当前站点 `api` 决定。
-- 独立账号优先写业务模块 `api/auth.go` 和 `service/auth.go`，返回兼容的 `token`、`user.id`、`user.name`、`user.account`。
+- 独立账号优先写业务模块 `api/auth.go` 和 `service/auth.go`，返回 front 登录态需要的 `token`、`user.id`、`user.name`、`user.account`。
 - 如果顶部账户资料、角色切换、权限管理需要独立，提供站点自己的节点或页面；不要让业务站点误用管理员 `/front/account/profile`。
 
 做一套其他界面：

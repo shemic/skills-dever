@@ -16,19 +16,18 @@ find module package -maxdepth 4 -type f 2>/dev/null
 | 模式 | 判断 | 默认策略 |
 | --- | --- | --- |
 | `empty-project` | 没有 `go.mod`，或只有空目录/最小骨架 | 读 `empty-project.md`，允许使用 `boot.sh` 和 package 安装流程 |
-| `existing-project` | 已有 `go.mod/main.go/config/module/package` 任意关键文件 | 读 `migration.md`，只做增量改造，不全量重写 |
 | `app-feature` | 在应用项目里新增或修改业务功能 | 业务放 `module/<name>`，优先 Model + page JSON |
 | `package-dev` | 明确维护 `package/front`、`package/bot`、`package/user` 或其他 package | 读 `component.md` 和组件 skill，改 package 源码 |
 | `framework-dev` | 明确维护 `backend/dever`、Dever CLI、生成器、框架中间件 | 读 `framework.md` 和 `troubleshooting.md`，改框架源码 |
 
-模式不明时继续盘点，不生成、不迁移、不删除。
+模式不明时继续盘点，不生成、不删除。
 
 ## 2. 通用决策顺序
 
 1. 项目能否被 Dever 启动？
    - `empty-project`：初始化固定 `module my`。
-   - `existing-project`：保留现有 `module my`；若不是 `my`，先说明组件 import 风险，不继续生成 package shim。
-   - 缺 `main.go` 或配置时，先判断是空项目补骨架，还是旧项目局部补缺。
+   - 非空项目：先确认已有 `module my`、`main.go`、配置和组件边界；若不是 `my`，先说明组件 import 风险，不继续生成 package shim。
+   - 缺 `main.go` 或配置时，只补当前任务明确需要的文件，不用空项目脚本覆盖已有内容。
 2. 代码归属在哪里？
    - 应用业务放 `module/<name>`。
    - `module/<name>/main.go` 只有 `// dever:import ...` 时，真实代码在 package。
@@ -40,9 +39,9 @@ find module package -maxdepth 4 -type f 2>/dev/null
    - 先读 `product.md`，拆资源、流程、角色、页面和服务边界。
    - 普通资源先写 model，再写 page JSON。
 5. 是否是后台页面？
-   - 默认 `Model + package/front + page JSON`，细则见 `front-page.md`。
+   - 默认 `Model + package/front + page JSON`，快速规则见 `front-page-quick.md`，复杂页面见 `front-page.md`。
    - 普通 CRUD 不写 API/Service。
-   - 标准页优先自动推导 model，不写 `_model/_use/submit.use`。
+   - 标准页优先自动推导 model，不写 `_model/_use/submit.use/option.use/childUse`；不能推导时只写对应位置的 `model` 或 `service`。
 6. 是否有真实业务规则？
    - 状态流转、跨表保存、强校验、外部协议、异步任务、聚合查询才写 Provider/Service/API，细则见 `service-api.md`。
 7. 是否需要刷新生成文件？
@@ -57,14 +56,6 @@ find module package -maxdepth 4 -type f 2>/dev/null
 - 先安装 `front` 和业务组件；站点细节由组件 `dever.json.front.sites` 声明，项目配置只保留 `setting.json(c).frontSite` 静态服务开关。
 - 业务页面放 `module/<biz>/front/page/{page}`。
 - 不生成业务 API/Service。
-
-### existing-project
-
-- 不运行 `boot.sh` 覆盖骨架。
-- 不修改 `go.mod` module path。
-- 不全量重写 page JSON、Service、API、配置。
-- 只迁移本次触达的页面或功能。
-- 删除旧代码前必须确认替代路径已经存在并覆盖同等行为。
 
 ### app-feature
 

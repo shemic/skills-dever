@@ -27,6 +27,12 @@ front 的便利能力必须放在明确的服务端权限检查之后。不要�
 
 自动推导的 action 也遵守同样规则。空 `action` 配置不代表可以跳过权限检查。
 
+## Route Option
+
+`route/option` 必须由 `path + key` 定位到服务端可访问的 page JSON，再从该节点解析 `option.model/service` 或 `meta.model/service`。客户端不能直接传 model、service、字段名或 SQL 片段来决定数据来源。
+
+批量 option 也必须逐项复用同一站点、登录态和权限上下文；不要为了性能绕过 access scope。
+
 ## 密钥
 
 - 模板和源码里不放真实 JWT secret、API key、数据库密码或 provider token。

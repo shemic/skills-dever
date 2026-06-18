@@ -13,7 +13,7 @@
 5. 当前项目已有 `module/*` / `package/*`
 6. 当前 `backend/dever`
 
-外部 demo 只作为兜底参考，不作为首选来源。不要从 demo 复制业务模块、旧页面写法或旧配置结构。
+外部 demo 只作为补充参考，不作为首选来源。不要从 demo 复制业务模块、被当前协议禁止的 page 字段或非当前配置结构。
 
 ## 2. 空项目最小骨架
 
@@ -206,7 +206,7 @@ skills/skills-dever/files/config/setting.jsonc.tmpl
 
 不能只把新站点配置成 `page: "admin"` 就认为会复用 admin 系统页。`main/login` 的逻辑 route 前缀跟当前站点 `api` 走，例如 `api: "work"` 时系统页是 `work/main`、`work/login`；`page` 只决定这些页面从哪个物理目录读取。
 
-如果复用 admin 顶栏，注意它可能包含账户资料入口。业务账号独立时，要么让业务登录返回兼容的 `user.id/name/account`，要么提供站点自己的 profile 页面/节点，不要让前台账号误用 `/front/account/profile` 这类管理员页面。
+如果复用 admin 顶栏，注意它可能包含账户资料入口。业务账号独立时，要么让业务登录返回 front 登录态需要的 `user.id/name/account`，要么提供站点自己的 profile 页面/节点，不要让前台账号误用 `/front/account/profile` 这类管理员页面。
 
 ## 6. 入口注册
 

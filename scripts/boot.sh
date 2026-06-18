@@ -87,7 +87,7 @@ ensure_empty_project() {
 
   echo "检测到已有 Dever 项目文件：${existing[*]}"
   echo "boot.sh 只用于空项目初始化，避免覆盖已有项目。"
-  echo "已有项目请按 references/migration.md 增量接入；确需补齐骨架时显式加 --adopt-existing。"
+  echo "确需补齐缺失骨架时，先确认当前目录是 Dever 应用项目，再显式加 --adopt-existing。"
   exit 1
 }
 
@@ -100,7 +100,7 @@ ensure_go_mod() {
   if [[ -n "$existing_module" && "$existing_module" != "$MODULE_NAME" ]]; then
     echo "检测到 go.mod 模块路径：$existing_module"
     echo "Dever package 组件要求模块路径：$MODULE_NAME"
-    echo "已停止，避免生成不兼容的 import。"
+    echo "已停止，避免生成错误的 package import。"
     exit 1
   fi
 }

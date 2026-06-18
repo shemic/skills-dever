@@ -9,18 +9,15 @@ fi
 
 fail=0
 warn_count=0
-LEGACY=0
 CHANGED=0
 TARGETS=()
 
 for arg in "$@"; do
   case "$arg" in
-    --legacy) LEGACY=1 ;;
     --changed) CHANGED=1 ;;
     --help|-h)
-      echo "用法：bash scripts/audit.sh [--changed] [--legacy] <file-or-dir> [...]"
+      echo "用法：bash scripts/audit.sh [--changed] <file-or-dir> [...]"
       echo "  --changed  只检查 git 已修改/新增文件"
-      echo "  --legacy   旧项目盘点模式：错误降级为警告"
       exit 0
       ;;
     *) TARGETS+=("$arg") ;;
@@ -28,15 +25,11 @@ for arg in "$@"; do
 done
 
 if (( CHANGED == 0 && ${#TARGETS[@]} == 0 )); then
-  echo "用法：bash scripts/audit.sh [--changed] [--legacy] <file-or-dir> [...]"
+  echo "用法：bash scripts/audit.sh [--changed] <file-or-dir> [...]"
   exit 2
 fi
 
 err() {
-  if (( LEGACY == 1 )); then
-    warn "$*"
-    return
-  fi
   echo "错误：$*"
   fail=1
 }
@@ -240,22 +233,19 @@ check_page() {
     fi
   done
 
+  check_forbidden_page_protocol "$file"
+  check_option_params_protocol "$file"
+
   if is_standard_page "$file"; then
     local kind
     kind="$(page_kind "$file")"
     if ! rg -q '^[[:space:]]*"parent"[[:space:]]*:' "$file"; then
       err "$file: 标准 ${kind} 页必须声明 page.parent，避免权限/菜单归属错误"
     fi
-    if rg -q '"_model"[[:space:]]*:|"_use"[[:space:]]*:|"<<[^"]*New[A-Za-z0-9_]*Model>>' "$file"; then
-      err "$file: 标准页必须使用路径推导 model，不要写 _model/_use/<<Model>>"
-    fi
-    if has_direct_submit_model_use "$file"; then
-      err "$file: 标准页 action 不能硬编码 submit.use"
-    fi
     if [[ "$kind" == "update" || "$kind" == "create" ]] && ! rg -q '"submit"[[:space:]]*:' "$file"; then
       err "$file: 标准 ${kind} 页必须声明最小 action.submit"
     fi
-    if [[ "$kind" == "list" ]] && rg -q '"type"[[:space:]]*:[[:space:]]*"form-switch"|"editor"[[:space:]]*:' "$file" && ! rg -q '"savePath"[[:space:]]*:' "$file"; then
+    if [[ "$kind" == "list" ]] && rg -q '"type"[[:space:]]*:[[:space:]]*"form-switch"|"editor"[[:space:]]*:' "$file" && ! has_inline_edit_save_handler "$file"; then
       err "$file: 标准列表存在内联编辑/状态切换时必须声明 show-table.meta.savePath"
     fi
   fi
@@ -263,12 +253,37 @@ check_page() {
   if rg -q '/front/route/action|http://|https://.*route/action' "$file"; then
     err "$file: page JSON 不能硬编码 route/action URL；请使用当前 site runtime"
   fi
-  if rg -q '"table"[[:space:]]*:[[:space:]]*"[^"]+"|"model"[[:space:]]*:[[:space:]]*"[^"]+"' "$file" && rg -q '"action"[[:space:]]*:' "$file"; then
-    warn "$file: 检查 action 配置是否直连表/model 修改；优先使用已注册 front action"
+}
+
+check_forbidden_page_protocol() {
+  local file="$1"
+
+  if rg -q '"_model"[[:space:]]*:|"_use"[[:space:]]*:|"<<[^"]*New[A-Za-z0-9_]*Model>>|"\{\{[^"]+\}\}"|"childUse"[[:space:]]*:|"modelName"[[:space:]]*:|"type"[[:space:]]*:[[:space:]]*"service"' "$file"; then
+    err "$file: page JSON 存在禁止协议；请改为自动推导或显式 model/service，不要写 _model/_use/<<Model>>/{{Service}}/type:service/childUse/modelName"
+  fi
+  if rg -q -U '"option"[[:space:]]*:[[:space:]]*\{[^}]*"use"[[:space:]]*:' "$file"; then
+    err "$file: option 不能写 use；请改为 option.model 或 option.service"
+  fi
+  if rg -q '"/front/route/option([?#][^"]*)?"' "$file"; then
+    err "$file: page JSON 不能手写 /front/route/option；请改为自动推导或显式 model/service 对象"
+  fi
+  if rg -q -U '"meta"[[:space:]]*:[[:space:]]*\{[^}]*"use"[[:space:]]*:' "$file"; then
+    err "$file: meta 不能写 use；请改为 meta.model/meta.service 或 meta.childModel/meta.childService"
+  fi
+  if has_direct_submit_use "$file"; then
+    err "$file: action.submit 不能写 use；跨资源保存请改为 action.submit.model，hook 请写 before/after.service"
   fi
 }
 
-has_direct_submit_model_use() {
+check_option_params_protocol() {
+  local file="$1"
+
+  if rg -q -U '"optionParams"[[:space:]]*:[[:space:]]*\{[^}]*"(parentField|childParentField|valueField|labelField|leafField|extraFields|searchFields|filterField|filterValue|filters|order|pageSize)"[[:space:]]*:' "$file"; then
+    err "$file: optionParams 只传 parentId/selected/keyword/level 等动态值；parentField/valueField/labelField/extraFields/pageSize/order/filters 等静态配置请放到 option 或 meta"
+  fi
+}
+
+has_direct_submit_use() {
   local file="$1"
   awk '
     /"submit"[[:space:]]*:/ {
@@ -281,7 +296,7 @@ has_direct_submit_model_use() {
         if (c == "{") depth++
         if (c == "}") depth--
       }
-      if (depth == 1 && $0 ~ /"use"[[:space:]]*:[[:space:]]*"[^"]*New[A-Za-z0-9_]*Model"/) {
+      if (depth == 1 && $0 ~ /"use"[[:space:]]*:/) {
         found = 1
         exit
       }
@@ -291,6 +306,11 @@ has_direct_submit_model_use() {
     }
     END { exit found ? 0 : 1 }
   ' "$file"
+}
+
+has_inline_edit_save_handler() {
+  local file="$1"
+  rg -q '"savePath"[[:space:]]*:' "$file" || rg -q '"change"[[:space:]]*:' "$file"
 }
 
 check_service_api() {

@@ -1,6 +1,6 @@
 ---
 name: dever-{{COMPONENT_NAME}}
-description: Use when 修改 {{COMPONENT_NAME}} Dever 组件，包括 model、service、provider、api、front/page JSON、front 插件、config、组件元数据、权限、公开接口和迁移行为。
+description: Use when 修改 {{COMPONENT_NAME}} Dever 组件，包括 model、service、provider、api、front/page JSON、front 插件、config、组件元数据、权限、公开接口和升级影响。
 version: 0.1.0
 ---
 
@@ -25,11 +25,11 @@ version: 0.1.0
 - 不创建 CRUD wrapper Service/API。
 - 不修改生成文件或编译后的 front 产物。
 - 组件专属行为留在本组件内，不散落到全局。
-- 用户未明确要求兼容旧格式时，不写兼容代码；直接迁移到当前组件规则并清理旧路径。
-- 任何公开 API、权限、密钥、外部调用或迁移行为，都要在这里写清楚。
+- 不为禁止字段保留适配代码，不保留双路径备用实现。
+- 任何公开 API、权限、密钥、外部调用或升级影响，都要在这里写清楚。
 - 新增菜单、权限、公开路径、站点默认展示配置时，优先写入组件 `dever.json.front.sites.<site>.config`；项目覆盖只写 `config/front.json`。
 - 新增服务端模板页面时，保留 page JSON 六对象规则，使用 `page.render: "template"` + 顶层 `template`，SEO 放 `data.seo`。
-- 删除或改名页面、model、Service/API 前，先写清迁移影响和旧项目升级步骤。
+- 删除或改名页面、model、Service/API 前，先写清影响范围和替代路径。
 
 ## 允许写 Service/API 的场景
 
@@ -56,11 +56,11 @@ version: 0.1.0
 - 修改后台页面前先检查组件权限。
 - 修改 `dever.json` 后检查 `skills`、`public`、`sites`、`depends` 是否仍有效。
 
-## 迁移说明
+## 升级影响
 
-旧项目接入或升级本组件时，需要记录：
+组件发布新版本时，需要记录：
 
 - 需要新增或更新的 package/module。
 - 需要写入的 `dever.json` 元数据。
-- 是否需要迁移旧 `config/front.json(c)` 菜单、权限或 public 配置。
+- 是否需要更新项目 `config/front.json(c)` 菜单、权限或 public 配置。
 - 是否有破坏性数据变更。

@@ -1,6 +1,6 @@
 # Front Page JSON 规则
 
-普通后台和简单站点页面优先使用 `package/front` page JSON。只有页面确实需要画布、图编辑器、工作台、领域实时交互这类自定义交互界面时，才写 React 插件节点。
+普通后台和简单站点页面优先使用 `package/front` page JSON。常规 CRUD 先读 `front-page-quick.md`；本文件用于左分类右列表、弹窗、内联编辑、权限、站点壳和复杂 page JSON 细节。只有页面确实需要画布、图编辑器、工作台、领域实时交互这类自定义交互界面时，才写 React 插件节点。
 
 **核心原则**：能自动推导的不写。page JSON 只写"页面结构和业务字段"，标签、选项、排序、默认值、权限尽量来自 model 元信息和路径推导。
 
@@ -14,7 +14,7 @@
 4. 当前项目已有 module/package 页面。
 5. 只有当前项目没有可比示例时，才看外部 demo。
 
-当前 `package/front` 已支持的能力，不要继续按旧项目页面写法实现。
+当前 `package/front` 已支持的能力，不要再写被当前协议禁止的 page 字段。
 
 ## 文件位置和路径
 
@@ -64,84 +64,7 @@ module/work/front/page/work/home.json            -> work/home
 
 ## 服务端模板页面
 
-公开内容站、演示站、CMS 类 SEO 页面可以使用 `package/front` 的服务端模板渲染能力。它不替代现有 JSON/React 页面，只在页面声明 `page.render: "template"` 时生效。
-
-模板页面仍必须保留六对象规则：
-
-```json
-{
-  "page": {
-    "name": "文章详情",
-    "render": "template"
-  },
-  "layout": {},
-  "nodes": {},
-  "data": {
-    "article": {
-      "_model": "mt.NewArticleModel",
-      "one": true,
-      "required": true,
-      "defaultFilters": {
-        "slug": "$route.slug",
-        "status": "published"
-      }
-    },
-    "seo": {
-      "title": "$data.article.title",
-      "description": "$data.article.summary",
-      "canonical": "/article/${data.article.slug}"
-    }
-  },
-  "state": {},
-  "action": {},
-  "template": {
-    "route": "/article/:slug",
-    "layout": "layout.html",
-    "view": "article.html"
-  }
-}
-```
-
-规则：
-
-- `page.render: "template"` 表示该 page 由 Go `html/template` 服务端输出完整 HTML。
-- 模板页面直接由服务端输出，不受 `setting.runtime.shell` 影响，也不会加载 React 后台壳。
-- 顶层 `template` 只放渲染元信息：`route`、`layout`、`view`。不要把模板配置塞进 `nodes`；`nodes` 保持 React/runtime 节点语义。
-- SEO 数据放在 `data.seo`，渲染后模板上下文提供 `.SEO.Title`、`.SEO.Description`、`.SEO.Image`、`.SEO.Canonical`。
-- `data` 支持模板站最小数据能力：`_model`、`one: true`、`required: true`、`defaultFilters`、`pageSize`、`order`、`type: "service"` + `service`。
-- `defaultFilters`、`data.seo` 等模板值支持 `$route.xxx`、`$query.xxx`、`$site.xxx`、`$data.xxx`。
-- 单条数据设置 `required: true` 时，查询不到记录返回 404。
-- 模板访问路径是 `/{site.api}{template.route}`。例如 site `api: "mt"` + `route: "/article/:slug"`，访问 `/mt/article/hello`。
-- 模板路由不要占用站点保留根路径：`main`、`route`、`upload`、`resource`、`import`、`export`、`runtime.js`、`assets`。
-
-模板和资源随组件发布：
-
-```txt
-module/mt/front/page/mt_content/article.json
-module/mt/front/template/mt_content/layout.html
-module/mt/front/template/mt_content/article.html
-module/mt/front/template/mt_content/partials/header.html
-module/mt/front/assets/mt_content/css/site.css
-module/mt/front/assets/mt_content/images/logo.png
-```
-
-模板文件默认从当前 site 的 `page` 目录隔离读取。上例 site `page: "mt_content"`，所以 `template.view: "article.html"` 会读取 `front/template/mt_content/article.html`。
-
-静态资源访问路径是 `/{site}/assets/{assetRef}`，模板上下文提供 `.Site.AssetBase`。资源必须显式声明来源：
-
-```html
-<link rel="stylesheet" href="{{ .Site.AssetBase }}/mt/assets/mt_content/css/site.css">
-<img src="{{ .Site.AssetBase }}/config/assets/mt_content/images/logo.png" alt="">
-```
-
-资源引用规则：
-
-```txt
-config/assets/<site>/images/logo.svg      -> config/front/assets/<site>/images/logo.svg
-mt/assets/mt_content/css/site.css         -> module/package mt 的 front/assets/mt_content/css/site.css
-```
-
-不做隐式覆盖查找；需要项目覆盖时写 `config/assets/...`，需要组件默认资源时写 `<component>/assets/...`。
+公开内容站、演示站、CMS 类 SEO 页面可以使用 `page.render: "template"`，但它是低频能力，不属于普通后台 CRUD 流程。需要服务端模板、SEO、模板资源或公开内容站时，读 `template-page.md`。
 
 ## `page` 对象
 
@@ -184,11 +107,39 @@ mt/assets/mt_content/css/site.css         -> module/package mt 的 front/assets/
 - `data.form._model`
 - `data.form._use`
 - `action.submit.use`
+- `{{Service}}`
+- `type: "service"`
+- `option.use`
+- `childUse`
+- `modelName` 作为 page JSON 字段
 - `<<NewXxxModel>>` in page JSON
 
 如果推导失败，修 model 文件名、`NewXxxModel`、所属路径或 page path。不要为了省事硬编码 model。
 
-只有 `set`、`config`、固定单记录页、跨资源嵌入页、真实自定义流程这类非标准页面，才显式声明 model。
+只有 `set`、`config`、固定单记录页、跨资源嵌入页、真实自定义流程这类非标准页面，才显式声明 `model` 或 `service`。
+
+当前协议只保留这些来源字段：
+
+- `data.<key>.model`：显式指定 model 数据源。
+- `data.<key>.service`：显式指定 service 数据源；在 `data.table` 或 `data.form` 已经能推导/声明 model 时，它表示 model 查询后的 rows/record 补字段 service。
+- `action.<key>.model`：覆盖保存/删除 action 的 model。
+- `option.model` / `option.service`：显式指定选项来源。
+- `meta.model` / `meta.service`：给远程 option 节点声明来源。
+- `meta.childModel` / `meta.childService`：给级联/树形子级远程 option 声明来源。
+
+不要写 `/front/route/option` 字符串；需要远程 option 时写对象：
+
+```json
+"option": {
+  "model": "source.NewChannelModel",
+  "filters": { "status": 1 },
+  "order": "sort asc,id asc"
+}
+```
+
+`form-cascader` 已能从 `meta.model` / `meta.service` / `meta.childModel` / `meta.childService` 自动使用当前站点 `route/option`，不要再写 `meta.api: "/front/route/option"`。`type-editor`、`form-array` 的 `fillFromOption`、`form-combo-mapping` 也会在存在 `loadOption`、`fillFromOption.option`、`optionSourceOption` 或 `paramSourceOption` 时自动使用 `route/option`，page JSON 只写对象来源和稳定 key。
+
+不要发明 `modelPath`、`service@...`、`transform` 或其它前缀写法；确实无法推导时，用对应位置的 `model` 或 `service`。
 
 ## Model 元信息是来源
 
@@ -229,10 +180,12 @@ app-site-brand, app-login-form, app-sidebar, app-topbar, app-outlet, app-assista
 1. **不写 `option`**：`form-select` 外键字段（`xxx_id`）自动从 model `Relations` 推导；`form-radio`/`form-checkbox`/`show-tag` 枚举字段自动从 model `Options` 推导。这是最优先的默认。
 2. `option: "option.<field>"`：从 `data.option.<field>` 取，常用于 `show-category-list` 本地加载的选项。
 3. `option: { "model": "<module>.NewXxxModel", "order": "..." }`：显式指定 model，用于 Relations 推导不出来的场景。
-4. `option: { "type": "service", "service": "<module>.<Svc>.<Method>" }`：远程选项，model 推导不出来时才写。
+4. `option: { "service": "<module>.<Svc>.<Method>" }`：远程选项，model 推导不出来时才写。
 5. `option: [...]`：硬编码少量选项，仅用于页面级展示语义，不要替代 model Options。
 
 不要在 `form-select` 里硬编码业务选项数组来绕过 model Options。
+
+`optionParams` 只传动态值，例如 `parentId`、`selected`、`keyword`、`level`、`_inherit`、`_parentPath` 或 `_parent_*`。`parentField`、`valueField`、`labelField`、`extraFields`、`searchFields`、`filters`、`pageSize`、`order` 这类静态 option 配置放到 `option` 或 `meta`，不要塞进 `optionParams`。
 
 ## 列表页
 
@@ -252,6 +205,8 @@ page-main
 - `pageSize`：默认 10。
 - `total`：默认 0，运行时自动填充。
 - `list`：不需要写；运行时按 model 自动加载。可以写 `"list": []` 作为空容器，但不要写 `"<<...NewXxxModel>>"`。
+- `model`：非标准路径、跨资源列表或无法按 path 推导时才写，例如 `"model": "front.NewAccountLogModel"`。
+- `service`：可选。`data.table` 有 model 时表示 rows 补字段/过滤/聚合的后处理 service；不要用它包一层普通 CRUD。
 - `searchFields`：按需。模糊搜索字段，对应 `data.search.keyword` 走 LIKE。不写则不支持关键词搜索。
 - `filterFields`：按需。精确过滤字段，对应 `data.search.<field>` 走等值。不写则不支持筛选。
 - `order`：按需。默认排序，不写时用 model `Order`。
@@ -283,7 +238,7 @@ page-main
 
 标准编辑/新增页：
 
-- 使用推导 model 和默认 submit，不硬编码 `submit.use`。
+- 使用推导 model 和默认 submit，不硬编码 `submit.use`。跨资源保存才写 `action.submit.model`。
 - `status` 或 `sort` 如果是列表维护字段，不放进编辑表单（新增时需要初始化除外）。
 - 只放用户真正需要编辑的字段。
 - 用作 `pageRoute`、modal/drawer 内容、嵌入子页、`savePath` 或任意 action 目标时，必须给它明确表达用途的 `page.name` 和 `page.parent`。
@@ -294,6 +249,8 @@ page-main
 - `status`/`sort`：不写时用 model `default` tag（通常 `status: 1`、`sort: 100`）。
 - 枚举字段：不写时用 model `default` tag；model 没写 default 时才在 page JSON 给。
 - 关联外键字段：不写时为空，`form-select` 显示占位符；如果业务要求新增时默认选中某项，才写默认 ID。
+- `model`：非标准路径、固定单记录或跨资源表单无法推导时才写。
+- `service`：可选。`data.form` 有 model 时表示 record 补字段/规范化 service；不要用它包一层普通 CRUD。
 
 只有以下情况才需要显式写 `data.form` 字段：
 
@@ -344,8 +301,10 @@ page-main
 
 - `before`：规范化、校验、派生字段。返回值替换 `data` 模板输入。普通 CRUD 不写。
 - `after`：关系同步、计数、缓存失效。返回值不影响保存结果。普通 CRUD 不写。
+- hook 配置只写 `{ "service": "<module>.<Service>.<Method>" }`；不要写 `{ "type": "service", "use": "..." }`。
 
 `validate.model` 只用于真实唯一业务标识，例如 `key`、`code`、`account`、手机号、OpenID、关系绑定自然键。展示名字段不要写 `validate.model`；展示名只做必填、长度、格式等表单校验。
+`validate.service` 只用于模型唯一性表达不了的远程/跨表校验；不要写 `validate.use`。
 
 ## 内联编辑与列表维护字段
 
@@ -360,6 +319,7 @@ page-main
 部分更新规则：
 
 - `meta.savePath` 必须指向一个真实的 `update.json` route，且该 update 页的 `action.submit` 必须能接受 `_partial: true` 的部分字段。
+- 嵌入子页或数组子表如果只是 patch 父表单数组，可以在列上显式写 `action.change`；这种场景不需要 `savePath`，但必须保证父表单最终保存这些数组字段。
 - update 页的 `action.submit.data` 模板必须包含所有可能被部分更新触及的字段（见上一节）。
 - update 页的 `before` hook 必须识别 `_partial`，跳过完整校验，只规范化实际存在的字段。不要在 partial 模式下清空 payload。
 - 部分更新不需要 `after` hook 执行重业务逻辑；如果需要，必须确保只针对真实变更字段触发。

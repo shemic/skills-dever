@@ -22,14 +22,15 @@ skills/skills-dever/
     framework.md
     development.md
     model.md
+    front-page-quick.md
     front-page.md
+    template-page.md
     service-api.md
     files.md
     component.md
     package-plugin.md
     security.md
     troubleshooting.md
-    migration.md
   scripts/
     audit.sh
     boot.sh
@@ -57,27 +58,42 @@ skills/skills-dever/
 首次手动安装：
 
 ```bash
-mkdir -p ~/.agents/skills/shemic-dever
-rsync -a --exclude .git skills/skills-dever/ ~/.agents/skills/shemic-dever/
+tmp="$(mktemp -d)"
+git clone --depth 1 --branch main https://github.com/shemic/skills-dever.git "$tmp/skills-dever"
+rm -rf ~/.agents/skills/shemic-dever
+mkdir -p ~/.agents/skills
+cp -a "$tmp/skills-dever/." ~/.agents/skills/shemic-dever
+for target in \
+  ~/.codex/skills/shemic-dever \
+  ~/.claude/skills/shemic-dever \
+  ~/.opencode/skills/shemic-dever \
+  ~/.trae/skills/shemic-dever \
+  ~/.qoder/skills/shemic-dever \
+  ~/.codebuddy/skills/shemic-dever
+do
+  rm -rf "$target"
+  mkdir -p "$(dirname "$target")"
+  ln -s ~/.agents/skills/shemic-dever "$target"
+done
+rm -rf "$tmp"
 ```
 
 Dever CLI 已提供：
 
 ```bash
-dever skill install         # 从项目本地 skill 或 github.com/shemic/skills-dever 同步
-dever skill install --force # 忽略已安装旧版全局 skill，按当前 ref 重新同步
+dever skill install         # 每次从 github.com/shemic/skills-dever 临时拉取并同步
 dever skill doctor
-dever install              # 默认调用 dever skill install，只同步全局 skill 和 agent 提示
+dever install              # 默认调用 dever skill install，同步全局 skill 和 agent 提示
 dever install --skip-skills
 ```
 
 `dever skill install` 做三件事：
 
-1. 优先读取当前项目附近完整的 `skills/skills-dever`；没有完整项目 skill 时使用已安装的全局 `shemic-dever`；没有全局 skill 或显式 `--force` 时，按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取或更新。
-2. 把 skill 同步到常见全局 skill 目录。
-3. 用 `files/AGENTS.dever.md` 的 managed block 更新 `AGENTS.md`、`CLAUDE.md`、`.codex/AGENTS.md`、`.opencode/AGENTS.md`，不覆盖用户原内容。
+1. 每次按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取临时副本；不读取项目本地 skill、不读取已安装全局 skill、不使用缓存或备用来源。
+2. 把真实 skill 同步到 `~/.agents/skills/shemic-dever`，再为 Codex、Claude、OpenCode、Trae、Qoder、CodeBuddy 等常见工具 skill 目录创建 symlink 引用。
+3. 用 `files/AGENTS.dever.md` 的 managed block 更新 `AGENTS.md`、`CLAUDE.md`、`.codex/AGENTS.md`、`.opencode/AGENTS.md`、`.trae/AGENTS.md`、`.qoder/AGENTS.md`、`.codebuddy/AGENTS.md`，不覆盖用户原内容。
 
-默认不复制项目本地 `skills/skills-dever` 镜像。只有需要离线项目副本时才显式执行：
+默认不复制项目本地 `skills/skills-dever` 镜像。只有确实需要项目副本时才显式执行：
 
 ```bash
 dever skill install --project=true
@@ -87,8 +103,8 @@ dever skill install --project=true
 
 1. 项目 agent 提示文件是否包含 Dever managed block。
 2. active module/package 的 `dever.json.skills` 是否指向真实组件 skill 文件。
-3. 常见全局 skill 目录是否已同步。
-4. 如存在项目本地 `skills/skills-dever` 镜像，也会检查它。
+3. `~/.agents/skills/shemic-dever` 是否完整。
+4. 常见工具 skill 目录是否是指向 `~/.agents/skills/shemic-dever` 的 symlink 引用。
 
 `dever install` 默认会执行 `dever skill install`，可用 `--skip-skills` 跳过。
 
@@ -101,7 +117,7 @@ dever skill install --project=true
 3. 当前 `package/user`
 4. 当前项目已有 `package/*` / `module/*`
 5. 当前 `backend/dever`
-6. 外部 demo 只作为兜底
+6. 外部 demo 只作为补充参考
 
 不要默认先看 demo。当前项目代码才是事实来源。
 
@@ -110,9 +126,10 @@ dever skill install --project=true
 | 任务 | 必读 |
 | --- | --- |
 | 空项目、新后台、新站点 | `SKILL.md`、`workflow.md`、`empty-project.md`、`files.md` |
-| 旧项目改功能或迁移 | `SKILL.md`、`workflow.md`、`migration.md`，再按涉及面读 page/service/model |
-| 新产品或业务模块 | `SKILL.md`、`workflow.md`、`product.md`、`model.md`、`front-page.md` |
-| 后台 CRUD | `SKILL.md`、`front-page.md`、`model.md` |
+| 新产品或业务模块 | `SKILL.md`、`workflow.md`、`product.md`、`model.md`、`front-page-quick.md` |
+| 后台 CRUD | `SKILL.md`、`front-page-quick.md`、`model.md` |
+| 复杂 page JSON、左分类右列表、弹窗、内联编辑 | `SKILL.md`、`front-page-quick.md`、`front-page.md` |
+| 服务端模板、SEO、公开内容站 | `SKILL.md`、`front-page-quick.md`、`template-page.md`、`security.md` |
 | 状态流转、跨表事务、外部调用 | `SKILL.md`、`service-api.md`、`security.md` |
 | 组件维护 | `SKILL.md`、`component.md`、组件自己的 `skills/**/SKILL.md` |
 | Dever 框架维护 | `SKILL.md`、`framework.md`、`troubleshooting.md` |
@@ -127,6 +144,8 @@ dever skill install --project=true
 4. 写 `front/page/<site>/<resource>/update.json`。
 5. 让标准 page path 自动推导 model。
 
+普通 CRUD 先按 `references/front-page-quick.md` 写；遇到左分类右列表、嵌入弹窗、内联编辑、站点壳或复杂权限上下文，再读 `references/front-page.md`。
+
 禁止为了普通 CRUD 新增：
 
 - CRUD API
@@ -136,6 +155,12 @@ dever skill install --project=true
 - `_model`
 - `_use`
 - `<<NewXxxModel>>`
+- `{{Service}}`
+- `type: "service"`
+- `option.use`
+- `/front/route/option`
+- `childUse`
+- `modelName`
 
 状态、排序等列表维护字段优先使用 package/front 标准列表动作。
 
@@ -256,7 +281,7 @@ package/user/skills/user/SKILL.md
 
 ```bash
 bash skills/skills-dever/scripts/audit.sh --changed
-bash skills/skills-dever/scripts/audit.sh --legacy package/bot module/work
+bash skills/skills-dever/scripts/audit.sh package/bot module/work
 ```
 
 检查内容包括：
@@ -266,7 +291,9 @@ bash skills/skills-dever/scripts/audit.sh --legacy package/bot module/work
 - 标准 page 硬编码 model。
 - 标准 page 缺少 `page.parent`。
 - 标准 update/create 缺少最小 `action.submit`。
-- 标准 list 使用内联编辑但缺少 `show-table.meta.savePath`。
+- 标准 list 使用内联编辑但缺少 `show-table.meta.savePath` 或显式 `action.change`。
+- 禁止手写字符串 option URL：`/front/route/option`。
+- `optionParams` 塞入 `parentField`、`valueField`、`labelField`、`extraFields`、`pageSize`、`order` 等静态 option 配置。
 - page JSON 缺顶层对象。
 - 硬编码 `/front/route/action`。
 - 空 Provider。
@@ -274,7 +301,7 @@ bash skills/skills-dever/scripts/audit.sh --legacy package/bot module/work
 - model 文件命名问题。
 - `longtext` 使用问题。
 
-推荐日常使用 `--changed` 只检查本次改动文件。旧项目盘点使用 `--legacy`，错误降级为警告，避免为了历史问题触发全量重构。它不是 build/test，不会启动项目。
+推荐日常使用 `--changed` 只检查本次改动文件。直接传文件或目录时，所有禁止项都会按错误处理。它不是 build/test，不会启动项目。
 
 ## 组件规则
 
@@ -292,22 +319,11 @@ package/<name>/skills/<name>/SKILL.md
 
 修改组件前先读组件 skill。
 
-## 旧项目升级
-
-旧项目不用一次性全量重构。建议：
-
-1. 安装 `shemic-dever`。
-2. 加 AGENTS managed block。
-3. 补 `files/` 模板。
-4. 复杂组件补组件 skill。
-5. 之后每次改相关功能时，顺手移除多余 Service/API/page 硬编码。
-6. 不确定时跑 `scripts/audit.sh` 做静态检查。
-
 ## 不要做的事
 
 - 不手改 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
 - 不手改 `package/front/front/html/assets/index*.js`。
-- 没有明确兼容要求时，不写旧格式兼容代码。
+- 不为禁止字段保留适配代码，不保留双路径备用实现。
 - 不为普通 CRUD 写 API/Service。
 - 不生成空 Provider。
 - 不把复杂业务塞进 page JSON。

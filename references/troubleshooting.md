@@ -35,7 +35,7 @@
 - model 是否为该字段定义了 Options 或 Relations。
 - 嵌入行/弹窗是否带着正确 model 上下文。
 - page 是否误复用了其他 model 的分类/search 状态。
-- 标准页是否错误硬编码 `_model/_use`。
+- 标准页是否错误硬编码 `_model/_use/submit.use/option.use/childUse`、`<<Model>>`、`{{Service}}`、`type: "service"` 或 `modelName`。
 
 ## 页面 Schema 空值错误
 

@@ -62,7 +62,7 @@ files/
 
 - `files/` 模板必须服从 `references/` 的硬规则，不能生成 reference 明确禁止的写法。
 - `model.go.tmpl` 只生成最小字段和必要 Options，不默认添加唯一索引、查询索引或 `UpdatedAt`；真实索引和更新时间字段由业务需求决定。
-- 标准 page 模板必须保留六个顶层对象，使用路径自动推导 model，不写 `_model`、`_use`、`<<NewXxxModel>>` 或 `submit.use`。
+- 标准 page 模板必须保留六个顶层对象，使用路径自动推导 model，不写 `_model`、`_use`、`<<NewXxxModel>>`、`{{Service}}`、`submit.use`、`option.use`、`childUse`、`type: "service"` 或 `modelName`。
 - 列表页模板必须要求明确 `page.parent`，避免菜单同步把页面落成错误顶层菜单。
 - 编辑页模板必须包含最小 `action.submit`：`{ "type": "save", "params": "form" }`，不写 `data`、`before`、`after`。
 - 详情页模板只展示 model 字段，不硬编码自定义数据源。
@@ -76,7 +76,7 @@ files/
 - 空项目 `go.mod` 来自 `files/go/go.mod.tmpl`。
 - 空项目 `main.go` 来自 `files/go/main.go.tmpl`，默认注册 `data.RegisterRoutes` 和 `frontsite.Register`。
 
-目标配置已存在时，默认不覆盖。使用 `--force` 时必须先备份旧文件。
+目标配置已存在时，默认不覆盖。使用 `--force` 时必须先备份原文件。
 
 规则：
 

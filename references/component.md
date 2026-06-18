@@ -39,7 +39,7 @@ package/<name>/skills/<name>/SKILL.md
 
 - frontmatter `description` 用触发条件描述，优先以 `Use when` 开头，不写流程摘要。
 - 默认使用项目主要语言；当前项目面向中文协作时，组件 skill 正文使用中文。
-- `硬规则` 必须写清：禁止 CRUD wrapper、禁止生成文件/编译产物、公开 API 边界、权限边界、迁移影响。
+- `硬规则` 必须写清：禁止 CRUD wrapper、禁止生成文件/编译产物、公开 API 边界、权限边界、升级影响。
 - `事实来源` 必须列出 model、service、api、front/page、front/src、dever.json 的真实路径；不要只写概念。
 - 公开路径、菜单、站点壳、依赖和 skill 声明必须回到组件 `dever.json`，不要散落到项目级配置。
 
@@ -144,4 +144,4 @@ module/<name>/front/page/<page>/...
 - 公开 API、权限和密钥边界。
 - front 插件规则。
 - 常见错误。
-- 迁移说明。
+- 升级说明。
