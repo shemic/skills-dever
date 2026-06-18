@@ -65,6 +65,7 @@ version: 1.0.0
 - Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；front 站点运行契约随组件写在 `dever.json.front.sites`，项目只可通过 `config/front.json` 覆盖 `sites.<site>` 展示配置；不要在脚本里散落 heredoc 模板或硬编码资产。
 - 修改 `package/<name>` 或 `module/<name>` 前，先检查并遵守 `package/<name>/skills/**/SKILL.md` 或 `module/<name>/skills/**/SKILL.md`。复杂组件没有 skill 时，先按 `component.md` 补齐约束再做大改。
 - `package/front` 是核心 runtime；维护它时必须同时读 `front-page-quick.md`、`front-page.md`、`package-plugin.md`、`security.md`、`framework.md`，不要把业务组件逻辑塞进 front。
+- `front/src/plugin.ts` 的 `depends` 只写 Dever front plugin 名（如 `"crm"`），不要写 npm 包名；npm 依赖必须写在同目录 `front/package.json`。
 - 当前本地代码是事实来源。参考顺序：当前 `package/front`、当前 `package/bot`、当前 `package/user`、当前 module/package 示例、`backend/dever`；外部 demo 只作为补充参考。
 - 开始实现前必须先判断项目模式：`empty-project`、`app-feature`、`package-dev`、`framework-dev`。模式不明时先盘点，不生成、不删除。
 - 非空项目只改当前任务需要的最小范围；删除 Service/API/Provider/page 配置前，必须确认当前 `package/front`、组件能力或真实业务 Service 已覆盖同等行为。

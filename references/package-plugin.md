@@ -217,7 +217,7 @@ export default defineFrontPlugin({
 
 不要再写 `runtime.ts`；Dever CLI 前端插件编译器会按 `plugin.ts` 自动生成开发态和发布态注册入口。
 
-`nodes` 和 `depends` 都从 `plugin.ts` 自动提取，用于运行时按需加载插件。不要在 `dever.json.front.sites` 里手写插件 node 清单；页面 JSON 引用了某个插件 node，主 front 才会加载对应插件。
+`nodes` 和 `depends` 都从 `plugin.ts` 自动提取，用于运行时按需加载插件。`depends` 只写 Dever front plugin 名（例如 bot 插件内部确实依赖 crm 插件时写 `"crm"`），不要写 npm 包名；npm 依赖写在同目录 `front/package.json`。不要在 `dever.json.front.sites` 里手写插件 node 清单；页面 JSON 引用了某个插件 node，主 front 才会加载对应插件。
 
 节点组件使用 `@dever/front-plugin` 暴露的 SDK 和组件：
 

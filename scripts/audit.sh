@@ -250,7 +250,7 @@ check_page() {
     fi
   fi
 
-  if rg -q '/front/route/action|http://|https://.*route/action' "$file"; then
+  if rg -q '/front/route/action|https?://[^"[:space:]]*/front/route/action' "$file"; then
     err "$file: page JSON 不能硬编码 route/action URL；请使用当前 site runtime"
   fi
 }
