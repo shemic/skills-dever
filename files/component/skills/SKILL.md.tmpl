@@ -12,6 +12,8 @@ version: 0.1.0
 
 - 组件源码：`package/{{COMPONENT_NAME}}`
 - 组件页面：`package/{{COMPONENT_NAME}}/front/page`
+- 组件服务端模板：`package/{{COMPONENT_NAME}}/front/template`
+- 组件模板静态资源：`package/{{COMPONENT_NAME}}/front/assets`
 - 组件 front 插件：`package/{{COMPONENT_NAME}}/front/src/plugin.ts`
 - 组件元数据：`package/{{COMPONENT_NAME}}/dever.json`
 - 核心 model：维护本组件后补充具体路径。
@@ -25,6 +27,7 @@ version: 0.1.0
 - 组件专属行为留在本组件内，不散落到全局。
 - 任何公开 API、权限或迁移行为，都要在这里写清楚。
 - 新增菜单、权限、公开路径、站点资源时，优先写入组件 `dever.json`。
+- 新增服务端模板页面时，保留 page JSON 六对象规则，使用 `page.render: "template"` + 顶层 `template`，SEO 放 `data.seo`。
 - 删除或改名页面、model、Service/API 前，先写清迁移影响和旧项目升级步骤。
 
 ## 允许写 Service/API 的场景

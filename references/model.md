@@ -84,7 +84,21 @@ orm.Relation{
 - 中间表：写 `Through/OwnerField/TargetField/Option`
 - 页面列展示关联名时用 `agent.name` 这类路径，不写额外接口。
 
-## 5. 注册规则
+## 5. 索引规则
+
+索引只服务真实查询、幂等和业务一致性，不为了“看起来完整”默认添加。
+
+- 展示名字段（`name`、`title`、`display_name`）默认不加 `unique`，也不默认加 `index:"name,id"`。
+- 只有稳定业务标识才加唯一索引，例如 `key`、`code`、`account`、`token_hash`、`request_id`、`lock_key`、版本号、关系表自然键。
+- 运行态、大表、日志、流水、统计表可以按真实查询保留组合索引，例如 `project_id,status,created_at`、`owner_id,status,id`、`knowledge_base_id,status,id`。
+- 小配置表、分类表不要默认加单独 `sort`、`created_at`、`name` 索引；如果只是后台列表排序，依赖 `Order` 即可。
+- `status,sort,id` 只在数据量可能增长且经常按状态筛选时添加；小型字典/分类表不需要。
+- 如果字段用于模糊搜索，普通 BTree `name,id` 通常无效；不要为了模糊搜索随手加索引。
+- 树路径、文件目录、状态 KV 等确实需要同级唯一时可以加组合唯一，但必须在模型旁能看出业务语义。
+
+索引变更后要注意旧库历史索引。Dever 结构迁移在开启时会按 model 声明同步索引；如果项目未开启或没有执行迁移，需要单独提供清理 SQL/迁移说明。
+
+## 6. 注册规则
 
 Dever 只扫描 `model` 目录里的零参数 `New*Model` 构造函数。注册名：
 

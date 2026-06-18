@@ -39,6 +39,8 @@ module/work/front/page/work/home.json            -> work/home
 - 业务前台组件在自己的 `dever.json.front.sites.<siteKey>` 定义 `api/page/access/entry/public`。
 - `admin` 可以被多个组件追加 `auth/public`；非 `admin` 站点只能由一个组件定义壳字段，避免同名站点被静默覆盖。
 - `access.mode` 支持 `rbac`、`login`、`public`。公开展示或演示站点使用 `public`，不需要登录；只需登录但不走权限树的工作台使用 `login`。
+- `setting.appearance` 和 `setting.runtime.skin/routerMode` 已有 front 默认值，普通业务站点不要重复写；`package/front` 的 `admin` 壳可以保留显式 setting 作为默认后台配置。
+- 本地组件前端插件由 active 组件的 `front/src/plugin.ts`、发布态 `front/dist/manifest.json` 或 embed 产物自动发现，不要为常规本地插件手写 `setting.runtime.plugins`。
 
 ## 必需结构
 
@@ -56,6 +58,85 @@ module/work/front/page/work/home.json            -> work/home
 ```
 
 缺少 `data`、`state` 或 `action` 常会导致 schema/runtime 空值错误。
+
+## 服务端模板页面
+
+公开内容站、演示站、CMS 类 SEO 页面可以使用 `package/front` 的服务端模板渲染能力。它不替代现有 JSON/React 页面，只在页面声明 `page.render: "template"` 时生效。
+
+模板页面仍必须保留六对象规则：
+
+```json
+{
+  "page": {
+    "name": "文章详情",
+    "render": "template"
+  },
+  "layout": {},
+  "nodes": {},
+  "data": {
+    "article": {
+      "_model": "mt.NewArticleModel",
+      "one": true,
+      "required": true,
+      "defaultFilters": {
+        "slug": "$route.slug",
+        "status": "published"
+      }
+    },
+    "seo": {
+      "title": "$data.article.title",
+      "description": "$data.article.summary",
+      "canonical": "/article/${data.article.slug}"
+    }
+  },
+  "state": {},
+  "action": {},
+  "template": {
+    "route": "/article/:slug",
+    "layout": "layout.html",
+    "view": "article.html"
+  }
+}
+```
+
+规则：
+
+- `page.render: "template"` 表示该 page 由 Go `html/template` 服务端输出完整 HTML。
+- 顶层 `template` 只放渲染元信息：`route`、`layout`、`view`。不要把模板配置塞进 `nodes`；`nodes` 保持 React/runtime 节点语义。
+- SEO 数据放在 `data.seo`，渲染后模板上下文提供 `.SEO.Title`、`.SEO.Description`、`.SEO.Image`、`.SEO.Canonical`。
+- `data` 支持模板站最小数据能力：`_model`、`one: true`、`required: true`、`defaultFilters`、`pageSize`、`order`、`type: "service"` + `service`。
+- `defaultFilters`、`data.seo` 等模板值支持 `$route.xxx`、`$query.xxx`、`$site.xxx`、`$data.xxx`。
+- 单条数据设置 `required: true` 时，查询不到记录返回 404。
+- 模板访问路径是 `/{site.api}{template.route}`。例如 site `api: "mt"` + `route: "/article/:slug"`，访问 `/mt/article/hello`。
+- 模板路由不要占用站点保留根路径：`main`、`route`、`upload`、`resource`、`import`、`export`、`runtime.js`、`assets`。
+
+模板和资源随组件发布：
+
+```txt
+module/mt/front/page/mt_content/article.json
+module/mt/front/template/mt_content/layout.html
+module/mt/front/template/mt_content/article.html
+module/mt/front/template/mt_content/partials/header.html
+module/mt/front/assets/mt_content/css/site.css
+module/mt/front/assets/mt_content/images/logo.png
+```
+
+模板文件默认从当前 site 的 `page` 目录隔离读取。上例 site `page: "mt_content"`，所以 `template.view: "article.html"` 会读取 `front/template/mt_content/article.html`。
+
+静态资源访问路径是 `/{site.api}/assets/{file}`，模板上下文提供 `.Site.AssetBase`：
+
+```html
+<link rel="stylesheet" href="{{ .Site.AssetBase }}/css/site.css">
+<img src="{{ .Site.AssetBase }}/images/logo.png" alt="">
+```
+
+项目级资源覆盖放在：
+
+```txt
+config/front/assets/<siteKey>/
+```
+
+读取优先级：项目覆盖资源优先，其次是组件内置 `front/assets/<site.page>/...`。
 
 ## `page` 对象
 
@@ -258,6 +339,8 @@ page-main
 
 - `before`：规范化、校验、派生字段。返回值替换 `data` 模板输入。普通 CRUD 不写。
 - `after`：关系同步、计数、缓存失效。返回值不影响保存结果。普通 CRUD 不写。
+
+`validate.model` 只用于真实唯一业务标识，例如 `key`、`code`、`account`、手机号、OpenID、关系绑定自然键。展示名字段不要写 `validate.model`；展示名只做必填、长度、格式等表单校验。
 
 ## 内联编辑与列表维护字段
 

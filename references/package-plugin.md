@@ -348,10 +348,10 @@ dever build --skip-front
 
 ## 10. 前端产物服务与二进制
 
-插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`；`dever run` 开发态优先发现源码插件，并按后端 `http.port + 10000` 派生插件 dev server 端口，例如 `8085 -> 18085`、`8082 -> 18082`。运行时会先根据页面 schema 的 node 类型判断需要哪些插件，再加载对应插件入口。page JSON 放 `front/page`。package 需要进二进制时用 `go:embed` 带进产物：
+插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`；`dever run` 开发态优先发现源码插件，并按后端 `http.port + 10000` 派生插件 dev server 端口，例如 `8085 -> 18085`、`8082 -> 18082`。运行时会先根据页面 schema 的 node 类型判断需要哪些插件，再加载对应插件入口。page JSON 放 `front/page`。服务端模板站还可以放 `front/template` 和 `front/assets`。package 需要进二进制时用 `go:embed` 带进产物：
 
 ```go
-//go:embed front/page
+//go:embed front/page front/template front/assets
 var PageFS embed.FS
 
 //go:embed front/dist

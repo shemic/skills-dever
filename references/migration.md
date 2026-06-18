@@ -43,7 +43,22 @@ find module package -maxdepth 4 -type f 2>/dev/null
 
 除非用户明确要求，不一次性重写所有页面。
 
-## 4. Service/API 迁移
+## 4. Model 和索引迁移
+
+修改 model 时：
+
+- 展示名字段不要保留历史 `unique`、`index:"name,id"`、`validate.model`。
+- 只保留真实业务标识唯一约束，例如 `key`、`code`、`account`、手机号、OpenID、关系自然键、request/lock/version。
+- 小配置表的单独 `sort`、`created_at`、`name` 索引可以随触达范围删除。
+- 运行态、日志、流水、统计、知识库节点/向量等大表索引不要因“精简”误删。
+
+旧库升级时要处理历史索引：
+
+- 代码删掉 model index tag 后，必须执行一次 Dever 结构迁移，或提供人工 SQL 清理历史 `idx_*` / `uidx_*`。
+- 如果项目没有开启结构迁移，源码变化不会自动删除数据库里的旧唯一索引。
+- 清理前先确认索引用途；不要删除 `key`、`code`、关系绑定、版本、锁、request_id 这类业务唯一索引。
+
+## 5. Service/API 迁移
 
 修改 service/API 时：
 
@@ -55,7 +70,7 @@ find module package -maxdepth 4 -type f 2>/dev/null
 
 不要为了“规范化”把可运行的真实业务 Service 合并进 page JSON。
 
-## 5. 组件迁移
+## 6. 组件迁移
 
 复杂组件：
 
@@ -65,14 +80,14 @@ find module package -maxdepth 4 -type f 2>/dev/null
 - 旧项目若仍保留项目级 `front.json`，迁移时按组件归属拆回对应 package/module 的 `dever.json.front`。
 - 写清手动升级步骤，不让应用项目猜。
 
-## 6. 资产迁移
+## 7. 资产迁移
 
 - 把 logo/favicon 移到 `config/front/assets/<site>/images`。
 - 侧栏和加载态 logo 使用透明背景。
 - favicon 可以保留背景。
 - 停止修改编译产物 `package/front/html`、`front/dist`、`package/*/front/dist`。
 
-## 7. 禁止事项
+## 8. 禁止事项
 
 - 不用 `scripts/boot.sh` 覆盖已有项目。
 - 不批量删除旧 Service/API。
