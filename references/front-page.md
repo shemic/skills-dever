@@ -8,7 +8,7 @@
 
 按这个顺序查示例：
 
-1. 当前 `package/front/page` 和 `package/front/service/page`。
+1. 当前 `package/front/front/page` 和 `package/front/service/page`。
 2. 当前 `package/bot/front/page`。
 3. 如果已安装，查当前 `package/user/front/page`。
 4. 当前项目已有 module/package 页面。
@@ -21,7 +21,7 @@
 页面 route 由所属目录和文件路径决定：
 
 ```txt
-package/front/page/admin/account/list.json       -> front/account/list
+package/front/front/page/admin/account/list.json -> front/account/list
 package/bot/front/page/admin/agent/list.json     -> bot/agent/list
 module/work/front/page/work/home.json            -> work/home
 ```
@@ -36,10 +36,13 @@ module/work/front/page/work/home.json            -> work/home
 站点定义随组件发布：
 
 - `package/front/dever.json.front.sites.admin` 定义后台壳。
-- 业务前台组件在自己的 `dever.json.front.sites.<siteKey>` 定义 `api/page/access/entry/public`。
+- 业务前台组件在自己的 `dever.json.front.sites.<siteKey>` 定义 `api/page/access/entry/public/config`。
 - `admin` 可以被多个组件追加 `auth/public`；非 `admin` 站点只能由一个组件定义壳字段，避免同名站点被静默覆盖。
 - `access.mode` 支持 `rbac`、`login`、`public`。公开展示或演示站点使用 `public`，不需要登录；只需登录但不走权限树的工作台使用 `login`。
 - `setting.appearance` 和 `setting.runtime.skin/routerMode` 已有 front 默认值，普通业务站点不要重复写；`package/front` 的 `admin` 壳可以保留显式 setting 作为默认后台配置。
+- `setting.runtime.shell` 支持 `app` 和 `blank`。`admin` 或 `access.mode: "rbac"` 默认 `app`，会套后台侧边栏/顶栏；`public` 和 `login` 站点默认 `blank`，只渲染自己的 `main.json`。
+- 自定义站点、前台工作台、公开页面优先使用默认 `blank`，不要为了去掉后台布局改 React 入口。`blank` 不挂后台侧边栏、顶栏和命令面板，只保留页面渲染、主题/layout context、`app-outlet` 所需的基础上下文。
+- 确实需要复用后台侧边栏、顶栏或命令面板时，才显式写 `"shell": "app"` 并使用 `app-sidebar`、`app-topbar`、`shell-sidebar-inset` 等壳节点。
 - 本地组件前端插件由 active 组件的 `front/src/plugin.ts`、发布态 `front/dist/manifest.json` 或 embed 产物自动发现，不要为常规本地插件手写 `setting.runtime.plugins`。
 
 ## 必需结构
@@ -102,6 +105,7 @@ module/work/front/page/work/home.json            -> work/home
 规则：
 
 - `page.render: "template"` 表示该 page 由 Go `html/template` 服务端输出完整 HTML。
+- 模板页面直接由服务端输出，不受 `setting.runtime.shell` 影响，也不会加载 React 后台壳。
 - 顶层 `template` 只放渲染元信息：`route`、`layout`、`view`。不要把模板配置塞进 `nodes`；`nodes` 保持 React/runtime 节点语义。
 - SEO 数据放在 `data.seo`，渲染后模板上下文提供 `.SEO.Title`、`.SEO.Description`、`.SEO.Image`、`.SEO.Canonical`。
 - `data` 支持模板站最小数据能力：`_model`、`one: true`、`required: true`、`defaultFilters`、`pageSize`、`order`、`type: "service"` + `service`。
@@ -123,20 +127,21 @@ module/mt/front/assets/mt_content/images/logo.png
 
 模板文件默认从当前 site 的 `page` 目录隔离读取。上例 site `page: "mt_content"`，所以 `template.view: "article.html"` 会读取 `front/template/mt_content/article.html`。
 
-静态资源访问路径是 `/{site.api}/assets/{file}`，模板上下文提供 `.Site.AssetBase`：
+静态资源访问路径是 `/{site}/assets/{assetRef}`，模板上下文提供 `.Site.AssetBase`。资源必须显式声明来源：
 
 ```html
-<link rel="stylesheet" href="{{ .Site.AssetBase }}/css/site.css">
-<img src="{{ .Site.AssetBase }}/images/logo.png" alt="">
+<link rel="stylesheet" href="{{ .Site.AssetBase }}/mt/assets/mt_content/css/site.css">
+<img src="{{ .Site.AssetBase }}/config/assets/mt_content/images/logo.png" alt="">
 ```
 
-项目级资源覆盖放在：
+资源引用规则：
 
 ```txt
-config/front/assets/<siteKey>/
+config/assets/<site>/images/logo.svg      -> config/front/assets/<site>/images/logo.svg
+mt/assets/mt_content/css/site.css         -> module/package mt 的 front/assets/mt_content/css/site.css
 ```
 
-读取优先级：项目覆盖资源优先，其次是组件内置 `front/assets/<site.page>/...`。
+不做隐式覆盖查找；需要项目覆盖时写 `config/assets/...`，需要组件默认资源时写 `<component>/assets/...`。
 
 ## `page` 对象
 

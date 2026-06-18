@@ -82,10 +82,11 @@ find module package -maxdepth 4 -type f 2>/dev/null
 
 ## 7. 资产迁移
 
-- 把 logo/favicon 移到 `config/front/assets/<site>/images`。
+- 把组件默认 logo/favicon 移到所属组件 `front/assets/<site>/images`，项目覆盖资源放 `config/front/assets/<site>/images`。
+- 在组件 `dever.json.front.sites.<site>.config.logo/favicon` 或项目 `config/front.json.sites.<site>.logo/favicon` 使用显式资源引用，不再使用旧 `assets` 字段。
 - 侧栏和加载态 logo 使用透明背景。
 - favicon 可以保留背景。
-- 停止修改编译产物 `package/front/html`、`front/dist`、`package/*/front/dist`。
+- 停止修改编译产物 `package/front/front/html`、`front/dist`、`package/*/front/dist`。
 
 ## 8. 禁止事项
 

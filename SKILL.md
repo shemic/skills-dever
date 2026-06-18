@@ -43,7 +43,8 @@ version: 1.0.0
 
 - `shemic-dever` 的唯一维护源是 `github.com/shemic/skills-dever`; Dever 框架仓库只负责安装和检查，不维护完整内嵌副本。
 - 不手改生成文件：`data/router.go`、`data/load/model.go`、`data/load/service.go`、`data/table/*.json`。
-- 不通过修改 `package/front/html/assets/index*.js` 等编译产物来改行为、logo、文案或样式。
+- 不通过修改 `package/front/front/html/assets/index*.js` 等编译产物来改行为、logo、文案或样式。
+- 用户没有明确要求兼容旧格式时，不写兼容代码、不保留旧分支、不做双路径兜底；直接迁移到当前规则并清理旧代码。
 - 应用项目 Go module 固定使用 `my`；不要改成项目名、域名或目录名。
 - 空项目 `go.mod` 来自 `files/go/go.mod.tmpl`。普通外部项目不能包含 `replace github.com/shemic/dever => ./dever`；只有本地框架开发才加这个 replace。
 - 普通后台 CRUD 走 `Model + package/front + page JSON`；不要写 CRUD API 或 CRUD Service。
@@ -56,7 +57,7 @@ version: 1.0.0
 - Provider 只用于真实 page/load hook、校验、规范化、保存生命周期或适配；不要创建空 passthrough Provider。
 - Service 只用于真实业务流程：事务、状态流转、外部调用、异步编排、跨表规则；不要创建 CRUD wrapper service。
 - API 只用于真实 HTTP 能力：登录、注册、回调、外部端点、workflow action、复杂前端交互；API 必须薄。
-- Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；front 站点配置随组件写在 `dever.json.front`；不要在脚本里散落 heredoc 模板或硬编码资产。
+- Config、logo、favicon、AGENTS 片段、page 骨架、组件 skill 骨架来自 `files/`；front 站点运行契约随组件写在 `dever.json.front.sites`，项目只可通过 `config/front.json` 覆盖 `sites.<site>` 展示配置；不要在脚本里散落 heredoc 模板或硬编码资产。
 - 修改 `package/<name>` 或 `module/<name>` 前，先检查并遵守 `package/<name>/skills/**/SKILL.md` 或 `module/<name>/skills/**/SKILL.md`。
 - 当前本地代码是事实来源。参考顺序：当前 `package/front`、当前 `package/bot`、当前 `package/user`、当前 module/package 示例、`backend/dever`；外部 demo 只作为兜底。
 - 开始实现前必须先判断项目模式：`empty-project`、`existing-project`、`app-feature`、`package-dev`、`framework-dev`。模式不明时先盘点，不生成、不迁移、不删除。

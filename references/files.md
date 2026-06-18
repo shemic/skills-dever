@@ -72,29 +72,33 @@ files/
 - `go.mod.tmpl` 不写死 Dever 版本；空项目初始化脚本用 `go get github.com/shemic/dever@main` 写入当前 main 对应的真实版本。
 - `go.sum` 由 Go 工具生成，不能作为模板维护。
 - 日志默认写文件：`data/log/access.log`、`data/log/error.log`。
-- front 站点配置放组件 `dever.json.front.sites`，全局公开路径放 `dever.json.front.public`。
-- `config/front/assets/<site>` 只放站点静态资产；不要用项目级 `config/front.json(c)` 维护站点。
+- front 站点运行契约放组件 `dever.json.front.sites`，全局公开路径放 `dever.json.front.public`。
+- `config/front.json` 只允许覆盖 `sites.<site>` 展示配置：`name/subtitle/description/url/logo/favicon`。不要在项目级配置写 `api/page/access/entry/public/auth/setting`。
+- `config/front/assets/<site>` 只放项目级站点静态资产，通过 `config/assets/<site>/...` 显式引用。
 - 项目运行数据放 `data/`，不放 `package/`。
 
 ## Logo 和 Favicon
 
-品牌资产属于站点配置资产：
+组件默认品牌资产放在组件自己的 `front/assets/<site>/`，项目覆盖资产放在 `config/front/assets/<site>/`：
 
 ```txt
+package/<name>/front/assets/<site>/images/logo.svg
+package/<name>/front/assets/<site>/images/favicon.svg
 config/front/assets/<site>/images/logo.svg
 config/front/assets/<site>/images/favicon.svg
 ```
 
-组件 `dever.json.front.sites.<site>.assets` 使用相对路径引用它们：
+组件 `dever.json.front.sites.<site>.config` 使用显式资源引用：
 
 ```jsonc
 {
   "front": {
     "sites": {
       "admin": {
-        "assets": {
-          "logo": "assets/images/logo.svg",
-          "favicon": "assets/images/favicon.svg"
+        "config": {
+          "name": "管理后台",
+          "logo": "front/assets/admin/images/logo.svg",
+          "favicon": "front/assets/admin/images/favicon.svg"
         }
       }
     }
@@ -102,12 +106,33 @@ config/front/assets/<site>/images/favicon.svg
 }
 ```
 
+项目 `config/front.json` 只覆盖展示配置：
+
+```jsonc
+{
+  "sites": {
+    "admin": {
+      "logo": "config/assets/admin/images/logo.svg",
+      "favicon": "config/assets/admin/images/favicon.svg"
+    }
+  }
+}
+```
+
+资源引用只允许：
+
+```txt
+config/assets/<site>/images/logo.svg        -> config/front/assets/<site>/images/logo.svg
+<component>/assets/<site>/images/logo.svg   -> package/module <component>/front/assets/<site>/images/logo.svg
+https://...、/static/logo.svg、data:、blob: -> 原样使用
+```
+
 规则：
 
 - `logo.svg` 通常应为透明背景，适合侧栏和加载态。
 - `favicon.svg` 可以自带背景，因为它需要在浏览器标签页独立展示。
-- 不要通过编辑 `package/front/html/assets/index*.js` 修改 logo。
-- 不要编辑 `package/front/html` 或插件 `front/dist` 下的构建产物。
+- 不要通过编辑 `package/front/front/html/assets/index*.js` 修改 logo。
+- 不要编辑 `package/front/front/html` 或插件 `front/dist` 下的构建产物。
 - 不要按站点复制一套 logo 展示代码；复用 package/front 的站点品牌/runtime 行为。
 
 ## AGENTS 提示块

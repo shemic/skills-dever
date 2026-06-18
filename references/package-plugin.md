@@ -140,7 +140,7 @@ backend/module/<name>/front/
 开发态有两种：
 
 1. 主 front 源码开发：`cd front && pnpm dev`，访问 5173。
-2. 应用开发者模式：`dever run`，访问 8085；主 front 使用 `package/front/html`，插件源码由 Dever CLI 内置的 `compiler/front` 编译，8085 代理后按需加载。
+2. 应用开发者模式：`dever run`，访问 8085；主 front 使用 `package/front/front/html`，插件源码由 Dever CLI 内置的 `compiler/front` 编译，8085 代理后按需加载。
 
 两种模式都会扫描：
 
@@ -255,7 +255,7 @@ import { Button, request } from "@dever/front-plugin";
 
 - 适合后台型系统、运营系统、内部工作台。
 - `dever.json.front.sites.<siteKey>` 使用自己的 `api/page/access/authProvider`。
-- 在该站点 page 目录放自己的 `main.json` / `login.json`，结构参考 `package/front/page/admin/main.json` 和 `login.json`。
+- 在该站点 page 目录放自己的 `main.json` / `login.json`，结构参考 `package/front/front/page/admin/main.json` 和 `login.json`。
 - `main.json` 组合 `app-sidebar`、`app-topbar`、`app-outlet`、按需 `app-assistant`。
 - `login.json` 可复用 `app-site-brand`、`app-login-form`；登录接口由当前站点 `api` 决定。
 - 独立账号优先写业务模块 `api/auth.go` 和 `service/auth.go`，返回兼容的 `token`、`user.id`、`user.name`、`user.account`。
@@ -325,7 +325,7 @@ dever front build
 dever front build bot
 ```
 
-主 `front` 运行时单独构建，输出到 `backend/package/front/html`。它只包含基础框架和基础组件，不把 `backend/package/*/front/src`、`backend/module/*/front/src` 编进主包：
+主 `front` 运行时单独构建，输出到 `backend/package/front/front/html`。它只包含基础框架和基础组件，不把 `backend/package/*/front/src`、`backend/module/*/front/src` 编进主包：
 
 ```bash
 cd front

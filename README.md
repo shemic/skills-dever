@@ -168,9 +168,10 @@ files/config/front/assets/<site>/images/favicon.svg
 
 - `logo.svg` 默认透明背景，用于侧栏和加载态。
 - `favicon.svg` 可以带背景。
-- 不改 `package/front/html/assets/index*.js`。
+- 不改 `package/front/front/html/assets/index*.js`。
 - 不改 `front/dist`。
-- 站点资产通过组件 `dever.json.front.sites.<site>.assets` 引用。
+- 站点展示配置放组件 `dever.json.front.sites.<site>.config`，项目覆盖放 `config/front.json.sites.<site>`。
+- 资源使用 `config/assets/...` 或 `<component>/assets/...` 显式引用。
 
 ## 脚本
 
@@ -302,7 +303,8 @@ package/<name>/skills/<name>/SKILL.md
 ## 不要做的事
 
 - 不手改 `data/router.go`、`data/load/*.go`、`data/table/*.json`。
-- 不手改 `package/front/html/assets/index*.js`。
+- 不手改 `package/front/front/html/assets/index*.js`。
+- 没有明确兼容要求时，不写旧格式兼容代码。
 - 不为普通 CRUD 写 API/Service。
 - 不生成空 Provider。
 - 不把复杂业务塞进 page JSON。

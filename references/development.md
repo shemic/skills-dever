@@ -90,8 +90,8 @@
 ## 9. 文件和资源边界
 
 - 配置、logo、favicon、AGENTS block、page 骨架从 `files/` 模板生成。
-- 不修改 `package/front/html/assets/index*.js`、`front/dist` 等编译产物。
-- 站点 logo 放 `config/front/assets/<site>/images/logo.svg`，默认透明背景。
+- 不修改 `package/front/front/html/assets/index*.js`、`front/dist` 等编译产物。
+- 站点 logo 默认放组件 `front/assets/<site>/images/logo.svg`，项目覆盖放 `config/front/assets/<site>/images/logo.svg`，并通过 `config.logo` 显式引用。
 - favicon 可带背景。
 
 ## 10. 缓存与性能边界

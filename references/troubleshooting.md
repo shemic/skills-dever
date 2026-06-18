@@ -62,10 +62,10 @@
 
 检查：
 
-- `config/front/assets/<site>/images/logo.svg` 用作侧栏/加载态 logo 时是否透明。
+- 组件默认 `front/assets/<site>/images/logo.svg` 或项目覆盖 `config/front/assets/<site>/images/logo.svg` 用作侧栏/加载态 logo 时是否透明。
 - `favicon.svg` 可以带背景。
-- 组件 `dever.json.front.sites.<site>.assets.logo` 是否指向正确文件。
-- 是否误改了编译产物 `package/front/html/assets/index*.js`。
+- 组件 `dever.json.front.sites.<site>.config.logo` 或项目 `config/front.json.sites.<site>.logo` 是否使用 `config/assets/...` 或 `<component>/assets/...` 显式资源引用。
+- 是否误改了编译产物 `package/front/front/html/assets/index*.js`。
 - front 源码是否故意把 logo 包在固定深色 icon 容器里。
 
 ## Front 插件未加载

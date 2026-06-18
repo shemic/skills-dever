@@ -48,7 +48,7 @@ dever.Run(func(s server.Server) {
 - `dever model`：只生成 `data/load/model.go`。
 - `dever service`：只生成 `data/load/service.go`。
 - `dever migrate default`：按 `data/table` 应用表结构。
-- `cd front && pnpm run build:backend`：构建主 `front` 运行时，输出到 `backend/package/front/html`；不包含 module/package 插件源码。
+- `cd front && pnpm run build:backend`：构建主 `front` 运行时，输出到 `backend/package/front/front/html`；不包含 module/package 插件源码。
 - `dever front build`：构建所有 `backend/package/*/front` 与 `backend/module/*/front` 插件前端。
 - `dever front build bot`：只构建 `bot` 前端插件，输出到对应 `front/dist`。
 - `dever package add bot`：从 `github.com/dever-package/bot` 拉取 package，创建 `module/bot/main.go` shim，并刷新生成文件。
@@ -77,7 +77,7 @@ Dever 框架源码主仓库在 GitHub：
 - `backend/package/front`：当前项目内置的站点运行时、后台页面、插件服务、上传、导入导出等通用 package。
 - `backend/package/bot`：当前项目内置的 bot package。
 - package 拉取来源：`https://github.com/dever-package/<name>.git`。
-- `front`：主 front 运行时源码，构建产物输出到 `backend/package/front/html`。
+- `front`：主 front 运行时源码，构建产物输出到 `backend/package/front/front/html`。
 
 如果 `go.mod` 有：
 
@@ -100,12 +100,12 @@ replace github.com/shemic/dever => ./dever
 
 也不要手改编译产物来修前端问题：
 
-- `package/front/html/assets/index*.js`
-- `package/front/html/assets/*.css`
+- `package/front/front/html/assets/index*.js`
+- `package/front/front/html/assets/*.css`
 - `package/*/front/dist/*`
 - `module/*/front/dist/*`
 
-改源码、配置或 `config/front/assets`，再由正常构建/运行流程产生结果。
+改源码、`dever.json.front.sites.<site>.config`、`config/front.json` 或 `config/front/assets`，再由正常构建/运行流程产生结果。
 
 ## module 与 package
 

@@ -130,7 +130,7 @@ skills/skills-dever/files/config/setting.jsonc.tmpl
 - `front.sites.<siteKey>.api` 使用该系统的 API 分组；后台通常为 `front`。
 - `front.sites.<siteKey>.page` 决定物理页面目录，页面放到 `front/page/{page}/...`；`siteKey` 和 `page` 可以同名，也可以不同名。
 - `front.sites.<siteKey>.access` 使用该系统需要的 `rbac`、`login` 或 `public` 访问模式。
-- `front.sites.<siteKey>.assets.logo/favicon` 的相对路径映射到 `config/front/assets/{siteKey}/`。
+- `front.sites.<siteKey>.config` 放站点展示配置；`logo/favicon` 使用显式资源引用，例如 `work/assets/work/images/logo.svg` 或 `config/assets/work/images/logo.svg`。
 - `front.public` 保留上传、站点信息、bot 回调/请求等 package 需要的公开路径。
 - 菜单只放当前 site 的真实功能分组；bot 自带页面按 package 能力接入，不要复制页面实现。
 
@@ -145,9 +145,13 @@ skills/skills-dever/files/config/setting.jsonc.tmpl
     ],
     "sites": {
       "admin": {
-        "name": "管理后台",
         "api": "front",
         "page": "admin",
+        "config": {
+          "name": "管理后台",
+          "logo": "front/assets/admin/images/logo.svg",
+          "favicon": "front/assets/admin/images/favicon.svg"
+        },
         "access": {
           "mode": "rbac",
           "authProvider": "front"
@@ -156,9 +160,13 @@ skills/skills-dever/files/config/setting.jsonc.tmpl
         "auth": []
       },
       "work": {
-        "name": "工作台",
         "api": "work",
         "page": "work",
+        "config": {
+          "name": "工作台",
+          "logo": "work/assets/work/images/logo.svg",
+          "favicon": "work/assets/work/images/favicon.svg"
+        },
         "access": {
           "mode": "login",
           "authProvider": "work"
@@ -180,7 +188,7 @@ skills/skills-dever/files/config/setting.jsonc.tmpl
 
 ## 5. 多站点复用决策
 
-`package/front/html` 和主 React runtime 是所有 `sites` 共享的。每个站点的差异来自 active 组件 `dever.json.front.sites.<siteKey>` 注入的 runtime：`siteKey`、`api`、`page`、`access`、资源和展示信息。
+`package/front/front/html` 和主 React runtime 是所有 `sites` 共享的。每个站点的差异来自 active 组件 `dever.json.front.sites.<siteKey>` 注入的 runtime：`siteKey`、`api`、`page`、`access`、`config` 展示配置。
 
 不要把“复用 admin 样式”和“复用 admin 账号权限”混为一件事：
 
