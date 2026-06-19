@@ -1,28 +1,21 @@
-# 文件、配置和资产
+# 文件和模板
 
-`skills/skills-dever/files` 是模板和静态资源来源。不要把大段 heredoc 模板散落在脚本里，也不要通过修改编译产物来改配置或品牌展示。
+`files/` 是确定性模板来源。不要把大段 heredoc 模板散落在脚本里。
 
-## files 目录
-
-期望结构：
+## 目录
 
 ```txt
 files/
-  gitignore
   AGENTS.dever.md
-  config/
-    setting.jsonc.tmpl
-    front/assets/admin/images/logo.svg
-    front/assets/admin/images/favicon.svg
-    front/assets/work/images/logo.svg
-    front/assets/work/images/favicon.svg
+  gitignore
+  config/setting.jsonc.tmpl
   go/
     go.mod.tmpl
     main.go.tmpl
-    package-shim.go.tmpl
     model.go.tmpl
-    middleware/readme.txt
+    package-shim.go.tmpl
     data/readme.txt
+    middleware/readme.txt
     package/readme.txt
   page/standard/
     list.json.tmpl
@@ -34,148 +27,55 @@ files/
     skills/README.md.tmpl
 ```
 
-脚本可以替换这些简单占位符：
+## 模板规则
+
+- 模板必须生成当前 Dever 协议。
+- 标准 page 模板必须保留 `page/layout/nodes/data/state/action` 六对象。
+- 标准 page 模板使用路径自动推导 model，不写旧字段。
+- list 页必须显式 `page.parent`。
+- update 页只写最小 `action.submit`。
+- Go module 固定 `module my`。
+- 普通项目入口使用 `github.com/dever-package/front/service/site`，不 import 本地 `package/front`。
+- package shim 只写 `// dever:import github.com/dever-package/<name>`。
+
+## 旧写法禁止
+
+模板不能生成：
 
 ```txt
-{{APP_NAME}}
-{{PORT}}
-{{MODULE_NAME}}
-{{PACKAGE_NAME}}
-{{TYPE_NAME}}
-{{RESOURCE_FILE}}
-{{MODEL_FUNC}}
-{{TABLE_NAME}}
-{{SITE_KEY}}
-{{PAGE_NAME}}
-{{RESOURCE_NAME}}
-{{RESOURCE_TITLE}}
-{{PARENT_KEY}}
-{{PARENT_ROUTE}}
-{{UPDATE_ROUTE}}
-{{COMPONENT_NAME}}
-{{COMPONENT_TITLE}}
+_model
+_use
+modelName
+modelPath
+type: "service"
+submit.use
+option.use
+childUse
+service@...
+transform
+<<NewXxxModel>>
+{{Service}}
+/front/route/option
+/front/route/action
 ```
 
-除非当前仓库已经使用复杂模板引擎，否则不要引入新的模板引擎。
+## 资产
 
-模板一致性规则：
+- `logo.svg` 默认透明背景。
+- `favicon.svg` 可以带背景。
+- 站点展示配置在组件 `dever.json.front.sites.<site>.config`。
+- 项目覆盖只写 `config/front.json.sites.<site>` 的展示配置。
+- 不修改 `package/front/front/html` 或 `front/dist` 产物。
 
-- `files/` 模板必须服从 `references/` 的硬规则，不能生成 reference 明确禁止的写法。
-- `model.go.tmpl` 只生成最小字段和必要 Options，不默认添加唯一索引、查询索引或 `UpdatedAt`；真实索引和更新时间字段由业务需求决定。
-- 标准 page 模板必须保留六个顶层对象，使用路径自动推导 model，不写 `_model`、`_use`、`<<NewXxxModel>>`、`{{Service}}`、`submit.use`、`option.use`、`childUse`、`type: "service"` 或 `modelName`。
-- 列表页模板必须要求明确 `page.parent`，避免菜单同步把页面落成错误顶层菜单。
-- 编辑页模板必须包含最小 `action.submit`：`{ "type": "save", "params": "form" }`，不写 `data`、`before`、`after`。
-- 详情页模板只展示 model 字段，不硬编码自定义数据源。
-- 新增硬规则后，如果能用静态文本发现，就同步更新 `scripts/audit.sh`。
+## 脚本
 
-## 配置
+- `boot.sh` 只用于空项目。
+- `module.sh` 只生成 model 骨架，不生成 Service/API。
+- `page.sh` 只生成标准 page JSON。
+- `component-skill.sh` 生成 `package` 或 `module` 组件 skill。
 
-从模板生成配置：
+新增模板字段时，同步检查：
 
-- `config/setting.jsonc` 来自 `files/config/setting.jsonc.tmpl`。
-- 空项目 `go.mod` 来自 `files/go/go.mod.tmpl`。
-- 空项目 `main.go` 来自 `files/go/main.go.tmpl`，默认注册 `data.RegisterRoutes` 和 `frontsite.Register`。
-
-目标配置已存在时，默认不覆盖。使用 `--force` 时必须先备份原文件。
-
-规则：
-
-- 模板里不放真实密钥。
-- 占位值使用 `replace_me`。
-- `go.mod.tmpl` 是普通外部项目模板，不能包含 `replace github.com/shemic/dever => ./dever`。
-- `go.mod.tmpl` 不写死 Dever 版本；空项目初始化脚本用 `go get github.com/shemic/dever@main` 写入当前 main 对应的真实版本。
-- `go.sum` 由 Go 工具生成，不能作为模板维护。
-- 日志默认写文件：`data/log/access.log`、`data/log/error.log`。
-- front 站点运行契约放组件 `dever.json.front.sites`，全局公开路径放 `dever.json.front.public`。
-- `config/front.json` 只允许覆盖 `sites.<site>` 展示配置：`name/subtitle/description/url/logo/favicon`。不要在项目级配置写 `api/page/access/entry/public/auth/setting`。
-- `config/front/assets/<site>` 只放项目级站点静态资产，通过 `config/assets/<site>/...` 显式引用。
-- 项目运行数据放 `data/`，不放 `package/`。
-
-## Logo 和 Favicon
-
-组件默认品牌资产放在组件自己的 `front/assets/<site>/`，项目覆盖资产放在 `config/front/assets/<site>/`：
-
-```txt
-package/<name>/front/assets/<site>/images/logo.svg
-package/<name>/front/assets/<site>/images/favicon.svg
-config/front/assets/<site>/images/logo.svg
-config/front/assets/<site>/images/favicon.svg
+```bash
+bash skills/skills-dever/scripts/audit.sh <generated-file>
 ```
-
-组件 `dever.json.front.sites.<site>.config` 使用显式资源引用：
-
-```jsonc
-{
-  "front": {
-    "sites": {
-      "admin": {
-        "config": {
-          "name": "管理后台",
-          "logo": "front/assets/admin/images/logo.svg",
-          "favicon": "front/assets/admin/images/favicon.svg"
-        }
-      }
-    }
-  }
-}
-```
-
-项目 `config/front.json` 只覆盖展示配置：
-
-```jsonc
-{
-  "sites": {
-    "admin": {
-      "logo": "config/assets/admin/images/logo.svg",
-      "favicon": "config/assets/admin/images/favicon.svg"
-    }
-  }
-}
-```
-
-资源引用只允许：
-
-```txt
-config/assets/<site>/images/logo.svg        -> config/front/assets/<site>/images/logo.svg
-<component>/assets/<site>/images/logo.svg   -> package/module <component>/front/assets/<site>/images/logo.svg
-https://...、/static/logo.svg、data:、blob: -> 原样使用
-```
-
-规则：
-
-- `logo.svg` 通常应为透明背景，适合侧栏和加载态。
-- `favicon.svg` 可以自带背景，因为它需要在浏览器标签页独立展示。
-- 不要通过编辑 `package/front/front/html/assets/index*.js` 修改 logo。
-- 不要编辑 `package/front/front/html` 或插件 `front/dist` 下的构建产物。
-- 不要按站点复制一套 logo 展示代码；复用 package/front 的站点品牌/runtime 行为。
-
-## AGENTS 提示块
-
-使用 `files/AGENTS.dever.md` 作为项目根目录 `AGENTS.md` 的完整 managed block。
-
-项目根目录 `CLAUDE.md` 只保留一个 managed block，并通过 Claude Code 支持的 `@AGENTS.md` 引用读取同一份规则：
-
-```md
-<!-- dever-skill:start -->
-@AGENTS.md
-<!-- dever-skill:end -->
-```
-
-不要为 `.codex/`、`.opencode/`、`.trae/`、`.qoder/`、`.codebuddy/` 等工具子目录额外生成项目提示文件。项目提示以根目录 `AGENTS.md` 为准，Claude Code 通过根目录 `CLAUDE.md` 引用它。
-
-不要覆盖整个文件。只插入或替换：
-
-```md
-<!-- dever-skill:start -->
-...
-<!-- dever-skill:end -->
-```
-
-提示块必须说明：处理 Dever 任务时必须读取 `shemic-dever` skill；如果 skill 不可用，就手动读取 `skills/skills-dever/SKILL.md` 和相关 references。
-
-## 公开文件和上传文件
-
-- 公开静态资源必须放在所属 site/component 路径下，并通过配置/runtime 引用。
-- 上传文件必须走 package/front 上传规则，或走有文档说明的自定义上传 API。
-- 上传要校验大小、扩展名、可用时校验 MIME 和存储目标。
-- 不要提交运行时上传文件、日志、导出文件或用户数据。

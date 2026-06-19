@@ -258,8 +258,8 @@ check_page() {
 check_forbidden_page_protocol() {
   local file="$1"
 
-  if rg -q '"_model"[[:space:]]*:|"_use"[[:space:]]*:|"<<[^"]*New[A-Za-z0-9_]*Model>>|"\{\{[^"]+\}\}"|"childUse"[[:space:]]*:|"modelName"[[:space:]]*:|"type"[[:space:]]*:[[:space:]]*"service"' "$file"; then
-    err "$file: page JSON 存在禁止协议；请改为自动推导或显式 model/service，不要写 _model/_use/<<Model>>/{{Service}}/type:service/childUse/modelName"
+  if rg -q '"_model"[[:space:]]*:|"_use"[[:space:]]*:|"<<[^"]*New[A-Za-z0-9_]*Model>>|"\{\{[^"]*Service[^"]*\}\}"|"childUse"[[:space:]]*:|"modelName"[[:space:]]*:|"modelPath"[[:space:]]*:|"transform"[[:space:]]*:|"service@[A-Za-z0-9_.-]+|"type"[[:space:]]*:[[:space:]]*"service"' "$file"; then
+    err "$file: page JSON 存在禁止协议；请改为自动推导或显式 model/service，不要写 _model/_use/<<Model>>/{{Service}}/type:service/childUse/modelName/modelPath/service@/transform"
   fi
   if rg -q -U '"option"[[:space:]]*:[[:space:]]*\{[^}]*"use"[[:space:]]*:' "$file"; then
     err "$file: option 不能写 use；请改为 option.model 或 option.service"

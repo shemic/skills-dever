@@ -36,6 +36,7 @@ fi
 COMPONENT_NAME="$(echo "$COMPONENT_RAW" | tr '[:upper:]' '[:lower:]' | tr '-' '_')"
 COMPONENT_TITLE="${COMPONENT_TITLE:-$COMPONENT_NAME}"
 BASE_DIR="${OWNER_KIND}/${COMPONENT_NAME}"
+COMPONENT_ROOT="${BASE_DIR}"
 SKILL_DIR="${BASE_DIR}/skills"
 
 render() {
@@ -55,6 +56,8 @@ render() {
   sed \
     -e "s/{{COMPONENT_NAME}}/${COMPONENT_NAME}/g" \
     -e "s/{{COMPONENT_TITLE}}/${COMPONENT_TITLE}/g" \
+    -e "s#{{OWNER_KIND}}#${OWNER_KIND}#g" \
+    -e "s#{{COMPONENT_ROOT}}#${COMPONENT_ROOT}#g" \
     "$src" > "$dest"
 }
 

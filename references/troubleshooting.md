@@ -1,45 +1,45 @@
 # 故障排查
 
-先从问题所属层开始查。不要通过放宽权限或硬编码 model/action 名来修表面现象。
+不要通过放宽权限、硬编码 model/action 名或复制旧协议修表面现象。
 
-## `model 未注册`
-
-检查：
-
-- model 文件在 `module/<name>/model` 或 `package/<name>/model` 下。
-- 文件内只有一个零参数 `NewXxxModel`。
-- 文件名和 `NewXxxModel` 匹配。
-- 构造函数不会 panic。
-- `dever init` / `dever run` 已刷新生成的 `data/load/model.go`。
-
-不要手改 `data/load/model.go`。
-
-## `暂无权限`
+## model 未注册
 
 检查：
 
-- 当前登录账号和站点访问模式。
-- page path 和 menu/auth 注册。
+- model 是否在 active module/package 的 `model/` 下。
+- 是否只有一个零参 `NewXxxModel`。
+- 文件名是否匹配 `NewXxxModel`。
+- 构造函数是否 panic。
+- 是否刷新 `data/load/model.go`。
+
+不要手改生成文件。
+
+## 暂无权限
+
+检查：
+
+- 当前 site 的 `access.mode`。
+- `dever.json.front.sites.<site>.auth/public`。
+- page path、`page.parent` 和权限同步。
 - action key 是否从 page path 正确推导。
-- 子弹窗/子表是否保留 action 上下文。
-- 自定义 API route 的 auth/public 配置。
-- 如果使用组件元数据，检查组件 `dever.json` 的 menu/auth 条目。
+- 弹窗/子表是否保留 `_inherit/_parentPath/_parent_*`。
+- 自定义 API 是否显式 public。
 
-不要用通配权限修复，除非用户明确接受不安全的后台快捷方式。
+不要临时放开通配权限。
 
-## `option 无法推导模型`
+## option 无法推导模型
 
 检查：
 
-- 字段路径属于当前 form/table model。
-- model 是否为该字段定义了 Options 或 Relations。
-- 嵌入行/弹窗是否带着正确 model 上下文。
-- page 是否误复用了其他 model 的分类/search 状态。
-- 标准页是否错误硬编码 `_model/_use/submit.use/option.use/childUse`、`<<Model>>`、`{{Service}}`、`type: "service"` 或 `modelName`。
+- 节点 `value` 是否属于当前 form/table model。
+- model 是否定义 Options/Relations。
+- 跨资源 option 是否写了 `option.model` 或 `option.service`。
+- 嵌入页/弹窗是否有正确 path 和父级输入。
+- 是否误写旧字段。
 
-## 页面 Schema 空值错误
+## 页面空白或 schema 错误
 
-检查顶层对象：
+检查六个顶层对象：
 
 ```json
 {
@@ -52,38 +52,33 @@
 }
 ```
 
-## 导入循环
-
-检查 package/service 依赖。常见原因是 package/front 的 service 包 import 某个子包，而该子包又 import package/front service。
-
-修复方式：把共享小 helper 移到更底层的包，或通过窄接口反转依赖。不要再加一个同时 import 两边的 wrapper 包。
-
-## Logo 黑色背景
-
-检查：
-
-- 组件默认 `front/assets/<site>/images/logo.svg` 或项目覆盖 `config/front/assets/<site>/images/logo.svg` 用作侧栏/加载态 logo 时是否透明。
-- `favicon.svg` 可以带背景。
-- 组件 `dever.json.front.sites.<site>.config.logo` 或项目 `config/front.json.sites.<site>.logo` 是否使用 `config/assets/...` 或 `<component>/assets/...` 显式资源引用。
-- 是否误改了编译产物 `package/front/front/html/assets/index*.js`。
-- front 源码是否故意把 logo 包在固定深色 icon 容器里。
+再查浏览器请求的 `route/info`、`route/data`、插件 manifest 和节点 type。
 
 ## Front 插件未加载
 
 检查：
 
-- 所属 package/module 下存在 `front/src/plugin.ts`。
-- page JSON 使用的是已注册 node type。
-- 插件 dev server 只由 `dever run` 启动。
-- 没有手动修改构建产物。
+- 组件是否 active。
+- 是否有 `front/dist/manifest.json` 或 `front/src/plugin.ts`。
+- `dist/placeholder.txt` 不算有效 dist。
+- `dever run` 是否启动插件 dev server。
+- page JSON 是否使用已注册 node type。
+- plugin `depends` 是否写 Dever plugin 名，不是 npm 包名。
 
-## 生成路由缺失
+## 菜单为空
 
 检查：
 
-- API 方法已导出，命名为 `Get/Post/Put/DeleteXxx`。
-- receiver 类型已导出。
-- 文件位于 `api` 目录下。
-- 已通过 `dever routes` 或 `dever run` 刷新生成路由。
+- 站点 access 是否 `rbac/login/public`。
+- 组件 `dever.json.front.sites.<site>.auth`。
+- `page.parent` 是否指向有效分组或列表。
+- 当前账号角色是否有权限。
+- `dever init`/权限同步是否已执行。
 
-不要手改 `data/router.go`。
+不要把菜单写到项目 `config/front.json`。
+
+## 导入循环
+
+常见原因：`package/front` 通用 runtime import 业务 package，或 helper 同时依赖两边。
+
+修复：把共享 helper 下沉到更底层包，或用窄接口反转依赖。不要再加一个 wrapper 包。
