@@ -76,6 +76,8 @@ replace github.com/dever-package/crm => ./package/crm
 
 package 开发者自己负责 `git pull` / `git push`；`dever package bot` 不 clone、不 pull、不 push，只同步 Go module require、shim 和 Dever 注册。
 
+package 发布版本写在根目录 `dever.json.version`。在 `github.com/dever-package/<name>` 仓库里执行 `dever push` 时，会先完成普通 git push，再把 `dever.json.version` 规范成 `vX.Y.Z` 并推送同名 tag。
+
 应用项目的 `go.mod` 固定是 `module my`，不要替换成项目名、域名或目录名。Dever 会通过 `// dever:import` + `go list` 解析真实源码目录。
 
 package 自带前端插件会由 `package/front` 的站点服务发现；不要在每个组件里复制插件静态服务。
