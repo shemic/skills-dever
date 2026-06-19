@@ -151,7 +151,7 @@ write_package_shim() {
 }
 
 ensure_empty_project
-mkdir -p config/front/assets/{admin,work}/images middleware data/{load,log} package module/main/model
+mkdir -p config/front/assets/{admin,work}/images middleware data/{load,log} module/main/model
 ensure_go_mod
 ensure_dever_module
 ensure_gitignore
@@ -160,7 +160,6 @@ render_template "${FILES_DIR}/go/main.go.tmpl" "main.go"
 render_template "${FILES_DIR}/config/setting.jsonc.tmpl" "config/setting.jsonc"
 copy_file "${FILES_DIR}/go/middleware/readme.txt" "middleware/readme.txt"
 copy_file "${FILES_DIR}/go/data/readme.txt" "data/readme.txt"
-copy_file "${FILES_DIR}/go/package/readme.txt" "package/readme.txt"
 
 for site in admin work; do
   for file in logo.svg favicon.svg; do
@@ -172,5 +171,5 @@ write_package_shim front
 write_package_shim bot
 
 echo "已生成最小 Dever 项目骨架。"
-echo "已生成 module/front 和 module/bot package shim；请执行 dever package add --skip-init front/bot 或按项目 package 管理流程补齐源码。"
+echo "已生成 module/front 和 module/bot package shim；请执行 dever package front 和 dever package bot 安装或更新组件。"
 echo "未生成任何业务 API 或 Service。"

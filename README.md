@@ -309,7 +309,7 @@ bash skills/skills-dever/scripts/audit.sh package/bot module/work
 
 - `package` 是可复用组件。
 - `module` 是项目业务组件或 package shim。
-- `module/<name>/main.go` 只有 `// dever:import my/package/<name>` 时，真实代码在 package。
+- `module/<name>/main.go` 只有 `// dever:import github.com/dever-package/<name>` 时，真实代码来自 Go module package；开发仓库可通过 go.mod replace 映射到本地 `package/<name>`。
 
 复杂组件规则放组件内，不塞进全局 skill：
 

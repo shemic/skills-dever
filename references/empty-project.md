@@ -17,7 +17,7 @@
 
 ## 2. 空项目最小骨架
 
-Dever 应用项目的 Go module 固定使用 `my`。不要按项目名、公司域名或目录名改成其他 module path；`module/front`、`module/bot` 等组件 shim 依赖 `my/package/...`，改名会导致 package 组件不可用。
+Dever 应用项目的 Go module 固定使用 `my`。不要按项目名、公司域名或目录名改成其他 module path；package 组件通过 `github.com/dever-package/<name>` 引入，项目里只保留 `module/<name>/main.go` shim。
 
 `go.mod` 第一行保持：
 
@@ -36,9 +36,8 @@ config/front/assets/admin/images/favicon.svg
 config/front/assets/work/images/logo.svg
 config/front/assets/work/images/favicon.svg
 data/readme.txt
-package/readme.txt
-module/front/main.go         # package/front shim
-module/bot/main.go           # package/bot shim
+module/front/main.go         # github.com/dever-package/front shim
+module/bot/main.go           # github.com/dever-package/bot shim
 ```
 
 `data/router.go`、`data/load/*.go`、`data/table/*.json` 都由 Dever 生成，不手写、不手改。
@@ -68,27 +67,25 @@ replace github.com/shemic/dever => ./dever
 如果本机还没有 `dever` 命令，先使用 Go 直接调用当前版本 CLI：
 
 ```bash
-go run github.com/shemic/dever/cmd/dever@main package add --skip-init front
-go run github.com/shemic/dever/cmd/dever@main package add --skip-init bot
-go run github.com/shemic/dever/cmd/dever@main init --skip-tidy
+go run github.com/shemic/dever/cmd/dever@main package front
+go run github.com/shemic/dever/cmd/dever@main package bot
 ```
 
 已安装 `dever` 命令时可简写：
 
 ```bash
-dever package add --skip-init front
-dever package add --skip-init bot
-dever init --skip-tidy
+dever package front
+dever package bot
 ```
 
-如果只装单个 package，可以不加 `--skip-init`；一次补多个 package 时，先 `--skip-init`，最后只运行一次 `dever init --skip-tidy`。
+`dever package <name>` 会自动安装依赖 package、写入 shim 并刷新 Dever 注册。
 
 安装后确认：
 
-- `package/front`、`package/bot` 已存在。
-- `module/front/main.go` 是 `// dever:import my/package/front` shim。
-- `module/bot/main.go` 是 `// dever:import my/package/bot` shim。
-- package 源和 shim 里的 `my/package/front`、`my/package/bot` 是固定路径，不要替换成项目名或当前目录名。
+- 普通项目没有 `package/front`、`package/bot` 源码目录。
+- `module/front/main.go` 是 `// dever:import github.com/dever-package/front` shim。
+- `module/bot/main.go` 是 `// dever:import github.com/dever-package/bot` shim。
+- `go.mod` 第一行仍是 `module my`，不要改成项目名或域名。
 
 ## 4. 配置顺序
 
@@ -218,7 +215,7 @@ import (
 
 	"my/data"
 	_ "my/data/load"
-	frontsite "my/package/front/service/site"
+	frontsite "github.com/dever-package/front/service/site"
 
 	dever "github.com/shemic/dever/cmd"
 	"github.com/shemic/dever/server"
@@ -269,7 +266,7 @@ module/work/front/src/nodes/home/home.tsx    # 可选
 交付前至少静态确认：
 
 ```bash
-rg -n "my/package/(front|bot)|module/front|module/bot|frontSite|sites" .
+rg -n "github.com/dever-package/(front|bot)|module/front|module/bot|frontSite|sites" .
 bash skills/skills-dever/scripts/audit.sh --changed
 ```
 

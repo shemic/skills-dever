@@ -22,7 +22,7 @@ backend/package/<name>/
 // backend/module/<name>/main.go
 package <name>
 
-// dever:import my/package/<name>
+// dever:import github.com/dever-package/<name>
 ```
 
 规则：
@@ -45,44 +45,16 @@ package <name>
 项目里需要新增组件时，优先用命令：
 
 ```bash
-dever package add bot
+dever package bot
 ```
 
-它会从 `https://github.com/dever-package/bot.git` 拉取到 `package/bot`，创建 `module/bot/main.go` shim，并刷新 routes/model/service 注册。换组件时把 `bot` 换成对应名称。
+它会安装或更新 `github.com/dever-package/bot@latest`，自动处理 `dever.json.depends` 里的依赖 package，创建或修正 `module/bot/main.go` shim，并刷新 routes/model/service/component 注册。换组件时把 `bot` 换成对应名称。
 
 空项目 site 基线安装顺序见 `empty-project.md`，那里统一维护 `front` + `bot` 的初始化流程。本文只描述 package 组件结构、更新和插件规则。
 
-可选项：
-
-```bash
-dever package add --project-root=backend bot
-dever package add --repo-base=https://github.com/dever-package bot
-```
-
-更新已安装组件：
-
-```bash
-dever package update bot
-```
-
-默认更新规则：
-
-- `package/bot` 必须是 git 仓库。
-- 本地有未提交或未处理文件时直接报错。
-- 更新动作是 `git pull --ff-only`，不做合并提交。
-- `module/bot/main.go` 缺失时会补 shim；存在但不是目标 shim 会报错。
-- 更新后默认刷新 routes/model/service 注册。
-
-确认要丢弃本地 package 改动并重拉时，才使用：
-
-```bash
-dever package update --force bot
-```
-
-手动引入时使用同样结构：
+普通项目结构只保留 shim：
 
 ```txt
-backend/package/<name>/   # 确保 package 源码已存在，本地 package 直接放这里
 backend/module/<name>/main.go
 ```
 
@@ -91,18 +63,20 @@ backend/module/<name>/main.go
 ```go
 package <name>
 
-// dever:import my/package/<name>
+// dever:import github.com/dever-package/<name>
 ```
 
-然后刷新生成文件：
+当前框架/package 开发仓库可以保留本地源码，但通过 go.mod replace 接入：
 
-```bash
-dever init --skip-tidy
+```go
+replace github.com/dever-package/front => ./package/front
+replace github.com/dever-package/bot => ./package/bot
+replace github.com/dever-package/crm => ./package/crm
 ```
 
-应用项目的 `go.mod` 固定是 `module my`，所以 package 模板、shim 和项目内 import 里的 `my/package/<name>` 要保持不变；不要替换成项目名、域名或目录名。
+package 开发者自己负责 `git pull` / `git push`；`dever package bot` 不 clone、不 pull、不 push，只同步 Go module require、shim 和 Dever 注册。
 
-如果 package 来自独立 Go module，不要复制代码；在 `go.mod` 配好 `require/replace`，shim 的 import 写真实 Go import path。Dever 会通过 `go list` 解析真实源码目录。
+应用项目的 `go.mod` 固定是 `module my`，不要替换成项目名、域名或目录名。Dever 会通过 `// dever:import` + `go list` 解析真实源码目录。
 
 package 自带前端插件会由 `package/front` 的站点服务发现；不要在每个组件里复制插件静态服务。
 
@@ -129,6 +103,18 @@ backend/package/<name>/front/
     placeholder.txt
 ```
 
+`front/dist/placeholder.txt` 只用于保住空目录，不算有效构建产物。有效 dist 只看：
+
+```txt
+front/dist/manifest.json
+```
+
+有效源码入口只看：
+
+```txt
+front/src/plugin.ts
+```
+
 module 也可用同样结构：
 
 ```txt
@@ -142,14 +128,15 @@ backend/module/<name>/front/
 1. 主 front 源码开发：`cd front && pnpm dev`，访问 5173。
 2. 应用开发者模式：`dever run`，访问 8085；主 front 使用 `package/front/front/html`，插件源码由 Dever CLI 内置的 `compiler/front` 编译，8085 代理后按需加载。
 
-两种模式都会扫描：
+`dever run` 会按 `dist > src` 规则发现插件：
 
 ```txt
-backend/package/*/front/src/plugin.ts
-backend/module/*/front/src/plugin.ts
+有 front/dist/manifest.json      -> 直接使用 dist
+没有 manifest 且有 front/src/plugin.ts -> 启动插件源码 dev server
+两者都没有                         -> 不注册该插件
 ```
 
-所以开发时改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 Dever CLI 的前端插件编译器，再按页面实际 node 通过 `{site}/plugins-src/{name}/runtime.js` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
+所以开发时如果没有 dist manifest，改插件 `front/src` 不需要先打包插件。8085 模式不是让浏览器直接执行 TSX，而是由 `dever run` 启动 Dever CLI 的前端插件编译器，再按页面实际 node 通过 `{site}/plugins-src/{name}/runtime.js` 加载编译后的 ESM。开发者不需要也不应该依赖主 `front/src`。
 
 多站点 front 只记一条：站点配置在组件 `dever.json.front.sites`，页面目录是 `front/page/{page}`，业务前台优先放 `module/<name>`，可复用能力放 `package/<name>`。
 
@@ -300,7 +287,7 @@ pnpm dev
 dever run
 ```
 
-`dever run` 检测到 `package/*/front/src/plugin.ts` 或 `module/*/front/src/plugin.ts` 后，会自动安装/复用 Dever CLI 前端插件编译器依赖并启动插件源码编译服务，后端站点仍访问：
+`dever run` 只在插件没有 `front/dist/manifest.json`、但存在 `front/src/plugin.ts` 时，自动安装/复用 Dever CLI 前端插件编译器依赖并启动插件源码编译服务。后端站点仍访问：
 
 ```txt
 http://host:8085/admin/
@@ -313,7 +300,7 @@ http://host:8085/work/
 DEVER_FRONT_PLUGIN_DEV=0 dever run
 ```
 
-发布前构建所有插件前端：
+发布前构建所有本地可编辑插件前端：
 
 ```bash
 dever front build
@@ -338,7 +325,7 @@ pnpm run build:backend
 dever build [target]
 ```
 
-`dever build` 默认先执行前端插件构建，再 Go build。只想构建 Go：
+`dever build` 默认先处理前端插件，再 Go build：本地 `module/*` 和本地 replace 的 `package/*` 有 `front/src/plugin.ts` 时会自动构建 dist；外部 Go module package 必须已经带 `front/dist/manifest.json`，不能在项目 build 时写 Go module cache。只想构建 Go：
 
 ```bash
 dever build --skip-front
@@ -348,7 +335,7 @@ dever build --skip-front
 
 ## 10. 前端产物服务与二进制
 
-插件构建产物输出到自己的 `front/dist`。后端站点发布态会自动发现 `backend/package/*/front/dist/manifest.json` 与 `backend/module/*/front/dist/manifest.json`；`dever run` 开发态优先发现源码插件，并按后端 `http.port + 10000` 派生插件 dev server 端口，例如 `8085 -> 18085`、`8082 -> 18082`。运行时会先根据页面 schema 的 node 类型判断需要哪些插件，再加载对应插件入口。page JSON 放 `front/page`。服务端模板站还可以放 `front/template` 和 `front/assets`。package 需要进二进制时用 `go:embed` 带进产物：
+插件构建产物输出到自己的 `front/dist`。后端站点按 `front/dist/manifest.json > front/src/plugin.ts` 发现插件；`placeholder.txt` 不算有效 dist。运行时会先根据页面 schema 的 node 类型判断需要哪些插件，再加载对应插件入口。page JSON 放 `front/page`。服务端模板站还可以放 `front/template` 和 `front/assets`。package 需要进二进制时用 `go:embed` 带进产物：
 
 ```go
 //go:embed front/page front/template front/assets

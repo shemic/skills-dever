@@ -2,7 +2,7 @@
 
 ## 项目入口
 
-Dever 应用项目的 Go module 固定为 `my`。标准入口、业务代码 import、package shim 都按 `my/...` 写；不要把 `module my` 改成项目名、域名或目录名。
+Dever 应用项目的 Go module 固定为 `my`。标准入口和业务代码 import 按 `my/...` 写；package shim 使用 `github.com/dever-package/<name>` canonical path。不要把 `module my` 改成项目名、域名或目录名。
 
 标准入口：
 
@@ -41,17 +41,17 @@ dever.Run(func(s server.Server) {
 - `dever skill install`：每次按 `--repo` 和 `--ref` 从 `github.com/shemic/skills-dever` 拉取临时副本；不读取项目本地 skill、不读取已安装全局 skill、不使用缓存或备用来源。默认把真实 skill 同步到 `~/.agents/skills/shemic-dever`，并为 Codex、Claude、OpenCode、Trae、Qoder、CodeBuddy 等常见工具 skill 目录创建 symlink 引用，同时更新项目 agent 提示块。
 - `dever skill install --project=true`：额外在当前项目写入 `skills/skills-dever` 镜像；该镜像只作为输出结果，不参与后续安装来源选择。
 - `dever skill doctor`：检查 `~/.agents/skills/shemic-dever`、常见工具 symlink 引用、agent managed block、组件声明的 skill 文件。
-- `dever run`：热重载；启动前会执行 `init --skip-tidy`，model/service/api 变更后会再次刷新生成文件。存在 package/module 前端源码插件时，会启动插件 dev server；默认端口从后端 `http.port + 10000` 派生，例如 `8085 -> 18085`、`8082 -> 18082`，避免多项目都抢 `5174`。`DEVER_FRONT_PLUGIN_DEV_PORT` 可显式覆盖。
+- `dever run`：热重载；启动前会执行 `init --skip-tidy`，model/service/api 变更后会再次刷新生成文件。前端插件按 `front/dist/manifest.json > front/src/plugin.ts` 判定：有 dist manifest 直接用 dist，只有没有 manifest 且存在源码入口时才启动插件 dev server。默认端口从后端 `http.port + 10000` 派生，例如 `8085 -> 18085`、`8082 -> 18082`。`DEVER_FRONT_PLUGIN_DEV_PORT` 可显式覆盖。
 - `dever init --skip-tidy`：生成 routes/model/service 注册文件。
 - `dever routes`：只生成 `data/router.go`。
 - `dever model`：只生成 `data/load/model.go`。
 - `dever service`：只生成 `data/load/service.go`。
 - `dever migrate default`：按 `data/table` 应用表结构。
 - `cd front && pnpm run build:backend`：构建主 `front` 运行时，输出到 `backend/package/front/front/html`；不包含 module/package 插件源码。
-- `dever front build`：构建所有 `backend/package/*/front` 与 `backend/module/*/front` 插件前端。
+- `dever front build`：构建本地可编辑 `package/*/front` 与 `module/*/front` 插件前端；外部 Go module package 不写 dist。
 - `dever front build bot`：只构建 `bot` 前端插件，输出到对应 `front/dist`。
-- `dever package add bot`：从 `github.com/dever-package/bot` 拉取 package，创建 `module/bot/main.go` shim，并刷新生成文件。
-- `dever package update bot`：更新已安装 package；默认要求 git 工作区干净并执行 `git pull --ff-only`。
+- `dever package bot`：安装或更新 `github.com/dever-package/bot@latest`，自动安装依赖 package，写入 `module/bot/main.go` shim，并刷新生成文件。普通项目不复制 `package/bot` 源码。
+- `dever package remove bot`：移除 `module/bot` shim 和 go.mod 直接依赖；仍有其它 package 依赖时会拒绝。
 - `dever build [target]`：发布构建；默认构建当前项目，`target` 可传目录或 `main.go`；默认先构建前端插件，再构建 Go 二进制。用户禁止 build 时不要运行。
 - `dever build --skip-front`：只构建 Go 二进制，跳过 package/module 前端插件。
 
@@ -75,7 +75,7 @@ Dever 框架源码主仓库在 GitHub：
 - `backend/dever/compiler/front`：当前项目正在使用的 front 插件编译器。
 - `backend/package/front`：当前项目内置的站点运行时、后台页面、插件服务、上传、导入导出等通用 package。
 - `backend/package/bot`：当前项目内置的 bot package。
-- package 拉取来源：`https://github.com/dever-package/<name>.git`。
+- package Go module 来源：`github.com/dever-package/<name>`。
 - `front`：主 front 运行时源码，构建产物输出到 `backend/package/front/front/html`。
 
 如果 `go.mod` 有：
@@ -111,10 +111,17 @@ replace github.com/shemic/dever => ./dever
 Dever 扫描 `module/*`。如果 `module/<name>/main.go` 有：
 
 ```go
-// dever:import my/package/bot
+// dever:import github.com/dever-package/bot
 ```
 
-这个 module 是 package 引入 shim，真实源码来自 package。`my/package/...` 是应用项目固定 import 路径，不要替换成项目名。应用开发时不要复制 package 代码，也不要改 package 源码；只通过引入、配置、page JSON、Provider hook 等公开能力复用。只有明确维护 package 本身时，新增页面、model、service、api 才放到真实 package。
+这个 module 是 package 引入 shim，真实源码由 `go list` 根据 Go module/replace 定位。普通项目只保留 `module/<name>/main.go` shim，不复制 `package/<name>` 源码。当前框架/package 开发仓库可以保留 `package/*`，但必须通过 go.mod replace 接入：
+
+```go
+replace github.com/dever-package/front => ./package/front
+replace github.com/dever-package/bot => ./package/bot
+```
+
+应用项目的 `go.mod` 仍固定是 `module my`，不要改成项目名、域名或目录名。应用开发时不要改 package 源码；只通过引入、配置、page JSON、Provider hook 等公开能力复用。只有明确维护 package 本身时，新增页面、model、service、api 才放到真实 package。
 
 可复用 Go package 与 package 自带前端插件的结构和命令看 `references/package-plugin.md`。
 package 前端插件静态服务走 `package/front/service/plugin`，不要在每个组件里复制 `service/frontplugin`。

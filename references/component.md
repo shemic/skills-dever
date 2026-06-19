@@ -5,8 +5,8 @@
 ## 归属
 
 - 应用业务代码放在 `module/<name>`。
-- 可复用组件代码放在 `package/<name>`。
-- 如果 `module/<name>/main.go` 只有 `// dever:import my/package/<name>`，真实源码属于 `package/<name>`。
+- 可复用组件发布为 `github.com/dever-package/<name>` Go module；只有框架/package 开发仓库才在本地保留 `package/<name>` 源码。
+- 如果 `module/<name>/main.go` 只有 `// dever:import github.com/dever-package/<name>`，真实源码来自 Go module package；本地开发可通过 go.mod replace 映射到 `package/<name>`。
 - 不要为了定制行为把 package 代码复制到 module；优先用配置、page JSON、Provider hook、已暴露的 Service/API 或组件扩展点。
 
 ## 组件 Skill
@@ -96,7 +96,7 @@ front 站点运行契约归属于组件；项目级 `config/front.json` 只允�
 - 如果组件只是扩展别人拥有的站点，只写 `auth` 或 `public`，不要写壳字段。
 - `access.mode` 支持 `rbac`、`login`、`public`：`rbac` 登录并校验权限，`login` 只要求登录，`public` 整站匿名开放但仍走 page/action 的服务端安全边界。
 - `setting.appearance` 和 `setting.runtime.skin/routerMode` 有 front 默认值，普通业务站点不要重复写；`package/front` 的 `admin` 壳可以保留显式 setting 作为默认后台配置。
-- 本地组件前端插件由 active 组件的 `front/src/plugin.ts`、发布态 `front/dist/manifest.json` 或 embed 产物自动发现；不要在 `dever.json.front.sites` 为常规本地插件手写 `runtime.plugins`。外部插件只有在协议明确提供可匹配的 `nodes` 描述时才考虑配置，否则也不要写 `runtime.plugins`。
+- 组件前端插件按 `front/dist/manifest.json > front/src/plugin.ts` 自动发现；`front/dist/placeholder.txt` 不算有效 dist。不要在 `dever.json.front.sites` 为常规插件手写 `runtime.plugins`。外部插件只有在协议明确提供可匹配的 `nodes` 描述时才考虑配置，否则也不要写 `runtime.plugins`。
 
 ## 依赖
 

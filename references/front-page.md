@@ -43,7 +43,7 @@ module/work/front/page/work/home.json            -> work/home
 - `setting.runtime.shell` 支持 `app` 和 `blank`。`admin` 或 `access.mode: "rbac"` 默认 `app`，会套后台侧边栏/顶栏；`public` 和 `login` 站点默认 `blank`，只渲染自己的 `main.json`。
 - 自定义站点、前台工作台、公开页面优先使用默认 `blank`，不要为了去掉后台布局改 React 入口。`blank` 不挂后台侧边栏、顶栏和命令面板，只保留页面渲染、主题/layout context、`app-outlet` 所需的基础上下文。
 - 确实需要复用后台侧边栏、顶栏或命令面板时，才显式写 `"shell": "app"` 并使用 `app-sidebar`、`app-topbar`、`shell-sidebar-inset` 等壳节点。
-- 本地组件前端插件由 active 组件的 `front/src/plugin.ts`、发布态 `front/dist/manifest.json` 或 embed 产物自动发现，不要为常规本地插件手写 `setting.runtime.plugins`。
+- 组件前端插件按 `front/dist/manifest.json > front/src/plugin.ts` 自动发现；`front/dist/placeholder.txt` 不算有效 dist。不要为常规插件手写 `setting.runtime.plugins`。
 
 ## 必需结构
 
