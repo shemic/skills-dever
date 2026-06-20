@@ -235,6 +235,7 @@ check_page() {
 
   check_forbidden_page_protocol "$file"
   check_option_params_protocol "$file"
+  check_page_field_boundary "$file"
 
   if is_standard_page "$file"; then
     local kind
@@ -280,6 +281,24 @@ check_option_params_protocol() {
 
   if rg -q -U '"optionParams"[[:space:]]*:[[:space:]]*\{[^}]*"(parentField|childParentField|valueField|labelField|leafField|extraFields|searchFields|filterField|filterValue|filters|order|pageSize)"[[:space:]]*:' "$file"; then
     err "$file: optionParams 只传 parentId/selected/keyword/level 等动态值；parentField/valueField/labelField/extraFields/pageSize/order/filters 等静态配置请放到 option 或 meta"
+  fi
+}
+
+check_page_field_boundary() {
+  local file="$1"
+  local system_fields='code|key|slug|sn|no|created_at|updated_at|created_by|updated_by|author|author_id|editor|editor_id|creator|creator_id|operator|operator_id'
+
+  if rg -q '"value"[[:space:]]*:[[:space:]]*"form\.('"$system_fields"')"' "$file"; then
+    warn "$file: form 中出现系统/审计/派生字段；请确认不是 code/key/slug/作者/编辑/创建人/更新人等手填项"
+  fi
+
+  if rg -q '"\$form\.('"$system_fields"')"' "$file"; then
+    warn "$file: action 或校验中引用系统/审计/派生字段；请确认该字段允许从表单提交"
+  fi
+
+  if rg -q -U '\{[^{}]*"type"[[:space:]]*:[[:space:]]*"form-(input|textarea)"[^{}]*"value"[[:space:]]*:[[:space:]]*"form\.(cate_id|category_id|type|kind|group_id)"' "$file" ||
+     rg -q -U '\{[^{}]*"value"[[:space:]]*:[[:space:]]*"form\.(cate_id|category_id|type|kind|group_id)"[^{}]*"type"[[:space:]]*:[[:space:]]*"form-(input|textarea)"' "$file"; then
+    warn "$file: 分类/类型/分组字段看起来是自由输入；优先使用 Options/Relations/form-select/form-cascader/show-category-list"
   fi
 }
 

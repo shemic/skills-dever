@@ -33,6 +33,7 @@ version: 0.1.0
 - 新增菜单、权限、公开路径、站点默认展示配置时，优先写入组件 `dever.json.front.sites`；项目覆盖只写 `config/front.json.sites.<site>` 的展示配置。
 - 组件 skill 只记录本组件私有 API 前缀、权限和公开入口；通用 API/站点规则不在这里重复。
 - 新增服务端模板页面时，保留 page JSON 六对象规则，使用 `page.render: "template"` + 顶层 `template`，SEO 放 `data.seo`。
+- 新增 create/update 页面时，按全局 `front-page/field.md` 区分表单字段、系统字段、审计字段和分类字段。
 - 删除或改名页面、model、Service/API 前，先写清影响范围和替代路径。
 
 ## 允许写 Service/API 的场景
@@ -59,6 +60,7 @@ version: 0.1.0
 - 新增 Provider/API 前先读现有 service。
 - 新增 Service/API/front plugin 前写清低层能力为什么不够。
 - 检查是否重复了 model Options/Relations、字段标签、option 或权限配置。
+- 检查是否把 `code/key/slug`、作者、编辑、创建人、更新人、操作人等字段误做成手填。
 - 修改后台页面前先检查组件权限。
 - 修改 `dever.json` 后检查 `skills`、`public`、`sites`、`depends` 是否仍有效。
 

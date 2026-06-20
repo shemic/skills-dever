@@ -7,6 +7,7 @@
 | 问题 | 继续读 |
 | --- | --- |
 | 当前 page JSON 协议、禁止旧字段、model/service 来源 | `front-page/protocol.md` |
+| create/update 表单字段、系统字段、审计字段、code/key/分类边界 | `front-page/field.md` |
 | submit/save/delete、partial save、before/after hook | `front-page/action.md` |
 | option、meta、Relations、Options、远程选项 | `front-page/option.md` |
 | site、auth、public、shell、plugin 自动发现、config/front | `front-page/site.md` |
@@ -18,6 +19,7 @@
 - 标签、列名、表单 label：model comment。
 - 枚举：model Options。
 - 外键/关联选择：model Relations。
+- 表单字段：只放当前页面真实录入或选择的字段。
 - 保存前规范化：Provider hook 或 `action.submit.before` 调用真实 Service。
 - 跨表事务、状态流转、外部调用：Service。
 - 自定义 HTTP 能力：API + Service。
@@ -38,6 +40,8 @@
 ```
 
 标准 `list/update/create/view/detail/info` 页面按 route path 自动推导 model。能推导的不写，不能推导才写对应位置的 `model` 或 `service`。
+
+写 create/update 页前先判断字段来源。`code/key/slug`、作者、编辑、创建人、更新人、操作人、创建时间、更新时间默认不进入表单；分类、类型、分组优先用 Options/Relations/category 选择，不做自由输入。
 
 ## 直接禁止
 

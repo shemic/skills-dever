@@ -75,6 +75,8 @@
 
 空项目固定 `module my`。不要按项目名、域名或目录名改 Go module。
 
+从零开始先读 `references/quickstart.md`。本节只记录应用侧边界。
+
 最小骨架来自 `files/`：
 
 ```txt

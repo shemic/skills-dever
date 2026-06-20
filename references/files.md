@@ -74,6 +74,8 @@ transform
 - `page.sh` 只生成标准 page JSON。
 - `component-skill.sh` 生成 `package` 或 `module` 组件 skill。
 
+从零项目流程写在 `references/quickstart.md`，脚本行为变更时同步更新。
+
 新增模板字段时，同步检查：
 
 ```bash

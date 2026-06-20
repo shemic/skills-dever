@@ -48,12 +48,22 @@ Provider 是给 Dever/page runtime 调用的适配层。
 - `ProviderAfterSaveXxx`：关系同步、计数、缓存失效。
 - option/list 数据无法由 model metadata 提供时的适配。
 - 调用真实 Service 的薄适配器。
+- 根据登录态、父页面或路由写入审计、归属、派生字段。
 
 禁止：
 
 - 返回原输入的空透传。
 - 只因为生成器能识别就保留。
 - 在 Provider 里写长流程、HTTP client 或事务编排。
+
+常见字段责任：
+
+- 自动编号、`code/sn/no/slug` 派生和唯一校验：Provider 或 Service。
+- 创建人、更新人、操作人：Provider 或 Service 从登录上下文写。
+- 父资源 ID、站点 ID、租户 ID：Provider 或 Service 从上下文写。
+- 分类计数、关系同步、缓存失效：after hook 或聚焦 Service。
+
+不要为了让管理员手填这些字段而把它们放进 page form。
 
 ## Service
 

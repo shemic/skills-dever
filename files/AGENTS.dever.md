@@ -5,6 +5,8 @@
 
 默认是 dever-app。涉及 page JSON、route/action/option、权限、菜单、后台页面、工作台页面时必须叠加 dever-front-page。涉及 front/src/plugin.ts、React 节点、画布、复杂自定义交互时叠加 dever-front-plugin。
 
+不要默认认同用户预设。每次先基于源码、配置和 Dever 规范判断；方案不合理时直接指出风险并给更小替代方案；无需修改时明确说无需修改；不确定时先查代码，不给迎合性结论。
+
 普通业务默认禁止修改 backend/dever、backend/package/*、生成文件和编译产物；只有用户明确要求维护框架或 package 时才进入 dever-framework/dever-component。
 
 普通 CRUD 优先使用 Model + package/front + page JSON；禁止无意义 CRUD API、CRUD Service、空 Provider。

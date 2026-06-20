@@ -36,6 +36,30 @@ sort
 
 否则过滤后可能没有真实列，触发 `没有可保存的字段`。
 
+## 保存字段白名单
+
+`action.submit.data` 只写允许从表单保存的字段：
+
+- `id`
+- 当前表单真实录入字段。
+- 真实业务选择字段，例如 `owner_staff_id`、`assignee_id`、`cate_id`。
+- partial save 可能触达的 `status`、`sort`。
+
+不要把这些字段放入 submit payload：
+
+```txt
+created_at
+updated_at
+created_by
+updated_by
+author_id
+editor_id
+operator_id
+服务端生成的 code/key/slug/sn/no
+```
+
+这些字段来自登录上下文、父页面、路由、Provider、Service 或 model hook。真实“负责人/指派人”用业务字段名，不要误用 `created_by/updated_by`。
+
 ## before/after hook
 
 hook 只写 service 对象：

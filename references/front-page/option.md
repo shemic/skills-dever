@@ -64,3 +64,26 @@ pageSize
 - 弹窗 option 错：先查是否保留父级 path/input。
 - 分类 option 错：先查 `show-category-list` 的 key/value/option 和目标 model。
 - 不要为了修 option 硬编码旧字段或固定 URL。
+
+## 分类和人员字段
+
+分类、类型、分组不要做自由输入：
+
+- 固定枚举用 Model `Options`。
+- 外键分类用分类 model + `Relations`，表单用 `form-select` 或 `form-cascader`。
+- 左侧分类筛选和分类管理用 `show-category-list`。
+- 主资源保存分类 ID，不在主资源表单手填分类名。
+
+作者、编辑、创建人、更新人、操作人默认不是 option 字段。它们来自登录上下文或审计记录，只在列表/详情展示。
+
+真实业务选择字段可以用 option，例如负责人、指派人、所属部门：
+
+```txt
+owner_staff_id
+assignee_id
+department_id
+```
+
+这些字段要用清晰业务名，并优先通过 Relations 推导选项。
+
+控件选择按 `front-page/field.md`：2-4 个固定单选枚举优先 `form-radio`，不要为了 radio 在 page JSON 里复制 model Options。

@@ -18,9 +18,11 @@
 | 新规则类型 | 放置位置 |
 | --- | --- |
 | Dever 应用判断、业务边界 | `references/app.md` |
+| 空项目初始化、安装顺序 | `references/quickstart.md` |
 | model 命名、Options、Relations | `references/model.md` |
 | Provider/Service/API 边界 | `references/service-api.md` |
 | page 当前协议、旧字段禁止 | `references/front-page/protocol.md` |
+| page 表单字段、系统/审计/分类字段边界 | `references/front-page/field.md` |
 | action、submit、partial、hook | `references/front-page/action.md` |
 | option、meta、Relations/Options | `references/front-page/option.md` |
 | site、auth、public、shell、plugin 自动发现 | `references/front-page/site.md` |

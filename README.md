@@ -41,9 +41,24 @@ dever skill install
 SKILL.md                    # 薄入口：角色路由 + 全局硬规则
 references/                 # 按角色读取的规则
 references/front-page/      # page JSON 细协议
+references/quickstart.md    # 空项目初始化流程
 files/                      # AGENTS、Go、page、组件模板
 scripts/                    # 静态 audit 和骨架脚本
 ```
+
+## 从零开始
+
+推荐顺序：
+
+```bash
+dever skill install
+dever skill doctor
+bash ~/.agents/skills/shemic-dever/scripts/boot.sh my dever-app 8082
+dever package front
+dever package bot
+```
+
+完整说明见 `references/quickstart.md`。已有项目不要用 `boot.sh` 覆盖骨架。
 
 ## 规则归属
 
@@ -51,7 +66,7 @@ scripts/                    # 静态 audit 和骨架脚本
 - 应用开发：`references/app.md`
 - Model：`references/model.md`
 - Provider/Service/API：`references/service-api.md`
-- Page JSON：`references/front-page.md` 和 `references/front-page/*`
+- Page JSON：`references/front-page.md` 和 `references/front-page/*`，字段录入边界见 `references/front-page/field.md`
 - Front plugin：`references/front-plugin.md`
 - Component/package/module：`references/component.md`
 - Dever CLI/runtime：`references/framework.md`

@@ -18,6 +18,7 @@
 首轮必须完成：
 
 - 写清审查范围：用户指定文件、已改文件、同组件相关 model/page/service/api/provider、`dever.json`、权限/public/站点配置。
+- 涉及 create/update/page JSON 时，同时审查 form 节点、`data.form`、`action.submit.data`、model 字段、Options、Relations。
 - 对每个问题模式用 `rg` 搜同组件或同层级是否还有同类写法；同根问题合并报告。
 - 按审查清单过一遍 P0/P1 风险；P2 只报收益明确、和当前范围相关的问题。
 - 范围外但可疑的问题只放“未覆盖/后续风险”，不要混进本轮结论。
@@ -98,9 +99,15 @@ P2（可择机优化）
 - 是否缺六个顶层对象。
 - 是否使用旧协议字段。
 - 是否能自动推导却硬编码 model/service。
+- create/update 页是否把系统字段、审计字段、派生字段或分类名做成手填。
+- `data.form` 是否机械搬入整张表字段，而不是当前表单字段。
+- 固定少量单选枚举是否误用了 `form-select`；2-4 个固定选项优先 `form-radio`。
 - `action.submit.data` 是否破坏 partial save。
+- `action.submit.data` 是否提交 `created_at/updated_at/created_by/updated_by/author_id/editor_id/operator_id` 或服务端生成的 `code/key/slug/sn/no`。
 - option 是否能从 Options/Relations 推导。
 - `option.model` 和 `option.service` 是否互斥。
+- 分类、类型、分组是否用 Options/Relations/category，而不是自由输入。
+- 作者、编辑、创建人、更新人是否只展示或由服务端写入；真实负责人/指派人是否使用业务字段名。
 - 是否手写 `/front/route/option` 或 `/front/route/action`。
 - `page.parent/auth/public` 是否正确。
 
