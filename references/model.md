@@ -20,6 +20,25 @@ func NewXxxModel() *orm.Model[Xxx]
 
 不要手改 `data/load/model.go`。
 
+## 表命名
+
+表名有两层前缀，职责不同：
+
+- `config/setting.jsonc` 的 `database.<connection>.prefix` 是项目级前缀，必须非空，例如 `shemic`。ORM 会把 `bot_body_action` 建成 `shemic_bot_body_action`。
+- `LoadModel` 第二个参数是组件/业务域表名，必须显式带组件或业务域前缀，例如 `bot_body_action`、`crm_customer`、`user_point_config`、`source_channel`。
+
+不要依赖 ORM 自动补组件前缀。ORM 只补数据库项目级前缀，不推断 package/module 名。
+
+普通 package/module 的表名应等于组件根表名，或以 `组件名_` 开头：
+
+```go
+return orm.LoadModel[Action]("载体动作", "bot_body_action", orm.ModelConfig{})
+return orm.LoadModel[PointConfig]("积分配置", "user_point_config", orm.ModelConfig{})
+return orm.LoadModel[Channel]("频道", "source_channel", orm.ModelConfig{})
+```
+
+`package/front` 是框架核心 runtime，有历史核心表白名单；不要把业务组件命名规则直接套到 `front`。
+
 ## 字段元信息
 
 优先写在 model：

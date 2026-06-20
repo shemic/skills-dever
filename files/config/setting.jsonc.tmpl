@@ -39,6 +39,24 @@
     "enableTuning": true,
     "prefork": false
   },
+  "database": {
+    "create": true,
+    "delete": true,
+    "persist": true,
+    "default": {
+      "driver": "postgres",
+      "host": "127.0.0.1:5432",
+      "user": "app",
+      "pwd": "replace_me",
+      "dbname": "{{APP_KEY}}",
+      "prefix": "{{APP_KEY}}",
+      "maxOpenConns": 20,
+      "maxIdleConns": 10,
+      "connMaxLifetime": "300s",
+      "connMaxIdleTime": "120s",
+      "healthCheckPeriod": "5s"
+    }
+  },
   "auth": {
     "jwtSecret": "replace_me"
   },

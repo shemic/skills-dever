@@ -28,6 +28,8 @@ bash ~/.agents/skills/shemic-dever/scripts/boot.sh my dever-app 8082
 
 Dever 应用 Go module 固定是 `my`。不要按项目名、域名或目录名改 module path。
 
+生成后检查 `config/setting.jsonc` 的数据库配置：`database.default.prefix` 必须非空，推荐使用项目标识的小写下划线形式，例如 `shemic`。这个 prefix 是项目级表名前缀；组件前缀仍然写在每个 Model 的 `LoadModel` 表名里。
+
 4. 安装基础 package：
 
 ```bash

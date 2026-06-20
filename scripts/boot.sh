@@ -22,6 +22,10 @@ REQUESTED_MODULE_NAME="${ARGS[0]:-}"
 MODULE_NAME="my"
 APP_NAME="${ARGS[1]:-dever-app}"
 PORT="${ARGS[2]:-8082}"
+APP_KEY="$(printf '%s' "$APP_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+//; s/_+$//')"
+if [[ -z "$APP_KEY" ]]; then
+  APP_KEY="dever_app"
+fi
 
 if [[ -z "$REQUESTED_MODULE_NAME" ]]; then
   echo "用法：bash scripts/boot.sh <module_name> [app_name] [port] [--force] [--adopt-existing]"
@@ -68,6 +72,7 @@ render_template() {
   sed \
     -e "s/{{MODULE_NAME}}/${MODULE_NAME}/g" \
     -e "s/{{APP_NAME}}/${APP_NAME}/g" \
+    -e "s/{{APP_KEY}}/${APP_KEY}/g" \
     -e "s/{{PORT}}/${PORT}/g" \
     "$src" > "$dest"
 }

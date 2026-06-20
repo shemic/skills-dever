@@ -148,6 +148,20 @@ domain_for_model_file() {
   echo ""
 }
 
+component_for_model_file() {
+  local file="$1"
+  local normalized="${file//\\//}"
+  if [[ "$normalized" =~ (^|/)module/([^/]+)/model/ ]]; then
+    echo "${BASH_REMATCH[2]}"
+    return
+  fi
+  if [[ "$normalized" =~ (^|/)package/([^/]+)/model/ ]]; then
+    echo "${BASH_REMATCH[2]}"
+    return
+  fi
+  echo ""
+}
+
 check_generated() {
   if (( CHANGED == 0 )) && ! is_explicit_target "$1"; then
     return
@@ -199,6 +213,27 @@ check_model() {
   if [[ "$actual" != "$expected" && "$actual" != "$trimmed" ]]; then
     err "$file: 文件名应匹配 New${resource}Model（${expected}.go 或 ${trimmed}.go）"
   fi
+
+  check_model_table_prefix "$file"
+}
+
+check_model_table_prefix() {
+  local file="$1"
+  local component
+  component="$(component_for_model_file "$file" | tr '-' '_' | tr '[:upper:]' '[:lower:]')"
+  if [[ -z "$component" || "$component" == "front" ]]; then
+    return
+  fi
+
+  local tables table normalized
+  mapfile -t tables < <(rg -o 'LoadModel\[[^]]+\]\("[^"]+"[[:space:]]*,[[:space:]]*"[^"]+"' "$file" | sed -E 's/.*,[[:space:]]*"([^"]+)"/\1/')
+  for table in "${tables[@]}"; do
+    normalized="${table##*.}"
+    if [[ "$normalized" == "$component" || "$normalized" == "${component}_"* ]]; then
+      continue
+    fi
+    err "$file: LoadModel 表名 ${table} 应等于组件根表 ${component} 或以 ${component}_ 开头"
+  done
 }
 
 is_page_file() {
@@ -353,11 +388,73 @@ check_service_api() {
   fi
 }
 
+is_setting_file() {
+  case "$1" in
+    config/setting.json|config/setting.jsonc|*/config/setting.json|*/config/setting.jsonc|*/files/config/setting.json.tmpl|*/files/config/setting.jsonc.tmpl)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+check_database_prefix() {
+  local file="$1"
+  is_setting_file "$file" || return 0
+  rg -q '"database"[[:space:]]*:' "$file" || return 0
+
+  if database_block_has_empty_prefix "$file"; then
+    err "$file: database prefix 不能为空；请使用项目标识作为项目级表名前缀"
+    return
+  fi
+  if ! database_block_has_nonempty_prefix "$file"; then
+    err "$file: database 配置必须声明非空 prefix，避免建表缺少项目级前缀"
+  fi
+}
+
+database_block_has_empty_prefix() {
+  awk '
+    /"database"[[:space:]]*:/ { in_db = 1; depth = 0; opened = 0 }
+    in_db {
+      if ($0 ~ /"prefix"[[:space:]]*:[[:space:]]*""/) found = 1
+      for (i = 1; i <= length($0); i++) {
+        c = substr($0, i, 1)
+        if (c == "{") { depth++; opened = 1 }
+        if (c == "}") {
+          depth--
+          if (opened && depth <= 0) in_db = 0
+        }
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$1"
+}
+
+database_block_has_nonempty_prefix() {
+  awk '
+    /"database"[[:space:]]*:/ { in_db = 1; depth = 0; opened = 0 }
+    in_db {
+      if ($0 ~ /"prefix"[[:space:]]*:[[:space:]]*"[^"]+"/) found = 1
+      for (i = 1; i <= length($0); i++) {
+        c = substr($0, i, 1)
+        if (c == "{") { depth++; opened = 1 }
+        if (c == "}") {
+          depth--
+          if (opened && depth <= 0) in_db = 0
+        }
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$1"
+}
+
 while IFS= read -r file; do
   check_generated "$file"
   check_model "$file"
   check_page "$file"
   check_service_api "$file"
+  check_database_prefix "$file"
 done < <(collect_files)
 
 if (( fail != 0 )); then
