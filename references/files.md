@@ -69,6 +69,7 @@ transform
 
 ## 脚本
 
+- `install.sh` 自动安装 Go，安装 Dever CLI，并执行 `dever skill install`。
 - `boot.sh` 只用于空项目。
 - `module.sh` 只生成 model 骨架，不生成 Service/API。
 - `page.sh` 只生成标准 page JSON。

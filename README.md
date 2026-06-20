@@ -10,13 +10,15 @@ Dever 项目的 AI 开发约束 skill。它要求 AI 先识别任务角色，再
 https://github.com/shemic/skills-dever
 ```
 
-推荐使用：
+全新机器或全新项目先运行安装脚本：
 
 ```bash
-dever skill install
+curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 ```
 
-命令会每次从 GitHub 拉取临时副本，同步到：
+脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 Dever CLI，然后执行 `dever skill install` 同步项目提示词和多工具 skill 引用。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。
+
+`dever skill install` 会每次从 GitHub 拉取临时副本，同步到：
 
 ```txt
 ~/.agents/skills/shemic-dever
@@ -51,7 +53,7 @@ scripts/                    # 静态 audit 和骨架脚本
 推荐顺序：
 
 ```bash
-dever skill install
+curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 dever skill doctor
 bash ~/.agents/skills/shemic-dever/scripts/boot.sh my dever-app 8082
 dever package front

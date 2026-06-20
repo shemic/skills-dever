@@ -4,10 +4,13 @@
 
 ## 命令事实
 
+- 全新机器先用 `curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash` 获取 `dever` 命令并同步 skill。
+- Go 是 Dever 开发前置依赖；安装脚本在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，Windows 只提示手动安装。
 - `dever skill install` 每次从 `github.com/shemic/skills-dever` 拉取临时副本。
 - 主全局 skill 安装到 `~/.agents/skills/shemic-dever`。
 - Codex、Claude、OpenCode、Trae、Qoder、CodeBuddy 等目录使用 symlink 引用主 skill。
 - 项目只写根 `AGENTS.md`，`CLAUDE.md` 用 `@AGENTS.md` 引用。
+- `dever install` 用于本地框架源码或内嵌 `dever/` 项目安装绑定启动脚本，不是空项目第一步。
 - `dever package` 更新当前项目已启用的所有 `github.com/dever-package/*` package；`dever package <name>` 安装或更新单个 package，写 shim，并刷新注册文件。
 - `dever package add/update/sync/doctor/list` 已废弃。
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。

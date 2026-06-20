@@ -4,11 +4,13 @@
 
 ## 顺序
 
-1. 安装或同步 skill：
+1. 安装 Dever CLI，并同步 AI skill：
 
 ```bash
-dever skill install
+curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 ```
+
+脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 `dever` 命令，然后执行 `dever skill install`。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑；不要把通用 AI skill 安装工具作为主安装路径。
 
 2. 检查项目根提示词：
 
@@ -16,7 +18,7 @@ dever skill install
 dever skill doctor
 ```
 
-缺少 `AGENTS.md` 管理块时，重新执行 `dever skill install`。`CLAUDE.md` 只引用 `@AGENTS.md`。
+缺少 `AGENTS.md` 管理块时，重新执行安装脚本或 `dever skill install`。`CLAUDE.md` 只引用 `@AGENTS.md`。
 
 3. 空目录生成最小骨架：
 
@@ -84,7 +86,10 @@ bash ~/.agents/skills/shemic-dever/scripts/page.sh module/main admin product upd
 
 ## 常见错误
 
-- 没先安装 skill，导致项目根没有 Dever 规则。
+- Windows 暂不支持自动安装 Go，需按脚本提示手动安装后重跑。
+- 没装 git 就运行安装脚本；脚本会停止并提示先安装 git。
+- 跳过安装脚本，手动执行零散命令导致 Dever CLI、skill、AGENTS 不一致。
+- 把 AI skill 安装工具当成主安装方式；主流程用 `scripts/install.sh`。
 - 把 Go module 写成项目名，导致 package shim import 失效。
 - 用 `boot.sh` 覆盖已有项目。
 - 手动复制 `package/front` 源码到普通项目。
