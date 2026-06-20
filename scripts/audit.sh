@@ -322,7 +322,7 @@ check_service_api() {
        rg -q 'return record|return params\[0\]|return map\[string\]any\{\}' "$file"; then
       warn "$file: Provider 看起来只是透传；只保留真实校验、规范化或适配 hook"
     fi
-    if rg -q 'func .* (Save|List|Create|Update|Delete|GetInfo)[A-Za-z0-9_]*\(' "$file"; then
+    if rg -q 'func .* (Save|List|Create|Update|Delete|GetInfo|HandleData|Process)[A-Za-z0-9_]*\(' "$file"; then
       warn "$file: Service 方法看起来像 CRUD wrapper；普通 CRUD 应交给 package/front"
     fi
   fi

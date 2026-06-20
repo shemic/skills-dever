@@ -23,6 +23,20 @@
 
 优先选择能满足需求的最低层级。
 
+## 最小可维护实现阶梯
+
+最小不是最少行数，而是最少不必要层级、最少重复、最少平行实现。新增代码前按顺序停在第一个能满足需求的层级：
+
+1. 现有 model、page、service、api、provider 或组件扩展点能复用，先复用或小幅扩展。
+2. Model comment、Options、Relations、索引、默认排序能表达，就不要在 page JSON 重复硬编码。
+3. page JSON 和 package/front 标准 action 能表达，就不要写 Provider。
+4. Provider hook 或 `submit.before/after` 能表达，就不要写 API。
+5. 只有事务、状态流转、外部调用、异步编排、跨表规则才写 Service。
+6. API 只在需要 HTTP 边界、登录/站点/API key 上下文或 front plugin 自定义接口时出现。
+7. front plugin 只处理 page JSON 无法表达的复杂交互；framework/package 只处理公共 runtime 问题。
+
+不能用“以后可能扩展”“先留个接口”“方便统一”作为升层理由。安全校验、权限、错误处理、事务边界和脱敏日志不能为了少写代码省略。
+
 ## 实现流程
 
 1. 先搜索同类 model、page、service、api、provider、组件 skill。
@@ -92,6 +106,7 @@ dever package
 - 同一流程第二次出现就考虑抽函数/配置；第三次必须抽公共路径。
 - 函数保持单一职责，优先早返回，避免深层嵌套。
 - 名字表达业务意图，不用 `data/item/thing/handleData/processThing`。
+- 抽象必须消除真实重复、降低分支复杂度或稳定公共契约；否则保留直观实现。
 
 ## 常见禁止
 

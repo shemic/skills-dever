@@ -23,6 +23,21 @@
 | 登录/注册/回调/webhook | API + Service | page action |
 | front plugin 交互接口 | API + Service | 通用 CRUD action |
 
+## 升级门槛
+
+新增 Provider、Service、API 前必须写清低层能力为什么不够：
+
+- 能由 Model metadata、page JSON、标准 action 或 option runtime 表达的，不升级。
+- 只是参数转换、透传、普通查询、普通保存、列表过滤，不升级。
+- “以后可能复用”“方便统一入口”“先预留一层”不是升级理由。
+- 发现同类流程已经存在时，优先复用或收敛公共路径，不创建平行实现。
+
+可以升级的信号：
+
+- 存在跨表业务不变量、事务边界、状态机或幂等要求。
+- 存在外部系统调用、异步编排、webhook/callback 或超时/重试策略。
+- 需要明确 HTTP 边界、登录/站点/API key 上下文或 front plugin 自定义交互接口。
+
 ## Provider
 
 Provider 是给 Dever/page runtime 调用的适配层。
@@ -69,6 +84,8 @@ Process
 ```
 
 Service 应该有清晰事务边界、错误返回、超时控制、幂等设计和脱敏日志。
+
+Service 不做单纯 CRUD wrapper；如果方法只是 `Save/List/Create/Update/Delete/GetInfo/HandleData/Process` 的改名，回退到 Model + page JSON 或改成表达真实业务动作的 Service。
 
 ## API
 

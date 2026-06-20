@@ -26,6 +26,8 @@ version: 0.1.0
 - 不创建 CRUD wrapper Service/API。
 - 不修改生成文件或编译后的 front 产物。
 - 组件专属行为留在本组件内，不散落到全局。
+- 不为单个页面或单个调用点创建通用框架、单实现 interface、空 Base 类或 `Helper/Manager/Util`。
+- 同一流程第二次出现先考虑函数、配置或组件内公共路径；第三次必须收敛，不能复制粘贴。
 - 不为禁止字段保留适配代码，不保留双路径备用实现。
 - 任何公开 API、权限、密钥、外部调用或升级影响，都要在这里写清楚。
 - 新增菜单、权限、公开路径、站点默认展示配置时，优先写入组件 `dever.json.front.sites`；项目覆盖只写 `config/front.json.sites.<site>` 的展示配置。
@@ -55,6 +57,8 @@ version: 0.1.0
 
 - 修改 page JSON 前先读现有 model。
 - 新增 Provider/API 前先读现有 service。
+- 新增 Service/API/front plugin 前写清低层能力为什么不够。
+- 检查是否重复了 model Options/Relations、字段标签、option 或权限配置。
 - 修改后台页面前先检查组件权限。
 - 修改 `dever.json` 后检查 `skills`、`public`、`sites`、`depends` 是否仍有效。
 
