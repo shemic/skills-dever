@@ -33,6 +33,13 @@ package bot
 
 `front.sites.<site>.config` 只放展示配置：`name/subtitle/description/url/logo/favicon`。
 
+`front.sites.<site>.api` 是站点 API 前缀声明：
+
+- 站点主组件同时写 `page/config/setting/access/entry`。
+- 扩展已有站点的组件只写 `api/auth/public`。
+- 自定义 API 目录和声明要对应：`api/admin/*.go` 对应 `api: "<component>/admin"`。
+- 不写 `apiAliases`、`apiRoots` 或其它站点自定义字段。
+
 ## 组件 skill
 
 复杂组件必须带组件 skill，并在 `dever.json` 声明：

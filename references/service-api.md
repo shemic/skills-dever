@@ -81,4 +81,11 @@ API 必须薄：
 
 不要把业务流程、SQL 拼接、状态流转或外部调用直接写在 API。
 
+API 路由规则：
+
+- `api/*.go` 生成 `/组件名/<资源>/<动作>`，只适合明确不归属具体站点的通用接口。
+- `api/admin/*.go` 生成 `/组件名/admin/<资源>/<动作>`，用于后台自定义接口。
+- `api/<site-or-scope>/*.go` 生成 `/组件名/<site-or-scope>/<资源>/<动作>`，用于工作台、前台或独立站点接口。
+- 需要站点权限保护时，同步在 `dever.json.front.sites.<site>.api` 声明该前缀。
+
 公开 API 必须在组件 `dever.json.front.public` 或 `front.sites.<site>.public` 中明确声明。

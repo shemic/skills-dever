@@ -29,6 +29,10 @@ data/table/*.json
 
 - model：扫描 active module/package 的 `model/`，只注册零参 `New*Model`。
 - service：扫描 `service/`，只注册 `Provider*` 接收者方法。
+- api：扫描 active module/package 的 `api/**/*.go`，`api/` 下的子目录会进入 URL 前缀。
+  - `package/bot/api/admin/team.go` -> `/bot/admin/team/...`
+  - `package/bot/api/body/project.go` -> `/bot/body/project/...`
+  - `package/crm/api/work.go` -> `/crm/work/...`
 - component：扫描 active module/package 的 `dever.json` 和 embed FS。
 
 ## Go module

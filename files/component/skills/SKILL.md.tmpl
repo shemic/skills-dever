@@ -29,6 +29,7 @@ version: 0.1.0
 - 不为禁止字段保留适配代码，不保留双路径备用实现。
 - 任何公开 API、权限、密钥、外部调用或升级影响，都要在这里写清楚。
 - 新增菜单、权限、公开路径、站点默认展示配置时，优先写入组件 `dever.json.front.sites`；项目覆盖只写 `config/front.json.sites.<site>` 的展示配置。
+- 自定义 API 按站点/用途拆到 `api/<scope>`，并在 `front.sites.<site>.api` 声明对应 `/组件名/<scope>` 前缀；不要新增 `apiAliases/apiRoots/internal`。
 - 新增服务端模板页面时，保留 page JSON 六对象规则，使用 `page.render: "template"` + 顶层 `template`，SEO 放 `data.seo`。
 - 删除或改名页面、model、Service/API 前，先写清影响范围和替代路径。
 

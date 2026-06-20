@@ -37,6 +37,7 @@ version: 1.0.0
 - 不手改编译产物：`front/dist/*`、`package/front/front/html/*`、`package/front/front/html/assets/*`。
 - 修改 `package/<name>` 或 `module/<name>` 前，先读该组件声明的 `skills/**/SKILL.md`。
 - 组件站点运行契约写在组件 `dever.json.front.sites`；项目 `config/front.json` 只覆盖 `sites.<site>` 展示配置。
+- 自定义 API 按站点/用途放到 `api/<scope>` 子目录；路由自动生成 `/组件名/<scope>/...`，再用 `front.sites.<site>.api` 挂到站点权限域。不要把后台、前台、公开接口混在组件根 API 前缀。
 - `dever skill install` 每次从 `github.com/shemic/skills-dever` 拉取；不要使用本地缓存或项目镜像作为安装来源。
 - 如果用户禁止 build/test，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价测试。
 

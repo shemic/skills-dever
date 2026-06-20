@@ -30,6 +30,34 @@ favicon
 
 不要在 `front.sites.<site>` 写其它自定义字段。
 
+## api
+
+`api` 用来声明该组件给站点提供的 API 前缀：
+
+- 站点主组件写完整契约：`api/page/config/setting/access/entry`。
+- 其它组件只想给已有站点追加接口时，只写 `api/auth/public`，不要重复写 `page/config/setting/access/entry`。
+- `api` 单独出现不抢占站点所有权，可以有多个组件给同一个站点追加 API 前缀。
+- API 路由由目录自然生成：`api/admin/team.go` -> `/组件名/admin/team/...`。
+
+常用写法：
+
+```json
+{
+  "front": {
+    "sites": {
+      "admin": { "api": "bot/admin" },
+      "body": {
+        "api": "bot/body",
+        "page": "body",
+        "access": { "mode": "login", "authProvider": "user" }
+      }
+    }
+  }
+}
+```
+
+不要新增 `apiAliases`、`apiRoots`、`internal` 等字段。需要站点隔离时拆 `api/<scope>` 目录并声明对应 `api`。
+
 ## config/front.json
 
 项目覆盖文件只允许：
@@ -77,7 +105,7 @@ dever.json.front.sites.<site>.public
 
 ```txt
 api: "front" -> front/login, front/main
-api: "work"  -> work/login, work/main
+api: "crm/work" -> crm/work/login, crm/work/main
 ```
 
 ## front 插件发现
