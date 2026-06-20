@@ -77,9 +77,10 @@ module/bot/main.go
 ```bash
 dever package front
 dever package bot
+dever package
 ```
 
-`dever package <name>` 会安装或更新 `github.com/dever-package/<name>@latest`、写入 `module/<name>/main.go` shim，并刷新注册文件。普通项目不保留 `package/<name>` 源码。
+`dever package <name>` 会安装或更新单个 `github.com/dever-package/<name>@latest`、写入 `module/<name>/main.go` shim，并刷新注册文件。`dever package` 会更新当前项目已启用的全部 package。普通项目不保留 `package/<name>` 源码。
 
 `scripts/boot.sh` 只用于空项目；已有项目不要用它覆盖骨架。
 
