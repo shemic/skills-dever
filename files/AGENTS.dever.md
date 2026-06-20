@@ -11,7 +11,5 @@
 
 Page JSON 只用当前协议：能自动推导的不写；不能推导才写对应位置的 model/service；禁止旧字段和历史兼容写法。
 
-自定义 API 按站点/用途放到 api/<scope> 子目录，并在 dever.json.front.sites.<site>.api 声明对应前缀；不要新增 apiAliases/apiRoots/internal。
-
 修改 package/module 前，先读取该组件 skills/**/SKILL.md。
 <!-- dever-skill:end -->

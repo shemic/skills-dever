@@ -12,7 +12,7 @@ version: 1.0.0
 
 | 角色 | 触发 | 必读 |
 | --- | --- | --- |
-| `dever-app` | 业务功能、module、model、普通后台、配置 | `references/app.md`、`references/model.md`、涉及页面再读 `references/front-page.md` |
+| `dever-app` | 业务功能、module、model、普通后台、配置 | `references/app.md`、`references/model.md`；涉及 Service/API 再读 `references/service-api.md`；涉及页面再读 `references/front-page.md` |
 | `dever-front-page` | page JSON、route/action/option、权限、菜单、站点、后台/工作台页面 | `references/front-page.md` |
 | `dever-front-plugin` | `front/src/plugin.ts`、React 节点、画布、工作台、复杂交互 | `references/front-plugin.md`，再读组件 skill |
 | `dever-component` | `package/<name>`、`module/<name>`、`dever.json`、组件 skill | `references/component.md`，再读组件自己的 `skills/**/SKILL.md` |
@@ -37,7 +37,7 @@ version: 1.0.0
 - 不手改编译产物：`front/dist/*`、`package/front/front/html/*`、`package/front/front/html/assets/*`。
 - 修改 `package/<name>` 或 `module/<name>` 前，先读该组件声明的 `skills/**/SKILL.md`。
 - 组件站点运行契约写在组件 `dever.json.front.sites`；项目 `config/front.json` 只覆盖 `sites.<site>` 展示配置。
-- 自定义 API 按站点/用途放到 `api/<scope>` 子目录；路由自动生成 `/组件名/<scope>/...`，再用 `front.sites.<site>.api` 挂到站点权限域。不要把后台、前台、公开接口混在组件根 API 前缀。
+- 自定义 API 必须按站点/用途隔离；细则归属 `references/service-api.md` 和 `references/front-page/site.md`。
 - `dever skill install` 每次从 `github.com/shemic/skills-dever` 拉取；不要使用本地缓存或项目镜像作为安装来源。
 - 如果用户禁止 build/test，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价测试。
 
