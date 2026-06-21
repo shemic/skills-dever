@@ -6,7 +6,7 @@ Dever 里 `module` 和 `package` 都是组件。`module` 是项目本地业务�
 
 - 应用业务放 `module/<name>`。
 - 可复用组件发布为 `github.com/dever-package/<name>`。
-- 普通项目安装或更新单个组件使用 `dever package <name>`；更新全部已启用 package 使用 `dever package`。
+- 普通项目安装或更新单个组件使用 `dever package <name>`；更新全部已启用 package 使用 `dever package`。默认使用稳定 `@latest`，维护者验证 main、tag 或提交时才使用 `--ref=main`、`--ref=<tag-or-commit>`。
 - 框架/package 开发仓库可以保留本地 `package/<name>` 并通过 go.mod replace 接入。
 
 `module/<name>/main.go` 是 package shim 时：

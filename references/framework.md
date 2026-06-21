@@ -12,6 +12,7 @@
 - 项目只写根 `AGENTS.md`，`CLAUDE.md` 用 `@AGENTS.md` 引用。
 - `dever install` 用于本地框架源码或内嵌 `dever/` 项目安装绑定启动脚本，不是空项目第一步。
 - `dever package` 更新当前项目已启用的所有 `github.com/dever-package/*` package；`dever package <name>` 安装或更新单个 package，写 shim，并刷新注册文件。
+- `dever package` 默认使用稳定通道 `@latest`。维护者需要验证 main、tag 或提交时显式使用 `--ref=main`、`--ref=v0.1.1` 或 `--ref=<commit>`；不要把普通项目默认更新改成追 main。
 - `dever package add/update/sync/doctor/list` 已废弃。
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
 - `dever build` 默认先执行 front plugin build，再构建 Go 二进制。

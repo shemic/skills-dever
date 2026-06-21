@@ -60,6 +60,8 @@ dever package front
 dever package bot
 ```
 
+`dever package` 默认更新稳定版本；维护 package 时需要验证未发布提交，使用 `dever package front --ref=main` 或指定 tag/commit。
+
 完整说明见 `references/quickstart.md`。已有项目不要用 `boot.sh` 覆盖骨架。
 
 ## 规则归属

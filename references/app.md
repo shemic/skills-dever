@@ -107,6 +107,13 @@ dever package
 
 `dever package <name>` 会安装或更新单个 `github.com/dever-package/<name>@latest`、写入 `module/<name>/main.go` shim，并刷新注册文件。`dever package` 会更新当前项目已启用的全部 package。普通项目不保留 `package/<name>` 源码。
 
+普通项目默认使用稳定版本，不追 main。维护 package 或验证未发布提交时才使用：
+
+```bash
+dever package front --ref=main
+dever package front --ref=v0.1.1
+```
+
 `scripts/boot.sh` 只用于空项目；已有项目不要用它覆盖骨架。
 
 ## 代码质量
