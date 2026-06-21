@@ -58,6 +58,48 @@ order
 pageSize
 ```
 
+## form-select 空值
+
+`form-select` 默认把 `0`、`"0"`、`""` 当空值，空值展示 placeholder。`null` 和 `undefined` 也始终按空值处理。
+
+常规外键、人员、分类选择不用额外配置：
+
+```json
+{
+  "type": "form-select",
+  "name": "作者",
+  "placeholder": "请选择作者"
+}
+```
+
+没有 `placeholder` 时，前端按 `name` 生成 `请选择作者`；没有 `name` 时兜底 `请选择`。
+
+如果 `0` 或 `"0"` 是合法选项，必须覆盖 `meta.emptyValues`：
+
+```json
+{
+  "type": "form-select",
+  "name": "状态",
+  "meta": {
+    "emptyValues": [""]
+  }
+}
+```
+
+如果后端用其它值表示未选择，可以显式配置：
+
+```json
+{
+  "type": "form-select",
+  "placeholder": "请选择作者",
+  "meta": {
+    "emptyValues": [0, "0", "", -1, "-1"]
+  }
+}
+```
+
+不要为了状态/枚举字段机械配置 `emptyValues`。只有后端占位空值和默认规则不一致时才配置。
+
 ## 常见错误
 
 - option 无法推导：先查 model Relations/Options 和当前节点 value 字段。
