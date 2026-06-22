@@ -88,6 +88,8 @@ front/dist/manifest.json > front/src/plugin.ts
 
 `dever run` 只为本地可编辑且没有 dist manifest 的插件启动 dev server。
 
+发布用 `front/dist/manifest.json` 必须让入口 JS 带上 `css` 数组；如果 Vite 生成了独立 CSS asset，编译器应在 manifest 后处理阶段归并到入口，不能依赖宿主扫描所有 manifest 项。
+
 组件 Go 资源不要直接 `//go:embed front/dist`：前端构建失败可能清空 `front/dist`，导致 Go 解析组件时报 `cannot embed directory front/dist: contains no embeddable files`。推荐 `FrontFS` 嵌入稳定存在的 `front` 目录，组件注册的 `FrontPrefix` 仍保持 `front/dist`。
 
 不要靠手写 `front/dist/placeholder.txt` 绕过空目录；本地开发依赖 `front/src/plugin.ts` fallback，发布依赖真实构建产物。

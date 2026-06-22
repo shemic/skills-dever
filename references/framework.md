@@ -10,11 +10,12 @@
 - 主全局 skill 安装到 `~/.agents/skills/shemic-dever`。
 - Codex、Claude、OpenCode、Trae、Qoder、CodeBuddy 等目录使用 symlink 引用主 skill。
 - 项目只写根 `AGENTS.md`，`CLAUDE.md` 用 `@AGENTS.md` 引用。
-- `dever install` 用于本地框架源码或内嵌 `dever/` 项目安装绑定启动脚本，不是空项目第一步。
+- `dever install` 用于本地框架源码或内嵌 `dever/` 项目安装绑定启动脚本，不是空项目第一步。默认覆盖当前 `PATH` 命中的 `dever` 所在目录；该目录不可写时回退到用户 bin，必要时用 `--bin-dir` 显式指定。
 - `dever package` 更新当前项目已启用的所有 `github.com/dever-package/*` package；`dever package <name>` 安装或更新单个 package，写 shim，并刷新注册文件。
 - `dever package` 默认使用稳定通道 `@latest`。维护者需要验证 main、tag 或提交时显式使用 `--ref=main`、`--ref=v0.1.1` 或 `--ref=<commit>`；不要把普通项目默认更新改成追 main。
 - `dever package add/update/sync/doctor/list` 已废弃。
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
+- `dever run` 热重载只监听源码和配置目录：`config`、`dever`、`middleware`、`module`、`package`；不要监听 `data`，`data/skills`、`data/knowledge`、`data/upload`、`data/table` 等都是运行数据或生成数据。
 - `dever build` 默认先执行 front plugin build，再构建 Go 二进制。
 - `dever publish user@host:/opt/app` 在本地构建并打包 `server + config/`，上传到远端 `releases/<version>`，创建 `shared/data`，把 release 内的 `data` 软链到 `shared/data`，再切换 `current`。`data/` 不进入发布包。
 - `dever publish --skip-build --binary=server user@host:/opt/app` 复用本地已有二进制。
@@ -68,6 +69,7 @@ replace github.com/dever-package/front => ./package/front
 - 外部 Go module package 有 dist 就跳过。
 - 外部 Go module package 有 `front/src/plugin.ts` 但没有 `front/dist/manifest.json` 会报错，要求 package 发布前构建 dist。
 - 前端插件构建产物不应打包 React/ReactDOM/jsx-runtime 的运行时代码，也不应残留浏览器不可用的 `process.env.NODE_ENV`；dev 和 build 都通过宿主全局 shim 读取 React 运行时。
+- 前端插件构建产物如果生成独立 `.css` asset，`manifest.json` 的入口 JS 必须带 `css` 数组，宿主 runtime 只按入口 `css` 注入样式。
 
 `dever run`：
 
