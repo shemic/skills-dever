@@ -24,6 +24,16 @@
 - 跨表事务、状态流转、外部调用：Service。
 - 自定义 HTTP 能力：API + Service。
 
+## 编辑器正文展示
+
+- `form-editor` 保存的是 Dever 富文本 JSON，不是可直接拼接的 HTML。
+- React 页面展示编辑器正文用 `show-rich` 或 `RichTextView`，不要自己解析 JSON。
+- front plugin 或客户端代码需要 HTML 字符串时，用 `richTextToHtml(value)`；只要内部片段时才传 `wrapper:false`。
+- Go template 服务端模板展示编辑器正文时，用 `{{ richText .Data.article.content }}`；只要内部片段时才用 `{{ richTextInner .Data.article.content }}`。
+- 不要在项目里复制富文本解析、媒体解析、备注解析或手写 `dangerouslySetInnerHTML` 解析逻辑。
+- 图片、视频、音频备注统一存储在媒体节点 `attrs.caption`，前端必须渲染为 `figure > figcaption`；备注样式必须和编辑器/`RichTextView` 保持一致。
+- 新增富文本节点、媒体节点或展示样式时，必须同步更新 `RichTextView`、`richTextToHtml` 和 Go template `richText`，保证后台预览、React 展示和 template HTML 一致。
+
 ## 最小结构
 
 每个 page JSON 必须有六个顶层对象：

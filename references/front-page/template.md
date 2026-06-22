@@ -48,6 +48,8 @@
 - 模板 data 的 `model` 和 `service` 不能同时作为同一数据源。
 - 查询不到且 `required: true` 时返回 404。
 - 模板路由不要占用站点保留根路径：`main`、`route`、`upload`、`resource`、`import`、`export`、`runtime.js`、`assets`。
+- 展示 `form-editor` 正文时，用模板函数 `{{ richText .Data.article.content }}`；只要内部片段时用 `{{ richTextInner .Data.article.content }}`。
+- 不要在模板里手写 JSON 解析、媒体备注解析或直接输出原始 HTML。媒体备注来自 `attrs.caption`，统一渲染为 `figure > figcaption`。
 
 ## 资源
 
