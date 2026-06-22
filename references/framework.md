@@ -16,6 +16,7 @@
 - `dever package add/update/sync/doctor/list` 已废弃。
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
 - `dever build` 默认先执行 front plugin build，再构建 Go 二进制。
+- `dever daemon start -- <command...>` 可在当前项目后台运行任意命令；默认名称为 `default`，用 `--name` 区分多个后台命令。`stop/restart/status/logs -f` 通过 `tmp/dever/daemon/<name>.*` 管理 pid、元数据和日志。`restart` 不带命令时复用上次命令。
 
 ## 生成文件
 
