@@ -87,3 +87,7 @@ front/dist/manifest.json > front/src/plugin.ts
 发布 package 如果带 `front/src/plugin.ts`，必须携带有效 `front/dist/manifest.json`。`placeholder.txt` 不算 dist。
 
 `dever run` 只为本地可编辑且没有 dist manifest 的插件启动 dev server。
+
+组件 Go 资源不要直接 `//go:embed front/dist`：前端构建失败可能清空 `front/dist`，导致 Go 解析组件时报 `cannot embed directory front/dist: contains no embeddable files`。推荐 `FrontFS` 嵌入稳定存在的 `front` 目录，组件注册的 `FrontPrefix` 仍保持 `front/dist`。
+
+不要靠手写 `front/dist/placeholder.txt` 绕过空目录；本地开发依赖 `front/src/plugin.ts` fallback，发布依赖真实构建产物。

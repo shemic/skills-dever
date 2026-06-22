@@ -16,6 +16,9 @@
 - `dever package add/update/sync/doctor/list` 已废弃。
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
 - `dever build` 默认先执行 front plugin build，再构建 Go 二进制。
+- `dever publish user@host:/opt/app` 在本地构建并打包 `server + config/`，上传到远端 `releases/<version>`，创建 `shared/data`，把 release 内的 `data` 软链到 `shared/data`，再切换 `current`。`data/` 不进入发布包。
+- `dever publish --skip-build --binary=server user@host:/opt/app` 复用本地已有二进制。
+- `dever publish --service=<name> --install-service --restart user@host:/opt/app` 才会写入 systemd 并重启服务；服务名必须显式指定，避免一台服务器多个应用互相覆盖。
 - `dever daemon start -- <command...>` 可在当前项目后台运行任意命令；默认名称为 `default`，用 `--name` 区分多个后台命令。`stop/restart/status/logs -f` 通过 `tmp/dever/daemon/<name>.*` 管理 pid、元数据和日志。`restart` 不带命令时复用上次命令。
 
 ## 生成文件
@@ -64,6 +67,7 @@ replace github.com/dever-package/front => ./package/front
 - 只构建本地可编辑 package/module 插件。
 - 外部 Go module package 有 dist 就跳过。
 - 外部 Go module package 有 `front/src/plugin.ts` 但没有 `front/dist/manifest.json` 会报错，要求 package 发布前构建 dist。
+- 前端插件构建产物不应打包 React/ReactDOM/jsx-runtime 的运行时代码，也不应残留浏览器不可用的 `process.env.NODE_ENV`；dev 和 build 都通过宿主全局 shim 读取 React 运行时。
 
 `dever run`：
 
