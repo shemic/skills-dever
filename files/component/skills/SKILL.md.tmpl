@@ -30,7 +30,7 @@ version: 0.1.0
 - 同一流程第二次出现先考虑函数、配置或组件内公共路径；第三次必须收敛，不能复制粘贴。
 - 不为禁止字段保留适配代码，不保留双路径备用实现。
 - 任何公开 API、权限、密钥、外部调用或升级影响，都要在这里写清楚。
-- 新增菜单、权限、公开路径、站点默认展示配置时，优先写入组件 `dever.json.front.sites`；项目覆盖只写 `config/front.json.sites.<site>` 的展示配置。
+- 新增菜单、权限、公开路径、站点默认展示配置时，优先写入组件 `dever.json.front.sites`；项目覆盖只写 `config/front.json(c).sites.<site>` 的展示配置。
 - 组件 skill 只记录本组件私有 API 前缀、权限和公开入口；通用 API/站点规则不在这里重复。
 - 新增服务端模板页面时，保留 page JSON 六对象规则，使用 `page.render: "template"` + 顶层 `template`，SEO 放 `data.seo`。
 - 新增 create/update 页面时，按全局 `front-page/field.md` 区分表单字段、系统字段、审计字段和分类字段。

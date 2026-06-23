@@ -64,7 +64,7 @@ transform
 - `logo.svg` 默认透明背景。
 - `favicon.svg` 可以带背景。
 - 站点展示配置在组件 `dever.json.front.sites.<site>.config`。
-- 项目覆盖只写 `config/front.json.sites.<site>` 的展示配置。
+- 项目覆盖只写 `config/front.json(c).sites.<site>` 的展示配置。
 - 不修改 `package/front/front/html` 或 `front/dist` 产物。
 
 ## 脚本

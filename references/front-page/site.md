@@ -1,6 +1,6 @@
 # Front Page Site
 
-站点运行契约属于组件 `dever.json.front.sites`，项目 `config/front.json` 只覆盖展示配置。
+站点运行契约属于组件 `dever.json.front.sites`，项目 `config/front.json` 或 `config/front.jsonc` 只覆盖展示配置。两者同时存在时优先读取 `config/front.json`。
 
 ## dever.json.front.sites
 
@@ -27,6 +27,18 @@ url
 logo
 favicon
 ```
+
+`url` 永远写字符串数组，例如：
+
+```json
+{
+  "config": {
+    "url": ["https://admin.example.com"]
+  }
+}
+```
+
+不要写成字符串。`url` 只表示域名根路径绑定，不支持带 path、query 或 fragment。
 
 不要在 `front.sites.<site>` 写其它自定义字段。
 
@@ -58,7 +70,7 @@ favicon
 
 不要新增 `apiAliases`、`apiRoots`、`internal` 等字段。需要站点隔离时拆 `api/<scope>` 目录并声明对应 `api`。
 
-## config/front.json
+## config/front.json / config/front.jsonc
 
 项目覆盖文件只允许：
 
@@ -67,6 +79,7 @@ favicon
   "sites": {
     "admin": {
       "name": "管理后台",
+      "url": ["https://admin.example.com"],
       "logo": "config/assets/admin/images/logo.svg"
     }
   }
@@ -74,6 +87,10 @@ favicon
 ```
 
 不能覆盖 `api/page/access/entry/public/auth/setting`。
+
+`sites.<site>.url` 用来把域名根路径绑定到站点。命中 Host 后，`https://admin.example.com/` 直接进入 `admin` 站点，资源按 `/assets/...`、`/runtime.js` 输出；未命中 Host 或 IP 访问仍使用原来的 `/{site}` 路径，例如 `/admin/`。
+
+线上通过 nginx 或其它网关绑定域名时，反代到 Dever 后端根路径并保留 `Host`/`X-Forwarded-Host`；不要把域名 rewrite 到 `/{site}`，否则资源路径会和 runtime basePath 混在一起。
 
 ## access
 

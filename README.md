@@ -37,6 +37,61 @@ curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/in
 
 项目根只写 `AGENTS.md`，`CLAUDE.md` 使用 `@AGENTS.md` 引用。
 
+## 常用命令
+
+首次安装 Dever CLI 和 AI skill：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
+```
+
+之后更新 Dever CLI 和当前项目 Dever 框架依赖：
+
+```bash
+dever update
+dever update --ref=latest
+```
+
+`dever update` 默认追 GitHub `main`，会先在当前 Dever 后端项目中执行 `go get github.com/shemic/dever@<ref>`，再安装同一 ref 的 `dever` 命令。它不同步 AI skill；需要更新 AI skill 时单独执行：
+
+```bash
+dever skill install
+dever skill doctor
+```
+
+只想更新命令、不改当前项目 `go.mod` 时使用：
+
+```bash
+dever update --skip-framework
+```
+
+常见项目命令：
+
+| 命令 | 用途 |
+| --- | --- |
+| `dever run` | 开发启动，自动生成注册文件并热重载源码和配置。 |
+| `dever daemon start --name app -- dever run` | 后台启动 `dever run`。 |
+| `dever daemon stop --name app` | 停止后台命令。 |
+| `dever daemon restart --name app` | 重启后台命令；不带命令时复用上次命令。 |
+| `dever daemon logs --name app -f` | 查看后台日志。 |
+| `dever package front` | 安装或更新 `front` package。 |
+| `dever package bot` | 安装或更新 `bot` package。 |
+| `dever package` | 更新当前项目已启用的所有 package。 |
+| `dever package front --ref=main` | 维护者验证未发布 package 时追 `main`；普通项目默认不用。 |
+| `dever front build bot` | 构建本地可编辑 `bot` 前端插件，发布 package 前使用。 |
+| `dever build` | 构建项目二进制，默认会先构建本地前端插件。 |
+| `dever publish root@1.2.3.4:/opt/app --service=app --install-service --restart` | 发布到远端服务器，安装或更新 systemd 服务并重启。 |
+| `dever publish root@1.2.3.4:/opt/app --include=server --service=app --restart` | 已完成首次部署后，只覆盖线上 server 二进制并重启，远端配置保持不变。 |
+| `dever publish root@1.2.3.4:/opt/app --include=server,config,data/table,data/migrations --service=app --restart` | 显式把指定目录加入发布包；`data/...` 会合并到远端 `shared/data`。 |
+
+本地维护框架源码时，才使用 `dever install` 把当前项目里的 `dever/cmd/dever` 绑定成启动脚本：
+
+```bash
+dever install --skip-skills
+```
+
+普通用户更新最新版命令用 `dever update`，不要把 `dever install` 当作在线更新命令。
+
 ## 目录
 
 ```txt
