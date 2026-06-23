@@ -90,7 +90,11 @@ favicon
 
 `sites.<site>.url` 用来把域名根路径绑定到站点。命中 Host 后，`https://admin.example.com/` 直接进入 `admin` 站点，资源按 `/assets/...`、`/runtime.js`、`/plugins/...` 输出；同一域名下不再允许旧的 `/{site}` 路径，例如 `https://admin.example.com/admin/` 应返回 404。未命中 Host 或 IP 访问仍使用原来的 `/{site}` 路径，例如 `http://1.2.3.4:8086/admin/`。
 
+Host 绑定命中后，后续 `/front/main/*`、`/front/route/*` 等 runtime API 也必须优先按 Host 绑定站点解析，避免多个站点共用默认 `/front` API 前缀时被 `admin` 抢先命中。不要把 Host 域名 rewrite 到 `/{site}`，也不要依赖 `/{site}/main/*` 或 `/{site}/route/*` 作为 Host 绑定后的 runtime API。
+
 线上通过 nginx 或其它网关绑定域名时，反代到 Dever 后端根路径并保留 `Host`/`X-Forwarded-Host`；不要把域名 rewrite 到 `/{site}`，否则资源路径会和 runtime basePath 混在一起。
+
+如果站点是模板渲染站点，Host 根路径也必须进入该站点的模板 route。例如 `mt_content` 原本通过 `/mt_content` 输出模板首页，配置 `url: ["https://www.example.com"]` 后，`https://www.example.com/` 应输出同一套模板页，而不是后台 runtime 壳。
 
 nginx 反代示例：
 
@@ -138,12 +142,14 @@ dever.json.front.sites.<site>.public
 
 `front/page/{page}/...` 里的 `{page}` 是物理目录，来自 site 的 `page` 字段。它不自动进入 route。
 
-站点系统页由 `site.api` 决定：
+页面 route 前缀由定义该站点页面的组件名决定，不由站点 key 或 `site.api` 决定。`site.api` 只用于接口前缀。
 
 ```txt
-api: "front" -> front/login, front/main
-api: "crm/work" -> crm/work/login, crm/work/main
+package/front 定义 admin 页面 -> front/login, front/main
+module/mt 定义 mt_content 页面 -> mt/home, mt/article
 ```
+
+模板页面的 `template.route` 以站点路径为前缀。未绑定 Host 时使用原始 `/{site}` 路径；绑定 Host 时站点路径视为 `/`，模板资源也按 `/assets/...` 输出。
 
 ## front 插件发现
 

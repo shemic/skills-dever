@@ -18,7 +18,7 @@
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
 - `dever run` 热重载只监听源码和配置目录：`config`、`dever`、`middleware`、`module`、`package`；不要监听 `data`，`data/skills`、`data/knowledge`、`data/upload`、`data/table` 等都是运行数据或生成数据。
 - `dever build` 默认先执行 front plugin build，再构建 Go 二进制。
-- `dever publish user@host:/opt/app` 在本地构建并打包默认白名单 `server,config`，通过本次发布专用的 SSH ControlMaster 连接上传到远端 `releases/<version>`，创建 `shared/data`，把 release 内的 `data` 软链到 `shared/data`，再切换 `current`。
+- `dever publish user@host:/opt/app` 在本地构建并打包默认白名单 `server,config`，通过本次发布专用的 SSH ControlMaster 连接用 `scp` 上传到远端 `releases/<version>`，创建 `shared/data`，把 release 内的 `data` 软链到 `shared/data`，再切换 `current`。
 - `dever publish --include=server user@host:/opt/app` 只发布 `server` 并复用远端已有 `current/config`；首次上线或需要同步配置变更时使用默认 include。
 - `dever publish --include=server,config,data/log,data/table user@host:/opt/app` 会把指定路径加入发布包；`data/...` 会在远端合并到 `shared/data` 后再创建 release 内的 `data` 软链。
 - `dever publish --include=server,config,data --exclude=data/log user@host:/opt/app` 先按 include 白名单选择内容，再从选中的目录中过滤 exclude 子路径。

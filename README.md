@@ -97,6 +97,8 @@ dever install --skip-skills
 
 HTTPS 证书命令基于远端 `acme.sh`：`issue` 默认使用 Let's Encrypt 和 Nginx 验证模式，证书安装到 `/etc/dever/certs/<domain>`，续签时会执行默认 reload 命令 `systemctl reload nginx`。如果不是 Nginx，可用 `--mode=webroot --webroot=/path/to/site` 或 `--mode=standalone`；reload 命令用 `--reload="systemctl reload caddy"` 覆盖，或用 `--reload=` 关闭。
 
+`dever publish` 会在本机生成 `tar.gz` 发布包，再用 `scp` 上传到远端 `releases/<version>`。同一次发布会复用临时 SSH ControlMaster 连接，尽量避免准备目录、上传和激活发布时重复输入密码。
+
 ## 目录
 
 ```txt
