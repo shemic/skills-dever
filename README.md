@@ -83,6 +83,9 @@ dever update --skip-framework
 | `dever publish root@1.2.3.4:/opt/app --service=app --install-service --restart` | 发布到远端服务器，安装或更新 systemd 服务并重启。 |
 | `dever publish root@1.2.3.4:/opt/app --include=server --service=app --restart` | 已完成首次部署后，只覆盖线上 server 二进制并重启，远端配置保持不变。 |
 | `dever publish root@1.2.3.4:/opt/app --include=server,config,data/table,data/migrations --service=app --restart` | 显式把指定目录加入发布包；`data/...` 会合并到远端 `shared/data`。 |
+| `dever cert issue root@1.2.3.4 --domain=admin.example.com --email=admin@example.com` | 在远端安装 acme.sh，并用 Nginx 模式签发和安装 HTTPS 证书。 |
+| `dever cert info root@1.2.3.4 --domain=admin.example.com` | 查看远端证书信息和下次续签时间。 |
+| `dever cert renew root@1.2.3.4 --domain=admin.example.com --force` | 远端强制续签证书。 |
 
 本地维护框架源码时，才使用 `dever install` 把当前项目里的 `dever/cmd/dever` 绑定成启动脚本：
 
@@ -91,6 +94,8 @@ dever install --skip-skills
 ```
 
 普通用户更新最新版命令用 `dever update`，不要把 `dever install` 当作在线更新命令。
+
+HTTPS 证书命令基于远端 `acme.sh`：`issue` 默认使用 Let's Encrypt 和 Nginx 验证模式，证书安装到 `/etc/dever/certs/<domain>`，续签时会执行默认 reload 命令 `systemctl reload nginx`。如果不是 Nginx，可用 `--mode=webroot --webroot=/path/to/site` 或 `--mode=standalone`；reload 命令用 `--reload="systemctl reload caddy"` 覆盖，或用 `--reload=` 关闭。
 
 ## 目录
 

@@ -88,9 +88,29 @@ favicon
 
 不能覆盖 `api/page/access/entry/public/auth/setting`。
 
-`sites.<site>.url` 用来把域名根路径绑定到站点。命中 Host 后，`https://admin.example.com/` 直接进入 `admin` 站点，资源按 `/assets/...`、`/runtime.js` 输出；未命中 Host 或 IP 访问仍使用原来的 `/{site}` 路径，例如 `/admin/`。
+`sites.<site>.url` 用来把域名根路径绑定到站点。命中 Host 后，`https://admin.example.com/` 直接进入 `admin` 站点，资源按 `/assets/...`、`/runtime.js`、`/plugins/...` 输出；同一域名下不再允许旧的 `/{site}` 路径，例如 `https://admin.example.com/admin/` 应返回 404。未命中 Host 或 IP 访问仍使用原来的 `/{site}` 路径，例如 `http://1.2.3.4:8086/admin/`。
 
 线上通过 nginx 或其它网关绑定域名时，反代到 Dever 后端根路径并保留 `Host`/`X-Forwarded-Host`；不要把域名 rewrite 到 `/{site}`，否则资源路径会和 runtime basePath 混在一起。
+
+nginx 反代示例：
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8086/;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_http_version 1.1;
+}
+```
+
+不要写 `proxy_set_header Host <后端 IP>`，否则 Dever 只能看到 IP，无法按 `sites.<site>.url` 匹配域名。域名启用 HTTPS 时，`url` 里也写 `https://...`，需要同时支持 HTTP 再额外加入 `http://...`。
 
 ## access
 

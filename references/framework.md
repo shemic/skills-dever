@@ -25,6 +25,9 @@
 - `dever publish --skip-build --binary=server user@host:/opt/app` 复用本地已有二进制。
 - `dever publish --service=<name> --install-service --restart user@host:/opt/app` 才会写入 systemd 并重启服务；服务名必须显式指定，避免一台服务器多个应用互相覆盖。`--install-service` 只控制 systemd unit，不控制是否发布配置。
 - `dever publish` 支持 flag 写在远端目标前或后，但远端目标只能有一个。
+- `dever cert issue user@host --domain=<domain> --email=<email>` 通过 SSH 在远端安装或复用 `acme.sh`，默认使用 Let's Encrypt、`--nginx` 验证、`--install-cert` 安装到 `/etc/dever/certs/<domain>`，并保存 reload 命令；也支持 `--mode=webroot --webroot=<dir>` 和 `--mode=standalone`，非 Nginx 可用 `--reload=<cmd>` 覆盖或 `--reload=` 关闭。
+- `dever cert info user@host --domain=<domain>` 查看远端 `acme.sh --info -d <domain>` 输出；`dever cert renew user@host --domain=<domain> --force` 强制续签。
+- 证书命令不要直接读取 `~/.acme.sh` 内部证书文件；部署 Nginx 时使用 `dever cert issue` 安装出的 `fullchain.pem` 和 `privkey.pem`。
 - `dever daemon start -- <command...>` 可在当前项目后台运行任意命令；默认名称为 `default`，用 `--name` 区分多个后台命令。`stop/restart/status/logs -f` 通过 `tmp/dever/daemon/<name>.*` 管理 pid、元数据和日志。`restart` 不带命令时复用上次命令。
 
 ## 生成文件
