@@ -28,6 +28,8 @@
 ## 编辑器正文展示
 
 - `form-editor` 保存的是 Dever 富文本 JSON，不是可直接拼接的 HTML。
+- seed、`data.form` 默认值、数据模板 `default_value`、AI 预置内容如果目标字段是 `form-editor`，必须直接生成 Dever 富文本 JSON 字符串；不要生成 `<p>...</p>` 这类 HTML 默认值。
+- 只有纯文本来源时，先组装为 `doc > paragraph > text` 的富文本 JSON；不要依赖编辑器运行时把 HTML 或纯文本自动归一化。
 - React 页面展示编辑器正文用 `show-rich` 或 `RichTextView`，不要自己解析 JSON。
 - front plugin 或客户端代码需要 HTML 字符串时，用 `richTextToHtml(value)`；只要内部片段时才传 `wrapper:false`。
 - Go template 服务端模板展示编辑器正文时，用 `{{ richText .Data.article.content }}`；只要内部片段时才用 `{{ richTextInner .Data.article.content }}`。
