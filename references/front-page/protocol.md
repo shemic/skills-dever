@@ -92,8 +92,9 @@ transform
 
 ## page 元信息
 
-- `page.name` 必填，使用中文。
+- `page.name` 必填，使用中文；列表、弹窗、抽屉、嵌入页都要写。权限同步缺少名称时会兜底显示 route path，导致权限树出现 `pkg/foo/list` 这类路径名。
 - 标准可点击列表页必须写 `page.parent`，避免权限同步落到顶层。
 - `page.icon` 只在 `type: 1` 且进入菜单时写。
+- 后台左侧菜单使用权限记录的 `path` 作为跳转地址，不使用 `key`；手动新增菜单时必须把页面地址填到路径字段，并给当前角色授权。`path` 可以带 query，例如 `front/data_record/set?cate_id=1`，运行时按去掉 query 的 route path 匹配页面，并把 query 合并为权限条件。空路径菜单只作为分组，下面没有可见子菜单时不会显示。
 - 弹窗/抽屉/嵌入页保持 `page.parent` 指向所属列表或分组。
 - 公开页面不能靠不写 auth 绕权限，必须在组件 `dever.json` 里显式 public。

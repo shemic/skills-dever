@@ -272,6 +272,10 @@ check_page() {
   check_option_params_protocol "$file"
   check_page_field_boundary "$file"
 
+  if ! rg -q -U '^[[:space:]]*"page"[[:space:]]*:[[:space:]]*\{[^{}]*"name"[[:space:]]*:' "$file"; then
+    err "$file: page.name 必填且必须使用中文；缺失时权限同步会用 route path 作为名称"
+  fi
+
   if is_standard_page "$file"; then
     local kind
     kind="$(page_kind "$file")"

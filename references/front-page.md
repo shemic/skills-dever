@@ -24,6 +24,24 @@
 - 跨表事务、状态流转、外部调用：Service。
 - 自定义 HTTP 能力：API + Service。
 
+## 数据模板配置与调用
+
+`package/front` 的数据模板用于少量、可配置、非固定业务表结构的后台配置数据。不要为了只有一两条配置的页面继续新增一张业务表；优先用“系统设置 → 数据模板”维护模板分类、模板和字段。
+
+- 模板必须填写 `template_key`，字段必须填写 `field_key`。两个 key 都是稳定调用编码，只能包含字母、数字、下划线、点和短横线；已有填写数据后不要再改。
+- `record_json` 仍按 `field_id` 存储，避免字段展示名变化影响历史数据；对外调用时再转换为 `field_key`。
+- 需要让编辑人员填写数据时，在“系统设置 → 权限管理”新增菜单：路径填 `front/data_record/set`，查询参数填 `cate_id=<模板分类ID>`，再给角色授权。
+- 后端调用单条模板数据用 `front.datarecord.Editor.GetInfo`，传 `template_key`。返回结果里 `values` 按 `field_key` 映射，`raw_values` 保留 `field_id` 映射。
+- 示例：
+
+```go
+result := load.Service("front.datarecord.Editor.GetInfo", c, []any{
+	map[string]any{"template_key": "company.about"},
+})
+```
+
+page JSON 只需要加载某个模板数据时，也可以配置 `data.xxx.service: "front.datarecord.Editor.GetInfo"`，并通过页面 query 传 `template_key`。
+
 ## 编辑器正文展示
 
 - `form-editor` 保存的是 Dever 富文本 JSON，不是可直接拼接的 HTML。
