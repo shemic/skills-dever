@@ -20,17 +20,17 @@ version: 1.0.0
 | `dever-review` | bug、代码审查、精简、安全、性能、重构分析；要求按 P0/P1/P2 输出真实问题 | `references/review.md`，按问题层叠加其它 reference |
 | `dever-skill-maintainer` | 修改 `skills/skills-dever`、`files/AGENTS.dever.md`、`scripts/audit.sh`、新增规则 | `references/skill-maintenance.md` |
 
-角色可以叠加。角色不明时先盘点，不生成、不删除。
+角色可以叠加。角色一时不明时先盘点到足以判断归属；用户目标和修改位置明确时，直接进入最匹配角色并完成实现。
 
 ## 全局硬规则
 
-- 普通业务默认只改应用 `module/*`；不要改 `backend/dever`、`backend/package/*`，除非用户明确要求维护框架或 package。
+- 普通业务默认只改应用 `module/*`；不要改 `backend/dever`、`backend/package/*`。如果用户明确指向框架、package、runtime、通用组件或当前项目本身就是框架/package 开发仓库，进入 `dever-framework` 或 `dever-component` 并按对应边界处理。
 - 普通 CRUD 使用 `Model + package/front + page JSON`；不要写 CRUD API、CRUD Service、空 Provider。
 - Page JSON 只用当前协议。能自动推导的不写；不能推导才写对应位置的 `model` 或 `service`。
 - 禁止旧 page 写法和兼容分支：`_model`、`_use`、`modelName`、`modelPath`、`type:"service"`、`submit.use`、`option.use`、`childUse`、`service@...`、`transform`、`<<NewXxxModel>>`、`{{Service}}`、`/front/route/option`。
 - `data.table.service`、`data.form.service` 在已有 model 时是补字段/规范化，不是替代数据源。
 - Service 只承载真实业务流程：事务、状态流转、外部调用、异步编排、跨表规则。API 必须薄。
-- 新增代码前必须说明为什么不能用更低层能力；新增 Service/API/front plugin 前尤其要说明原因。
+- 新增 Service/API/front plugin/framework runtime 前必须说明为什么不能用更低层能力。普通局部 bugfix、组件内小改和贴近现有模式的代码，不要求长篇升层说明。
 - Provider 只做真实 hook/适配/校验/规范化；不要创建透传 Provider。
 - Model 标签、Options、Relations 是字段展示和选项首选来源；不要在多个 page JSON 重复写。
 - 不手改生成文件：`data/router.go`、`data/load/*.go`、`data/table/*.json`。
@@ -45,7 +45,7 @@ version: 1.0.0
 
 1. 先用 `rg`/`find` 搜索现有 model、page、service、api、组件 skill 和 `dever.json`。
 2. 判断最低能力层：model 元信息、page JSON、Provider、Service、API、front plugin、config、框架代码。
-3. 实现前自检：归属层、复用点、是否需要更重能力、是否影响组件/权限/生成文件。
+3. 实现前自检：归属层、复用点、是否需要更重能力、是否影响组件/权限/生成文件；目标明确时自检后继续实现。
 4. 按角色读取 reference；不要加载无关长文档。
 5. 改动靠近归属 module/package；不做顺手重构。
 6. 实现后自检：是否新增 CRUD wrapper、空 Provider、旧 page 协议、生成文件/产物改动、重复逻辑。
@@ -57,7 +57,7 @@ bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>
 
 ## 最终回复
 
-完成实现、排查、审查或分析后，最终回复必须包含：
+完成实现、排查、审查或分析后，最终回复保持简短，但必须包含：
 
 1. 状态：已完成 / 部分完成 / 未完成 / 阻塞。
 2. 完成内容：只写实际做过的事，不把计划或推测写成完成。
