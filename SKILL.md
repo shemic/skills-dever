@@ -45,11 +45,9 @@ version: 1.0.0
 
 1. 先用 `rg`/`find` 搜索现有 model、page、service、api、组件 skill 和 `dever.json`。
 2. 判断最低能力层：model 元信息、page JSON、Provider、Service、API、front plugin、config、框架代码。
-3. 实现前自检：归属层、复用点、是否需要更重能力、是否影响组件/权限/生成文件；目标明确时自检后继续实现。
-4. 按角色读取 reference；不要加载无关长文档。
-5. 改动靠近归属 module/package；不做顺手重构。
-6. 实现后自检：是否新增 CRUD wrapper、空 Provider、旧 page 协议、生成文件/产物改动、重复逻辑。
-7. 可静态检查时运行：
+3. 按角色读取 reference；不要加载无关长文档。
+4. 改动靠近归属 module/package；不做顺手重构。
+5. 实现前后按 `references/app.md` 的"自检"清单确认；可静态检查时运行：
 
 ```bash
 bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>
