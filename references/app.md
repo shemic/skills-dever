@@ -45,40 +45,17 @@
 4. 真实业务流程再写 Service，API 只做请求适配。
 5. 改 model/service/api 后让 `dever run` 或 `dever init --skip-tidy` 刷新生成文件；不要手改生成文件。
 
-## 实现前自检
+## 自检
 
-开始写代码前必须明确：
+编写前后确认：
 
-- 本次改动属于哪一层：model、page JSON、Provider、Service、API、front plugin、component、framework。
-- 是否已有同类 model/page/service/api/provider 可复用。
-- 是否能用 model metadata 或 page JSON 解决，而不是新增 Service/API。
-- 如果要写 Service/API/front plugin，原因是什么，为什么低层能力不够。
-- 是否涉及权限、public route、站点 access、组件 `dever.json` 或生成文件。
-- 是否需要先读组件自己的 `skills/SKILL.md`。
+- 改动是否在最低能力层（model > page JSON > Provider > Service > API > front plugin）。
+- 是否新增了不必要的 Service/API、空 Provider、CRUD wrapper 或平行实现。
+- 是否手改了生成文件、编译产物或使用了旧 page 协议。
+- Model 元信息（Options/Relations）是否能替代 page JSON 中的重复配置。
+- 是否影响组件权限、public route 或 `package/front` 通用 runtime。
 
-模式不明时继续盘点到足以判断归属；用户目标和修改位置明确时进入最匹配层级并继续实现。
-
-## 实现后自检
-
-完成后检查：
-
-- 是否新增了 CRUD API/Service。
-- 是否新增了空 Provider 或透传 Provider。
-- 是否手改了生成文件或编译产物。
-- 是否引入旧 page 协议或历史兼容分支。
-- 是否重复了 model Options/Relations、字段标签或 option。
-- 是否创建了平行实现、重复逻辑或无意义 helper。
-- 是否影响 `package/front` 通用 runtime、bot 画布、CRM 工作台、public/login/rbac 站点。
-- 是否需要静态 audit。
-
-## 交付口径
-
-最终回复必须区分：
-
-- 已完成的代码、配置、文档、分析或排查结果。
-- 已运行的验证命令和结果。
-- 未运行或无法运行的验证，尤其是用户禁止的 build/test。
-- 剩余风险、未验证 UI、未执行迁移或需要用户手动确认的事项。
+不确定时优先复用现有实现，不创建平行版本。必要时运行 `bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>` 静态检查。
 
 ## 空项目
 
@@ -125,11 +102,3 @@ dever package front --ref=v0.1.1
 - 函数保持单一职责，优先早返回，避免深层嵌套。
 - 名字表达业务意图，不用 `data/item/thing/handleData/processThing`。
 - 抽象必须消除真实重复、降低分支复杂度或稳定公共契约；否则保留直观实现。
-
-## 常见禁止
-
-- 为普通 CRUD 新增 API 或 Service。
-- 把业务流程塞进 page JSON。
-- 把组件菜单、public、站点壳写到项目配置里。
-- 修改 `front/dist`、`package/front/front/html` 或生成文件。
-- 为旧 page 协议保留兼容分支。

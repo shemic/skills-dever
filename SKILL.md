@@ -1,6 +1,6 @@
 ---
 name: shemic-dever
-description: Use when 修改或排查 Dever 项目：model、service、provider、api、page JSON、front 插件、package/module、dever.json、config/front、Dever CLI、生成路由/load、package/front 后台、package/bot/user/source/crm、权限、option、install、build、run、plugin、skills。
+description: Use when 新增/修改 Dever 项目的 model、page JSON、service、api、provider、front plugin 代码。纯问答、查看代码、简单排查不触发。
 version: 1.0.0
 ---
 
@@ -57,11 +57,12 @@ bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>
 
 ## 最终回复
 
-完成实现、排查、审查或分析后，最终回复保持简短，但必须包含：
+多步骤任务完成后，保持简短但包含：
 
 1. 状态：已完成 / 部分完成 / 未完成 / 阻塞。
 2. 完成内容：只写实际做过的事，不把计划或推测写成完成。
 3. 验证情况：写清运行过的命令和结果；用户禁止 build/test 时写明未运行。
-4. 剩余事项：写清未做、未验证、需要用户手动测试或后续迁移的内容；没有则写“剩余：无”。
+4. 剩余事项：写清未做、未验证、需要用户手动测试或后续迁移的内容；没有则写"剩余：无"。
 
-不要只说“已完成”。不要把未运行的 build/test、未人工验证的 UI、未执行的数据迁移说成已验证。
+单步骤操作、简单排查、问答可直接回复，不需要四段式。
+不要只说"已完成"。不要把未运行的 build/test、未人工验证的 UI 说成已验证。
