@@ -77,7 +77,7 @@ dever update --skip-framework
 | `dever package front` | 安装或更新 `front` package。 |
 | `dever package bot` | 安装或更新 `bot` package。 |
 | `dever package` | 更新当前项目已启用的所有 package。 |
-| `dever package front --ref=main` | 维护者验证未发布 package 时追 `main`；普通项目默认不用。 |
+| `dever package --ref=main front` | 维护者验证未发布 package 时追 `main`；普通项目默认不用。 |
 | `dever front build bot` | 构建本地可编辑 `bot` 前端插件，发布 package 前使用。 |
 | `dever build` | 构建项目二进制，默认会先构建本地前端插件。 |
 | `dever publish root@1.2.3.4:/opt/app --service=app --install-service --restart` | 发布到远端服务器，安装或更新 systemd 服务并重启。 |
@@ -122,7 +122,7 @@ dever package front
 dever package bot
 ```
 
-`dever package` 默认更新稳定版本；维护 package 时需要验证未发布提交，使用 `dever package front --ref=main` 或指定 tag/commit。
+`dever package` 默认更新稳定版本；维护 package 时需要验证未发布提交，使用 `dever package --ref=main front` 或把 `main` 替换为指定 tag/commit。
 
 完整说明见 `references/quickstart.md`。已有项目不要用 `boot.sh` 覆盖骨架。
 

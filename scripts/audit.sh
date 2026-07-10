@@ -30,7 +30,7 @@ if (( CHANGED == 0 && ${#TARGETS[@]} == 0 )); then
 fi
 
 err() {
-  echo "错误：$*"
+  echo "错误：$*" >&2
   fail=1
 }
 
@@ -111,7 +111,7 @@ skip_generated_or_built_files() {
 
 is_generated_or_built_file() {
   case "$1" in
-    */data/router.go|data/router.go|*/data/load/model.go|data/load/model.go|*/data/load/service.go|data/load/service.go|*/data/table/*.json|data/table/*.json)
+    */data/router.go|data/router.go|*/data/load/*.go|data/load/*.go|*/data/table/*.json|data/table/*.json)
       return 0
       ;;
     */package/front/front/html/*|package/front/front/html/*|*/package/front/html/assets/*|package/front/html/assets/*|*/front/dist/*|front/dist/*|*/package/*/front/dist/*|package/*/front/dist/*|*/module/*/front/dist/*|module/*/front/dist/*)
@@ -168,7 +168,7 @@ check_generated() {
   fi
 
   case "$1" in
-    */data/router.go|data/router.go|*/data/load/model.go|data/load/model.go|*/data/load/service.go|data/load/service.go|*/data/table/*.json|data/table/*.json)
+    */data/router.go|data/router.go|*/data/load/*.go|data/load/*.go|*/data/table/*.json|data/table/*.json)
       err "$1: 生成文件不能手动编辑"
       ;;
     */package/front/front/html/*|package/front/front/html/*|*/package/front/html/assets/*|package/front/html/assets/*|*/front/dist/*|front/dist/*|*/package/*/front/dist/*|package/*/front/dist/*|*/module/*/front/dist/*|module/*/front/dist/*)
@@ -453,13 +453,17 @@ database_block_has_nonempty_prefix() {
   ' "$1"
 }
 
+audit_file_list="$(mktemp)"
+trap 'rm -f "$audit_file_list"' EXIT
+collect_files > "$audit_file_list" || fail=1
+
 while IFS= read -r file; do
   check_generated "$file"
   check_model "$file"
   check_page "$file"
   check_service_api "$file"
   check_database_prefix "$file"
-done < <(collect_files)
+done < "$audit_file_list"
 
 if (( fail != 0 )); then
   exit 1

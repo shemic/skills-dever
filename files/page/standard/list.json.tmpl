@@ -26,7 +26,13 @@
     "toolbar-row": [
       {"type": "form-input", "value": "search.keyword", "mode": "search"},
       {"type": "show-button", "name": "搜索", "meta": {"searchSubmit": true}},
-      {"type": "show-button", "name": "新增", "meta": {"to": "{{RESOURCE_NAME}}/update", "open": "modal"}}
+      {
+        "type": "show-button",
+        "name": "新增",
+        "action": {
+          "click": {"type": "modal", "key": "dialog.create", "value": true}
+        }
+      }
     ],
     "table-row": [
       {
@@ -47,9 +53,20 @@
             {"value": "created_at", "type": "show-date"}
           ]
         }
-      }
+      },
+      {"type": "show-page"}
     ],
-    "dialog-shell": []
+    "dialog-shell": [
+      {
+        "type": "feedback-modal",
+        "meta": {
+          "stateKey": "dialog.create",
+          "pageRoute": "/{{UPDATE_ROUTE}}",
+          "title": "新增{{RESOURCE_TITLE}}",
+          "footer": {"confirm": true, "confirmText": "保存"}
+        }
+      }
+    ]
   },
   "data": {
     "search": {"keyword": ""},

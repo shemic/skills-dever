@@ -7,8 +7,9 @@
 检查：
 
 - model 是否在 active module/package 的 `model/` 下。
-- 是否只有一个零参 `NewXxxModel`。
-- 文件名是否匹配 `NewXxxModel`。
+- 构造函数是否为无接收者、零参数的导出 `NewXxxModel`。
+- 多层 `model/` 子目录是否使用完整注册名 `module[.model-subdir...].NewXxxModel`。
+- 构造函数是否返回 runtime 兼容的 model 或 wrapper。
 - 构造函数是否 panic。
 - 是否刷新 `data/load/model.go`。
 

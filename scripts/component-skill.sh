@@ -34,6 +34,7 @@ if [[ ! "$COMPONENT_RAW" =~ ^[A-Za-z0-9_-]+$ ]]; then
 fi
 
 COMPONENT_NAME="$(echo "$COMPONENT_RAW" | tr '[:upper:]' '[:lower:]' | tr '-' '_')"
+COMPONENT_SKILL_NAME="${COMPONENT_NAME//_/-}"
 COMPONENT_TITLE="${COMPONENT_TITLE:-$COMPONENT_NAME}"
 BASE_DIR="${OWNER_KIND}/${COMPONENT_NAME}"
 COMPONENT_ROOT="${BASE_DIR}"
@@ -55,6 +56,7 @@ render() {
   mkdir -p "$(dirname "$dest")"
   sed \
     -e "s/{{COMPONENT_NAME}}/${COMPONENT_NAME}/g" \
+    -e "s/{{COMPONENT_SKILL_NAME}}/${COMPONENT_SKILL_NAME}/g" \
     -e "s/{{COMPONENT_TITLE}}/${COMPONENT_TITLE}/g" \
     -e "s#{{OWNER_KIND}}#${OWNER_KIND}#g" \
     -e "s#{{COMPONENT_ROOT}}#${COMPONENT_ROOT}#g" \

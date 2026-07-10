@@ -37,7 +37,7 @@ dever package front
 dever package bot
 ```
 
-`dever package <name>` 默认安装或更新稳定版本，写 `module/<name>/main.go` package shim 并刷新注册文件。普通项目不保留 `package/<name>` 源码。维护 package 时需要验证 main、tag 或提交，才使用 `dever package <name> --ref=main` 或 `--ref=<tag-or-commit>`。
+`dever package <name>` 默认安装或更新稳定版本，写 `module/<name>/main.go` package shim 并刷新注册文件。普通项目不保留 `package/<name>` 源码。维护 package 时需要验证 main、tag 或提交，才使用 `dever package --ref=main <name>` 或 `dever package --ref=<tag-or-commit> <name>`。
 
 5. 新增业务资源按最低层级：
 

@@ -11,13 +11,15 @@
 - Codex、Claude、OpenCode、Trae、Qoder、CodeBuddy 等目录使用 symlink 引用主 skill。
 - 项目只写根 `AGENTS.md`，`CLAUDE.md` 用 `@AGENTS.md` 引用。
 - `dever install` 用于本地框架源码或内嵌 `dever/` 项目安装绑定启动脚本，不是空项目第一步。默认覆盖当前 `PATH` 命中的 `dever` 所在目录；该目录不可写时回退到用户 bin，必要时用 `--bin-dir` 显式指定。
+- `dever install` 默认还会同步 AI skill：更新主全局 skill、常见工具目录的 symlink，以及项目根 `AGENTS.md`/`CLAUDE.md` managed block。本地框架维护通常使用 `dever install --skip-skills`，只更新 launcher。
 - `dever update` 用于先在当前 Dever 后端项目执行 `go get github.com/shemic/dever@<ref>` 更新框架依赖，再从 GitHub 安装同一 ref 的 `github.com/shemic/dever/cmd/dever` 命令；默认追 `main`，安装到当前 `PATH` 命中的 `dever` 所在目录，不同步 AI skill。AI skill 单独用 `dever skill install` 安装或同步。需要稳定版本、tag 或提交时显式用 `--ref=latest`、`--ref=v0.1.1` 或 `--ref=<commit>`；只更新命令时用 `--skip-framework`。
 - `dever package` 更新当前项目已启用的所有 `github.com/dever-package/*` package；`dever package <name>` 安装或更新单个 package，写 shim，并刷新注册文件。
-- `dever package` 默认使用稳定通道 `@latest`。维护者需要验证 main、tag 或提交时显式使用 `--ref=main`、`--ref=v0.1.1` 或 `--ref=<commit>`；不要把普通项目默认更新改成追 main。
+- `dever package` 默认使用稳定通道 `@latest`。维护者需要验证 main、tag 或提交时使用 `dever package --ref=main <name>`、`dever package --ref=v0.1.1 <name>` 或 `dever package --ref=<commit> <name>`；不要把普通项目默认更新改成追 main。package 命令的 flag 必须写在组件名称前。
 - `dever package add/update/sync/doctor/list` 已废弃。
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
 - `dever run` 热重载只监听源码和配置目录：`config`、`dever`、`middleware`、`module`、`package`；不要监听 `data`，`data/skills`、`data/knowledge`、`data/upload`、`data/table` 等都是运行数据或生成数据。
 - `dever build` 默认先执行 front plugin build，再构建 Go 二进制。
+- `dever build` 和默认会在本地构建的 `dever publish` 都不会隐式执行 `init`。API/model/service/component 注册相关变更后，先通过 `dever run` 或 `dever init --skip-tidy` 刷新生成状态，再执行 build/publish；不要依赖构建阶段补生成文件。
 - `dever publish user@host:/opt/app` 在本地构建并打包默认白名单 `server,config`，通过本次发布专用的 SSH ControlMaster 连接用 `scp` 上传到远端 `releases/<version>`，创建 `shared/data`，把 release 内的 `data` 软链到 `shared/data`，再切换 `current`。
 - `dever publish --include=server user@host:/opt/app` 只发布 `server` 并复用远端已有 `current/config`；首次上线或需要同步配置变更时使用默认 include。
 - `dever publish --include=server,config,data/log,data/table user@host:/opt/app` 会把指定路径加入发布包；`data/...` 会在远端合并到 `shared/data` 后再创建 release 内的 `data` 软链。

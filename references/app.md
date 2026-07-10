@@ -87,8 +87,8 @@ dever package
 普通项目默认使用稳定版本，不追 main。维护 package 或验证未发布提交时才使用：
 
 ```bash
-dever package front --ref=main
-dever package front --ref=v0.1.1
+dever package --ref=main front
+dever package --ref=v0.1.1 front
 ```
 
 `scripts/boot.sh` 只用于空项目；已有项目不要用它覆盖骨架。

@@ -1,7 +1,6 @@
 ---
 name: shemic-dever
-description: Use when 新增/修改 Dever 项目的 model、page JSON、service、api、provider、front plugin 代码。纯问答、查看代码、简单排查不触发。
-version: 1.0.0
+description: Use when 实现、修改、审查、排查或维护 Dever 项目的 model、page JSON、Service、API、Provider、front plugin、component/package/module、framework、CLI、runtime、config 或 Dever skill。与 Dever 无关的通用问答不触发。
 ---
 
 # shemic-dever
@@ -16,7 +15,7 @@ version: 1.0.0
 | `dever-front-page` | page JSON、route/action/option、权限、菜单、站点、后台/工作台页面 | `references/front-page.md` |
 | `dever-front-plugin` | `front/src/plugin.ts`、React 节点、画布、工作台、复杂交互 | `references/front-plugin.md`，再读组件 skill |
 | `dever-component` | `package/<name>`、`module/<name>`、`dever.json`、组件 skill | `references/component.md`，再读组件自己的 `skills/**/SKILL.md` |
-| `dever-framework` | `backend/dever`、CLI、生成器、run/build/package/skill install、`package/front` runtime | `references/framework.md`，涉及 front runtime 再读 `backend/package/front/skills/SKILL.md` |
+| `dever-framework` | `backend/dever`、CLI、生成器、run/build/package/skill install、`package/front` runtime | `references/framework.md`；维护 `backend/dever` 时再读 `backend/dever/SKILL.md`；涉及 front runtime 再读 `backend/package/front/skills/SKILL.md` |
 | `dever-review` | bug、代码审查、精简、安全、性能、重构分析；要求按 P0/P1/P2 输出真实问题 | `references/review.md`，按问题层叠加其它 reference |
 | `dever-skill-maintainer` | 修改 `skills/skills-dever`、`files/AGENTS.dever.md`、`scripts/audit.sh`、新增规则 | `references/skill-maintenance.md` |
 

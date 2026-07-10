@@ -4,19 +4,36 @@ Model 是 Dever 普通资源的首选来源：表结构、字段标签、枚举�
 
 ## 注册规则
 
-Dever 生成器只扫描 active module/package 的 `model/` 目录，只注册：
+### 生成器实际识别条件
+
+Dever 生成器递归扫描 active module/package 的 `model/` 目录，只识别同时满足以下条件的函数：
+
+- 普通函数，无接收者。
+- 函数名导出，以 `New` 开头、以 `Model` 结尾。
+- 零参数。
+
+生成器当前不校验返回类型。供 page/runtime 使用时，构造函数应返回兼容的 model 对象，可以直接返回 `*orm.Model[Xxx]`：
 
 ```go
 func NewXxxModel() *orm.Model[Xxx]
 ```
 
-要求：
+也可以返回嵌入 `*orm.Model[Xxx]` 的 wrapper，用于承载紧贴 model 生命周期的扩展：
 
-- 函数名导出。
-- 以 `New` 开头、以 `Model` 结尾。
-- 零参数。
-- 一个 model 文件只放一个 `NewXxxModel`。
-- 文件名与 `NewXxxModel` 匹配，例如 `NewUserIdentityModel` -> `user_identity.go`。
+```go
+type XxxModel struct {
+    *orm.Model[Xxx]
+}
+
+func NewXxxModel() *XxxModel
+```
+
+注册名包含 `model/` 下的子目录：`module[.model-subdir...].NewXxxModel`。例如 `package/bot/model/agent/skill.go` 注册为 `bot.agent.NewSkillModel`。
+
+### 推荐组织约定
+
+- 一个资源保留一个清晰的 `NewXxxModel` 构造函数。
+- 推荐一个 model 文件放一个资源，文件名使用对应资源的 snake_case，例如 `NewUserIdentityModel` 放在 `user_identity.go`。这些是维护性约定，不是生成器识别条件。
 
 不要手改 `data/load/model.go`。
 
@@ -98,6 +115,6 @@ CreatedAt
 
 ## 常见错误
 
-- model 未注册：检查目录、函数签名、文件名和 `dever init`。
+- model 未注册：检查 active module/package、`model/` 目录、导出名称、零参数、无接收者、嵌套目录对应的完整注册名，以及是否已执行 `dever init`。
 - option 无法推导：检查 Options/Relations，而不是先硬编码 `option.model`。
 - 保存字段丢失：检查 dorm 字段、列名解析和 `action.submit.data`。

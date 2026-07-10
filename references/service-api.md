@@ -4,11 +4,12 @@
 
 ## 生成和调用事实
 
-- Model 注册来自零参 `New*Model`。
-- 当前 service 生成器扫描 `service/` 目录，只注册接收者方法 `Provider*`。
-- Provider 名称形如 `module.Type.Method`，实际引用的是方法 `Provider<Method>`。
-- Page action hook 只接受 `{ "service": "module.Type.Method" }`。
-- 普通 Service 方法如果没有被注册或被 API/Provider 显式调用，page JSON 不能凭空调用它。
+- Model 注册来自符合 model 生成器条件的零参 `New*Model`。
+- 当前 service 生成器递归扫描 active module/package 的 `service/` 目录，只识别导出接收者类型上的 `Provider*` 方法。
+- Provider 注册名为 `module[.service-subdir...].Type.Method`，其中 `Method` 来自方法名 `Provider<Method>`。例如 `service/setting/` 下的 `CrmHook.ProviderBeforeSaveCustomer` 注册为 `crm.setting.CrmHook.BeforeSaveCustomer`。
+- Page action hook 使用完整注册名，例如 `{ "service": "crm.setting.CrmHook.BeforeSaveCustomer" }`。
+- 生成器当前不校验 Provider 签名；不受注册适配支持的签名会在启动注册时出错或 panic。
+- 普通 Service 方法不会自动注册；只有被 API/Provider 直接调用，或另有显式注册时才能使用，page JSON 不能凭空调用。
 
 ## 选择表
 
@@ -41,6 +42,14 @@
 ## Provider
 
 Provider 是给 Dever/page runtime 调用的适配层。
+
+Page hook 推荐使用当前通用签名：
+
+```go
+func (s XxxService) ProviderAction(c *server.Context, params []any) any
+```
+
+这不是生成器的签名校验条件；生成器只识别名称和接收者。新增其他签名前，先确认 `dever/load` 的注册适配是否支持。
 
 允许：
 

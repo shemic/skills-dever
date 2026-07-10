@@ -22,9 +22,10 @@ list, update, create, view, detail, info
 
 推导失败时先检查：
 
-- model 文件是否在 `model/` 目录。
-- 是否只有一个零参数 `NewXxxModel`。
-- 文件名是否匹配 model 名。
+- model 是否位于 active module/package 的 `model/` 目录。
+- 构造函数是否为无接收者、零参数的导出 `NewXxxModel`。
+- 多层 `model/` 子目录是否使用完整注册名 `module[.model-subdir...].NewXxxModel`。
+- 构造函数是否返回 `*orm.Model[T]`，或返回嵌入 `*orm.Model[T]` 的兼容 wrapper。
 - 所属 module/package 和 page path 是否一致。
 - 是否已刷新 `data/load/model.go`。
 
