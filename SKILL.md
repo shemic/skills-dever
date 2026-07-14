@@ -38,6 +38,7 @@ description: Use when 实现、修改、审查、排查或维护 Dever 项目的
 - 组件站点运行契约写在组件 `dever.json.front.sites`；项目 `config/front.json` 或 `config/front.jsonc` 只覆盖 `sites.<site>` 展示配置。
 - 自定义 API 必须按站点/用途隔离；细则归属 `references/service-api.md` 和 `references/front-page/site.md`。
 - `dever skill install` 每次从 `github.com/shemic/skills-dever` 拉取；不要使用本地缓存或项目镜像作为安装来源。
+- `dever skill install` 默认安装/更新 Trellis 并初始化当前项目；不需要 Trellis 时显式使用 `--trellis=false`，只管理全局 CLI 时使用 `--trellis-project=false`。
 - 如果用户禁止 build/test，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价测试。
 
 ## 工作方式

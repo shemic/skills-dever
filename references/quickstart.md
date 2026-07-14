@@ -10,7 +10,7 @@
 curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 ```
 
-脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 `dever` 命令，然后执行 `dever skill install`。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑；不要把通用 AI skill 安装工具作为主安装路径。
+脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 `dever` 命令，然后执行 `dever skill install`。该命令要求 Node.js 18+ 和 npm，用于安装或更新 Trellis，并初始化当前项目；不需要 Trellis 时使用 `--skip-trellis`。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。不要把通用 AI skill 安装工具作为主安装路径。
 
 2. 检查项目根提示词：
 
@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/in
 dever skill doctor
 ```
 
-缺少 `AGENTS.md` 管理块时，重新执行安装脚本或 `dever skill install`。`CLAUDE.md` 只引用 `@AGENTS.md`。
+缺少 `AGENTS.md` 管理块或 `.trellis/` 时，重新执行安装脚本或 `dever skill install`。`CLAUDE.md` 只引用 `@AGENTS.md`。不需要 Trellis 的环境显式使用 `--trellis=false`。
 
 3. 空目录生成最小骨架：
 
@@ -90,6 +90,7 @@ bash ~/.agents/skills/shemic-dever/scripts/page.sh module/main admin product upd
 
 - Windows 暂不支持自动安装 Go，需按脚本提示手动安装后重跑。
 - 没装 git 就运行安装脚本；脚本会停止并提示先安装 git。
+- 没有 Node.js 18+ 或 npm，又未使用 `--skip-trellis`；脚本会停止并提示安装前置依赖。
 - 跳过安装脚本，手动执行零散命令导致 Dever CLI、skill、AGENTS 不一致。
 - 把 AI skill 安装工具当成主安装方式；主流程用 `scripts/install.sh`。
 - 把 Go module 写成项目名，导致 package shim import 失效。

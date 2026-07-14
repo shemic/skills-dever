@@ -4,9 +4,11 @@
 
 ## 命令事实
 
-- 全新机器先用 `curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash` 获取 `dever` 命令并同步 skill。
+- 全新机器先用 `curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash` 获取 `dever` 命令，同步 skill，并通过 Dever 安装/初始化 Trellis。
 - Go 是 Dever 开发前置依赖；安装脚本在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，Windows 只提示手动安装。
 - `dever skill install` 每次从 `github.com/shemic/skills-dever` 拉取临时副本。
+- `dever skill install` 默认要求 Node.js 18+ 和 npm，安装或更新 `@mindfoldhq/trellis@latest`；没有 `.trellis/` 时执行 Codex 项目初始化，已有项目执行 `trellis update --skip-all`。用 `--trellis=false` 完全跳过，或用 `--trellis-project=false` 只管理全局 CLI。
+- Trellis 项目初始化后必须保持 `session_auto_commit: false`；无任务状态下，小型明确工作直接处理，复杂/模糊/跨模块/高风险工作才询问创建 Trellis 任务。项目 `AGENTS.md` 明确禁止 build/test 时，Trellis 验证阶段不得绕过。
 - 主全局 skill 安装到 `~/.agents/skills/shemic-dever`。
 - Codex、Claude、OpenCode、Trae、Qoder、CodeBuddy 等目录使用 symlink 引用主 skill。
 - 项目只写根 `AGENTS.md`，`CLAUDE.md` 用 `@AGENTS.md` 引用。

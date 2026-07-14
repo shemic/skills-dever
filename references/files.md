@@ -69,7 +69,7 @@ transform
 
 ## 脚本
 
-- `install.sh` 自动安装 Go，安装 Dever CLI，并执行 `dever skill install`。
+- `install.sh` 自动安装 Go，安装 Dever CLI，并执行 `dever skill install`；Trellis 参数只透传给 Dever，不在 shell 中维护第二套安装逻辑。
 - `boot.sh` 只用于空项目。
 - `module.sh` 只生成 model 骨架，不生成 Service/API。
 - `page.sh` 只生成标准 page JSON。
