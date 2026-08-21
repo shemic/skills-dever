@@ -29,9 +29,11 @@ package/<name>/front/dist/manifest.json
 
 ## dev/build
 
-- `dever run` 在没有 dist manifest 时启动插件 dev server。
-- `dever front build [name]` 构建本地可编辑插件。
-- `dever build` 默认先构建前端插件。
+- `dever run` 对本地可编辑插件使用项目级 Vite source server 和 virtual compat；开发源码请求不按生产 chunk 数验收。
+- `dever front build [name]` 构建本地可编辑插件，先写 staging，通过 bundle audit 和 manifest 后处理后再替换 `front/dist`。
+- `dever build` 默认先构建本地可编辑前端插件，再构建 Go 二进制；不隐式构建宿主 `front/src`。
+- 宿主发布由维护者单独执行 `pnpm --dir front build:backend`，不要把它与插件构建合成一个入口。
+- split 插件可在 `front/package.json` 的 `dever.bundleBudget` 声明自己的 JS/CSS、动态入口、小文件和静态闭包预算；不声明时框架只输出统计和执行通用结构检查。
 - 用户禁止 build/test 时不要运行这些命令。
 
 ## 组件边界

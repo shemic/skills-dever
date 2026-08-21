@@ -21,6 +21,7 @@
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
 - `dever run` 热重载只监听源码和配置目录：`config`、`dever`、`middleware`、`module`、`package`；不要监听 `data`，`data/skills`、`data/knowledge`、`data/upload`、`data/table` 等都是运行数据或生成数据。
 - `dever build` 默认先执行 front plugin build，再构建 Go 二进制。
+- `dever build` 不隐式构建宿主 `front/src`；宿主发布资产由维护者单独执行 `pnpm --dir front build:backend`。
 - `dever build` 和默认会在本地构建的 `dever publish` 都不会隐式执行 `init`。API/model/service/component 注册相关变更后，先通过 `dever run` 或 `dever init --skip-tidy` 刷新生成状态，再执行 build/publish；不要依赖构建阶段补生成文件。
 - `dever publish user@host:/opt/app` 在本地构建并打包默认白名单 `server,config`，通过本次发布专用的 SSH ControlMaster 连接用 `scp` 上传到远端 `releases/<version>`，创建 `shared/data`，把 release 内的 `data` 软链到 `shared/data`，再切换 `current`。
 - `dever publish --include=server user@host:/opt/app` 只发布 `server` 并复用远端已有 `current/config`；首次上线或需要同步配置变更时使用默认 include。
@@ -82,12 +83,21 @@ replace github.com/dever-package/front => ./package/front
 - 外部 Go module package 有 `front/src/plugin.ts` 但没有 `front/dist/manifest.json` 会报错，要求 package 发布前构建 dist。
 - 前端插件构建产物不应打包 React/ReactDOM/jsx-runtime 的运行时代码，也不应残留浏览器不可用的 `process.env.NODE_ENV`；dev 和 build 都通过宿主全局 shim 读取 React 运行时。
 - 前端插件构建产物如果生成独立 `.css` asset，`manifest.json` 的入口 JS 必须带 `css` 数组，宿主 runtime 只按入口 `css` 注入样式。
+- 生产 split 插件的宿主兼容引用在业务模块内加载，不为每个 `@/...` 生成 virtual bridge chunk；single/IIFE 插件继续使用宿主预载兼容模块。
+- 插件可在 `front/package.json` 的 `dever.bundleBudget` 声明自己的产物预算；框架统一检查 JS/CSS 数量、动态入口、小文件、静态闭包和循环，不写死业务插件阈值。
+- 构建先输出到插件 `front/.dist-next-<pid>`；Vite、bundle audit 和 manifest 后处理全部成功后才替换正式 `front/dist`。
 
 `dever run`：
 
-- 有 dist manifest 时直接用 dist。
-- 没有 dist manifest 且有 src entry 时启动插件 dev server。
-- dev server 端口默认 `http.port + 10000`。
+- 本地可编辑插件继续走项目级 Vite source server 和 virtual compat；不增加 watch build，不读取生产 dist 模拟开发环境。
+- 外部 package 继续消费已经发布的 dist。
+- source server 端口默认 `http.port + 10000`；源码模块请求数不套用生产 bundle 预算。
+
+宿主 `front/src`：
+
+- 维护者执行 `pnpm --dir front build:backend` 独立构建，先写 `.html-next-<pid>` 并通过同一 bundle audit，再替换 `package/front/front/html`。
+- 宿主和插件共享审计实现与业务域分包原则，但各自使用独立预算和发布入口。
+- 不在 `dever build` 中串联宿主构建，避免每个应用重复构建 package/front。
 
 ## 框架维护原则
 

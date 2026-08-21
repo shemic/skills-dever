@@ -34,6 +34,8 @@ description: Use when 实现、修改、审查、排查或维护 Dever 项目的
 - Model 标签、Options、Relations 是字段展示和选项首选来源；不要在多个 page JSON 重复写。
 - 不手改生成文件：`data/router.go`、`data/load/*.go`、`data/table/*.json`。
 - 不手改编译产物：`front/dist/*`、`package/front/front/html/*`、`package/front/front/html/assets/*`。
+- 测试代码统一放在当前仓库根目录 `test/`；一次性验证测试在验证完成后删除，禁止长期与业务源码混放。语言或框架强制测试贴近源码时，只允许临时创建，并在交付前删除；不要为了迁移测试而暴露生产内部 API。
+- `dever run` 保持源码服务；生产插件由 `dever front build` / `dever build` 构建，宿主 `front/src` 由维护者单独执行 `pnpm --dir front build:backend`，不要混为一个构建入口。
 - 修改 `package/<name>` 或 `module/<name>` 前，先读该组件声明的 `skills/**/SKILL.md`。
 - 组件站点运行契约写在组件 `dever.json.front.sites`；项目 `config/front.json` 或 `config/front.jsonc` 只覆盖 `sites.<site>` 展示配置。
 - 自定义 API 必须按站点/用途隔离；细则归属 `references/service-api.md` 和 `references/front-page/site.md`。
