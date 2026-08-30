@@ -43,6 +43,7 @@ description: Use when 实现、修改、审查或排查 Dever 项目的 componen
 - 不手改编译产物：`front/dist/*`、`package/front/front/html/*`。
 - 修改 component/package/module 前先读其 `skills/**/SKILL.md`；组件私有规则不得上升成全局规则。
 - 测试统一放当前仓库根目录 `test/`；一次性验证结束后删除。
+- `dever skill install` 只同步 shemic-dever skill 和项目 agent 提示；Trellis 与 Codex 调度由 DAI 管理。
 - 用户或项目禁止 build/test 时，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价命令。
 
 ## 工作顺序

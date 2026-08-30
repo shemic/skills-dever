@@ -33,15 +33,15 @@ Service 承载：
 
 普通业务方法不需要 Dever 生成器注册。API、Provider、CLI、middleware 或 Model hook 直接调用它们。
 
-推荐普通签名使用 `context.Context + 明确参数`：
+推荐普通签名使用 `context.Context + 明确参数`。无状态且不需要保存依赖时直接使用函数：
 
 ```go
-type ReleaseService struct{}
-
-func (ReleaseService) Publish(ctx context.Context, input PublishInput) (Release, error) {
+func Publish(ctx context.Context, input PublishInput) (Release, error) {
     // 校验版本、签名和状态，并在一个事务内发布。
 }
 ```
+
+不要为了让函数“看起来像 Service”创建空 `ReleaseService`。只有一组业务方法确实需要共享数据库、外部客户端、配置或运行状态时，才定义 `Publisher` 等意图明确的结构体；只有必需依赖或创建时不变量需要集中建立时，才增加构造函数。
 
 不要让核心方法直接依赖 `*server.Context`，否则 CLI、任务和测试会被 HTTP/runtime 上下文绑死。
 
@@ -82,6 +82,8 @@ func (CustomerHook) ProviderBeforeSave(c *server.Context, params []any) any {
     // 适配 Page 参数后调用普通 Service。
 }
 ```
+
+这里没有字段的 `CustomerHook` 是生成器要求导出接收者的协议适配，不代表普通业务函数都要包装成空结构体。
 
 注册名：
 

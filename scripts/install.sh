@@ -10,26 +10,20 @@ BIN_DIR="${DEVER_BIN_DIR:-}"
 DEVER_HOME="${DEVER_HOME:-${HOME:-}/.dever}"
 GO_ROOT="${DEVER_GO_ROOT:-${DEVER_HOME}/go}"
 SKIP_SKILL=0
-SKIP_TRELLIS=0
-SKIP_TRELLIS_PROJECT=0
-TRELLIS_VERSION="${TRELLIS_VERSION:-latest}"
-TRELLIS_USER="${TRELLIS_USER:-}"
 USING_DEVER_GO=0
 DEVER_GO_NEEDS_PATH=0
 
 usage() {
   cat <<'EOF'
-用法：bash scripts/install.sh [--project-root=.] [--bin-dir=] [--skip-skill] [--skip-trellis] [--skip-trellis-project] [--trellis-user=] [--trellis-version=latest]
+用法：bash scripts/install.sh [--project-root=.] [--bin-dir=] [--skip-skill]
 
-自动安装 Go，安装 Dever CLI，同步 shemic-dever skill，并通过 Dever 安装/初始化 Trellis。
+自动安装 Go，安装 Dever CLI，并同步 shemic-dever skill。
 
 环境变量：
   REQUIRED_GO_VERSION  Go 最低版本，默认 1.25.3
   DEVER_GO_ROOT        Go 安装目录，默认 ~/.dever/go
   DEVER_VERSION        Dever 安装版本，默认 latest
   DEVER_BIN_DIR        Dever 命令安装目录
-  TRELLIS_VERSION      Trellis npm 版本或 dist-tag，默认 latest
-  TRELLIS_USER         Trellis 开发者名称，默认由 Dever 自动检测
 EOF
 }
 
@@ -62,38 +56,6 @@ while [[ $# -gt 0 ]]; do
     --skip-skill|--skip-skills)
       SKIP_SKILL=1
       shift
-      ;;
-    --skip-trellis)
-      SKIP_TRELLIS=1
-      shift
-      ;;
-    --skip-trellis-project)
-      SKIP_TRELLIS_PROJECT=1
-      shift
-      ;;
-    --trellis-user=*)
-      TRELLIS_USER="${1#--trellis-user=}"
-      shift
-      ;;
-    --trellis-user)
-      if [[ $# -lt 2 || -z "${2:-}" ]]; then
-        echo "错误：--trellis-user 需要参数。" >&2
-        exit 1
-      fi
-      TRELLIS_USER="${2:-}"
-      shift 2
-      ;;
-    --trellis-version=*)
-      TRELLIS_VERSION="${1#--trellis-version=}"
-      shift
-      ;;
-    --trellis-version)
-      if [[ $# -lt 2 || -z "${2:-}" ]]; then
-        echo "错误：--trellis-version 需要参数。" >&2
-        exit 1
-      fi
-      TRELLIS_VERSION="${2:-}"
-      shift 2
       ;;
     --help|-h)
       usage
@@ -393,19 +355,7 @@ fi
 
 if [[ "$SKIP_SKILL" != "1" ]]; then
   echo "同步 shemic-dever skill 和项目提示词: $PROJECT_ROOT"
-  SKILL_ARGS=(skill install --project-root="$PROJECT_ROOT")
-  if [[ "$SKIP_TRELLIS" == "1" ]]; then
-    SKILL_ARGS+=(--trellis=false)
-  else
-    SKILL_ARGS+=(--trellis-version="$TRELLIS_VERSION")
-    if [[ "$SKIP_TRELLIS_PROJECT" == "1" ]]; then
-      SKILL_ARGS+=(--trellis-project=false)
-    fi
-    if [[ -n "$TRELLIS_USER" ]]; then
-      SKILL_ARGS+=(--trellis-user="$TRELLIS_USER")
-    fi
-  fi
-  "$DEVER_BIN" "${SKILL_ARGS[@]}"
+  "$DEVER_BIN" skill install --project-root="$PROJECT_ROOT"
 fi
 
 echo "完成。下一步："

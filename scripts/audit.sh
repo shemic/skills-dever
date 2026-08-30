@@ -11,6 +11,7 @@ fail=0
 warn_count=0
 CHANGED=0
 TARGETS=()
+declare -A WARNED_COMPONENT_ROOTS=()
 
 for arg in "$@"; do
   case "$arg" in
@@ -49,6 +50,26 @@ path_is_under() {
   local normalized="${1//\\//}"
   local directory="$2"
   [[ "$normalized" == "$directory/"* || "$normalized" == */"$directory/"* ]]
+}
+
+component_info_for_file() {
+  local file="$1"
+  local directory absolute parent relative
+
+  directory="$(dirname "$file")"
+  absolute="$(cd "$directory" && pwd -P)/$(basename "$file")"
+  parent="$(dirname "$absolute")"
+
+  while [[ "$parent" != "/" ]]; do
+    if [[ -f "$parent/dever.json" ]]; then
+      relative="${absolute#"$parent"/}"
+      [[ "$relative" == */* ]] || return 1
+      printf '%s\t%s\n' "$(basename "$parent")" "$relative"
+      return 0
+    fi
+    parent="$(dirname "$parent")"
+  done
+  return 1
 }
 
 collect_files() {
@@ -192,25 +213,37 @@ check_component_business_root() {
   local file="$1"
   [[ "$file" == *.go ]] || return 0
 
-  local normalized component_kind component_name root_dir
+  local normalized component_kind component_name root_dir component_info relative
   normalized="${file//\\//}"
-  if [[ ! "$normalized" =~ (^|/)(package|module)/([^/]+)/([^/]+)/ ]]; then
-    return
+  if [[ "$normalized" =~ (^|/)(package|module)/([^/]+)/([^/]+)/ ]]; then
+    component_kind="${BASH_REMATCH[2]}"
+    component_name="${BASH_REMATCH[3]}"
+    root_dir="${BASH_REMATCH[4]}"
+  else
+    component_info="$(component_info_for_file "$file")" || return 0
+    IFS=$'\t' read -r component_name relative <<< "$component_info"
+    component_kind="component"
+    root_dir="${relative%%/*}"
   fi
 
-  component_kind="${BASH_REMATCH[2]}"
-  component_name="${BASH_REMATCH[3]}"
-  root_dir="${BASH_REMATCH[4]}"
-  if [[ "$component_kind" == "package" && "$component_name" == "front" && "$root_dir" == "internal" ]]; then
+  if [[ "$component_name" == "front" && "$root_dir" == "internal" ]]; then
     return
   fi
   case "$root_dir" in
     api|cmd|config|docs|front|middleware|migrations|model|sdk|service|skills)
       return
       ;;
+    contract|helper|installer|manager|provider|serverdeploy|serveridentity|serverinit|signing|updater)
+      err "$file: component 根目录 ${root_dir}/ 不能承载业务代码；业务代码必须放在 service/ 或 service/<domain>/"
+      return
+      ;;
   esac
 
-  err "$file: component 根目录 ${root_dir}/ 不能承载业务代码；业务代码必须放在 service/ 或 service/<domain>/"
+  local root_key="${component_kind}/${component_name}/${root_dir}"
+  if [[ -z "${WARNED_COMPONENT_ROOTS[$root_key]:-}" ]]; then
+    warn "$file: component 根目录 ${root_dir}/ 不是 Dever 标准入口；请确认它只承载适配或技术代码，核心业务必须放在 service/ 或 service/<domain>/"
+    WARNED_COMPONENT_ROOTS[$root_key]=1
+  fi
 }
 
 check_go_file_naming() {
@@ -226,6 +259,9 @@ check_go_file_naming() {
     err "$file: Go 文件名必须使用小写 snake_case"
   fi
 
+  # Model 文件名由 NewXxxModel 和资源名校验，不能套用普通业务文件的缩名提示。
+  path_is_under "$file" model && return 0
+
   parent="$(basename "$(dirname "$file")")"
   normalized_parent="$(printf '%s' "$parent" | tr '[:upper:]-' '[:lower:]_')"
   if [[ -n "$normalized_parent" && "$stem" == "${normalized_parent}_"* ]]; then
@@ -237,9 +273,11 @@ check_go_file_naming() {
     warn "$file: 文件名包含多个下划线；请检查是否混合职责，或应收进更明确的业务子目录"
   fi
 
-  if [[ "_${stem}_" =~ _(helper|helpers|util|utils|common|manager|value|service|runtime)_ ]]; then
-    warn "$file: 文件名包含泛化命名；请使用具体业务意图，并让目录承担领域上下文"
-  fi
+  case "$stem" in
+    helper|helpers|util|utils|common|manager|value|service|runtime|*_helper|*_helpers|*_util|*_utils|*_common|*_manager)
+      warn "$file: 文件名包含泛化命名；请使用具体业务意图，并让目录承担领域上下文"
+      ;;
+  esac
 }
 
 check_provider_location() {

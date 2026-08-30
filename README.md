@@ -16,7 +16,7 @@ https://github.com/shemic/skills-dever
 curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 ```
 
-脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 Dever CLI，然后执行 `dever skill install` 同步项目提示词和多工具 skill 引用。该命令要求 Node.js 18+ 与 npm，用于安装或更新 Trellis，并初始化当前项目；不需要 Trellis 时使用 `--skip-trellis`。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。
+脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 Dever CLI，然后执行 `dever skill install` 同步项目提示词和多工具 skill 引用。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。
 
 `dever skill install` 会每次从 GitHub 拉取临时副本，同步到：
 
@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/in
 
 项目根只写 `AGENTS.md`，`CLAUDE.md` 使用 `@AGENTS.md` 引用。
 
-Trellis 默认通过 `dever skill install` 管理：全局 CLI 更新到指定 npm 版本（默认 `latest`）；项目没有 `.trellis/` 时按 Codex 模式初始化，已有配置时使用 `trellis update --skip-all` 更新。Dever 会关闭 Trellis 自动 Git 提交，保留项目现有 `AGENTS.md` 内容，并把无任务状态调整为“小任务直接处理，复杂任务才询问是否创建 Trellis 任务”。
+`dever skill install` 只负责 shemic-dever skill 和项目 agent 提示。Trellis 与 Codex 调度统一由 DAI 管理，Dever 不安装、更新或改写 `.trellis`。
 
 ## 常用命令
 
@@ -61,16 +61,10 @@ dever skill install
 dever skill doctor
 ```
 
-只同步 Dever skill、不安装 Trellis：
+更新 Trellis 并重放 DAI 配置：
 
 ```bash
-dever skill install --trellis=false
-```
-
-只安装或更新全局 Trellis CLI、不初始化项目：
-
-```bash
-dever skill install --trellis-project=false
+dai trellis update
 ```
 
 只想更新命令、不改当前项目 `go.mod` 时使用：
