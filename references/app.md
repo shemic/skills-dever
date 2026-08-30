@@ -1,80 +1,80 @@
-# 应用开发
+# Dever 应用开发
 
-本文件用于普通 Dever 应用项目：业务 module、model、后台页面、少量业务 Service/API、项目配置。
+本文件用于普通应用项目中的业务 module、配置和后台功能。开始前先读 [decide.md](decide.md) 与 [development.md](development.md)。
 
-## 先判定归属
+## 1. 应用边界
 
-- 业务代码放 `module/<name>`。
-- `module/<name>/main.go` 只有 `// dever:import github.com/dever-package/<name>` 时，真实源码来自 package；不要在 shim 里写业务代码。
-- 普通应用开发不要改 `backend/dever`、`backend/package/*` 或复制 package 源码。
-- 当前 `/data/project/shemic/backend` 是框架/package 开发态，允许维护本地 `backend/dever` 和 `backend/package/*`，但外部新项目不应照搬本地 replace。
+- 项目私有业务放 `module/<name>`。
+- `module/<name>/main.go` 只有 `// dever:import github.com/dever-package/<name>` 时，它是 package shim；真实代码来自 package，不在 shim 中追加业务。
+- 普通应用不修改 `backend/dever`、`backend/package/*`，也不复制 package 源码。
+- 当前仓库如果明确处于 framework/package 开发态，可以维护对应源码，但这不是普通应用模式。
 
-## 能力选择
+## 2. 实现顺序
 
-| 需求 | 优先使用 | 不要使用 |
-| --- | --- | --- |
-| 普通列表/新增/编辑/删除/详情 | Model + page JSON | CRUD API/Service |
-| 标签、枚举、关联选项 | Model comment / Options / Relations | page JSON 重复硬编码 |
-| 保存前规范化或单表校验 | Provider hook | API 内联逻辑 |
-| 保存后关系同步、计数、缓存失效 | Provider hook 或聚焦 Service | 空 Provider |
-| 状态流转、事务、外部调用、异步任务 | Service | 直接 page action 更新状态 |
-| 登录、注册、回调、插件交互接口 | API + Service | 泛化 CRUD action |
-| 画布、编辑器、CRM 工作台等强交互 | front plugin | 巨型 page JSON |
+1. 搜索已有 component、Model、Page、Service、Provider、API 和组件 skill。
+2. 明确拥有该业务的 module，并按业务域规划 `model/`、`service/`、`front/page/`。
+3. 持久化资源先写 Model：字段、comment、Options、Relations、索引和默认排序。
+4. 普通后台 CRUD 写 Page JSON，让标准路径推导 Model。
+5. 有真实业务不变量时，在 `service/` 或 `service/<domain>/` 写普通 Service 方法。
+6. Page 需要动态 hook/option 时，在同一 Service 域增加薄 Provider 方法。
+7. 只有真实 HTTP 边界才写薄 API；只有 Page 无法表达的交互才写 front plugin。
+8. 改 Model/Provider/API 后让 `dever run` 或 `dever init --skip-tidy` 刷新生成文件。
 
-优先选择能满足需求的最低层级。
+普通资源的最小形态：
 
-## 最小可维护实现阶梯
-
-最小不是最少行数，而是最少不必要层级、最少重复、最少平行实现。新增代码前按顺序停在第一个能满足需求的层级：
-
-1. 现有 model、page、service、api、provider 或组件扩展点能复用，先复用或小幅扩展。
-2. Model comment、Options、Relations、索引、默认排序能表达，就不要在 page JSON 重复硬编码。
-3. page JSON 和 package/front 标准 action 能表达，就不要写 Provider。
-4. Provider hook 或 `submit.before/after` 能表达，就不要写 API。
-5. 只有事务、状态流转、外部调用、异步编排、跨表规则才写 Service。
-6. API 只在需要 HTTP 边界、登录/站点/API key 上下文或 front plugin 自定义接口时出现。
-7. front plugin 只处理 page JSON 无法表达的复杂交互；framework/package 只处理公共 runtime 问题。
-
-不能用“以后可能扩展”“先留个接口”“方便统一”作为升层理由。安全校验、权限、错误处理、事务边界和脱敏日志不能为了少写代码省略。
-
-## 实现流程
-
-1. 先搜索同类 model、page、service、api、provider、组件 skill。
-2. 持久化资源先写 model：字段、comment、Options、Relations、索引、默认排序。
-3. 普通后台写 page JSON，标准路径交给 front 自动推导 model。
-4. 真实业务流程再写 Service，API 只做请求适配。
-5. 改 model/service/api 后让 `dever run` 或 `dever init --skip-tidy` 刷新生成文件；不要手改生成文件。
-
-## 自检
-
-编写前后确认：
-
-- 改动是否在最低能力层（model > page JSON > Provider > Service > API > front plugin）。
-- 是否新增了不必要的 Service/API、空 Provider、CRUD wrapper 或平行实现。
-- 是否手改了生成文件、编译产物或使用了旧 page 协议。
-- Model 元信息（Options/Relations）是否能替代 page JSON 中的重复配置。
-- 是否影响组件权限、public route 或 `package/front` 通用 runtime。
-
-不确定时优先复用现有实现，不创建平行版本。必要时运行 `bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>` 静态检查。
-
-## 空项目
-
-空项目固定 `module my`。不要按项目名、域名或目录名改 Go module。
-
-从零开始先读 `references/quickstart.md`。本节只记录应用侧边界。
-
-最小骨架来自 `files/`：
-
-```txt
-go.mod
-main.go
-config/setting.jsonc
-data/readme.txt
-module/front/main.go
-module/bot/main.go
+```text
+module/catalog/
+  model/product.go
+  front/page/admin/product/list.json
+  front/page/admin/product/update.json
 ```
 
-引入 package 使用：
+只有存在发布、审批、同步等业务动作时才增加：
+
+```text
+module/catalog/service/product.go
+module/catalog/api/admin/product.go    # 仅在需要自定义 HTTP 动作时
+```
+
+## 3. 能力边界
+
+| 需求 | 默认实现 | 不要做 |
+| --- | --- | --- |
+| 列表、新增、编辑、删除、详情 | Model + Page JSON | CRUD API/Service |
+| 字段标签、枚举、关联选项 | Model comment/Options/Relations | 多页重复硬编码 |
+| 保存前规范化、上下文派生 | Provider before hook | API 内联业务 |
+| 保存后关系同步、计数、缓存失效 | Provider after hook 调用 Service | 空 Provider |
+| 发布、审批、状态流转、跨表事务 | Service | Page 直接改状态 |
+| 登录、回调、webhook、文件/流式协议 | API + Service | 泛化 CRUD action |
+| 画布、复杂编辑器、持续客户端状态 | front plugin | 巨型 Page JSON |
+
+选择依据见 [decide.md](decide.md)。
+
+## 4. 业务目录
+
+核心业务代码只放 `service/`。安装、升级、签名、任务、导入、发布等也是业务域，不创建 component 根级 `installer/`、`updater/`、`signing/`、`contract/` 或 `internal/`。
+
+API、CLI、middleware、Model hook 只调用 Service，不复制规则。具体目录和命名见 [development.md](development.md)。
+
+## 5. 配置
+
+- 环境和部署差异放 `config/setting.json(c)`。
+- 组件站点契约放组件 `dever.json.front.sites`。
+- 项目 `config/front.json(c)` 只覆盖站点展示配置。
+- 业务枚举放 Model Options，不做环境变量。
+- 可持久化、可管理的业务数据放 Model，不塞进配置文件。
+
+## 6. 空项目
+
+空项目固定 Go module：
+
+```go
+module my
+```
+
+从零开始读 [quickstart.md](quickstart.md)。`scripts/boot.sh` 只用于空项目，已有项目不要用它覆盖骨架。
+
+安装或更新 package：
 
 ```bash
 dever package front
@@ -82,23 +82,27 @@ dever package bot
 dever package
 ```
 
-`dever package <name>` 会安装或更新单个 `github.com/dever-package/<name>@latest`、写入 `module/<name>/main.go` shim，并刷新注册文件。`dever package` 会更新当前项目已启用的全部 package。普通项目不保留 `package/<name>` 源码。
-
-普通项目默认使用稳定版本，不追 main。维护 package 或验证未发布提交时才使用：
+默认使用稳定 `@latest`。维护 package 或验证未发布提交时才使用：
 
 ```bash
 dever package --ref=main front
 dever package --ref=v0.1.1 front
 ```
 
-`scripts/boot.sh` 只用于空项目；已有项目不要用它覆盖骨架。
+flag 写在组件名称前。
 
-## 代码质量
+## 7. 自检
 
-- 先复用，再新增；不要创建平行实现。
-- 不创建 `Xxx2`、`XxxNew`、`XxxEx`、`XxxV2`。
-- 不创建无意义 `Helper`、`Manager`、`Util`、单实现 interface 或空 Base 类。
-- 同一流程第二次出现就考虑抽函数/配置；第三次必须抽公共路径。
-- 函数保持单一职责，优先早返回，避免深层嵌套。
-- 名字表达业务意图，不用 `data/item/thing/handleData/processThing`。
-- 抽象必须消除真实重复、降低分支复杂度或稳定公共契约；否则保留直观实现。
+- 是否改在拥有业务的 module，而不是 framework 或公共 package。
+- 是否先复用现有能力并停在最低能力层。
+- 普通 CRUD 是否仍然只有 Model + Page JSON。
+- 核心业务是否全部在 `service/`，适配入口是否薄。
+- 是否没有根级平行业务目录、空 Provider、CRUD wrapper 或预留 API。
+- 是否没有手改生成文件、编译产物或使用旧 Page 协议。
+- Options/Relations 是否替代了重复 Page 配置。
+
+可用时运行：
+
+```bash
+bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>
+```

@@ -1,127 +1,204 @@
-# Provider、Service、API
+# Service、Provider 与 API
 
-大多数后台页面不需要自定义后端。只有真实业务不变量存在时才升级到 Provider、Service 或 API。
+Service 是 Dever component 的业务实现层；Provider 和 API 是不同调用协议的适配入口。普通后台 CRUD 不需要三者。
 
-## 生成和调用事实
+## 1. 物理归属
 
-- Model 注册来自符合 model 生成器条件的零参 `New*Model`。
-- 当前 service 生成器递归扫描 active module/package 的 `service/` 目录，只识别导出接收者类型上的 `Provider*` 方法。
-- Provider 注册名为 `module[.service-subdir...].Type.Method`，其中 `Method` 来自方法名 `Provider<Method>`。例如 `service/setting/` 下的 `CrmHook.ProviderBeforeSaveCustomer` 注册为 `crm.setting.CrmHook.BeforeSaveCustomer`。
-- Page action hook 使用完整注册名，例如 `{ "service": "crm.setting.CrmHook.BeforeSaveCustomer" }`。
-- 生成器当前不校验 Provider 签名；不受注册适配支持的签名会在启动注册时出错或 panic。
-- 普通 Service 方法不会自动注册；只有被 API/Provider 直接调用，或另有显式注册时才能使用，page JSON 不能凭空调用。
+```text
+<component>/
+  service/
+    product.go
+    release/
+      publish.go
+      package.go
+  api/
+    admin/
+      release.go
+```
 
-## 选择表
+- 核心业务、私有校验、映射、接口和实现都在 `service/` 或 `service/<domain>/`。
+- Provider 写成 `service/**` 内接收者的 `ProviderXxx` 方法，不创建 `provider/` 目录。
+- API 放 `api/**`，只做 HTTP 适配。
+- 不创建 component 根级 `contract/`、`internal/`、`manager/` 或按业务动作命名的平行目录。
 
-| 需求 | 使用 | 不要使用 |
-| --- | --- | --- |
-| 普通 CRUD | Model + page JSON | API/Service |
-| 字段标签、枚举、关联 | Model metadata | page 重复写 |
-| 保存前校验/规范化 | Provider hook 或 submit.before | API |
-| 保存后关系同步/计数 | Provider hook 或小 Service | page 硬编码副作用 |
-| 状态流转/跨表事务 | Service | 直接 update 状态 |
-| 外部 HTTP/provider | Service | API 内联 |
-| 登录/注册/回调/webhook | API + Service | page action |
-| front plugin 交互接口 | API + Service | 通用 CRUD action |
+## 2. Service
 
-## 升级门槛
+Service 承载：
 
-新增 Provider、Service、API 前必须写清低层能力为什么不够：
+- 业务不变量和权限范围。
+- 事务、状态流转、并发控制和幂等。
+- 跨表查询/写入编排。
+- 外部调用、超时、重试和回调处理。
+- 安装、升级、签名、发布、导入、任务等业务流程。
 
-- 能由 Model metadata、page JSON、标准 action 或 option runtime 表达的，不升级。
-- 只是参数转换、透传、普通查询、普通保存、列表过滤，不升级。
-- “以后可能复用”“方便统一入口”“先预留一层”不是升级理由。
-- 发现同类流程已经存在时，优先复用或收敛公共路径，不创建平行实现。
+普通业务方法不需要 Dever 生成器注册。API、Provider、CLI、middleware 或 Model hook 直接调用它们。
 
-可以升级的信号：
-
-- 存在跨表业务不变量、事务边界、状态机或幂等要求。
-- 存在外部系统调用、异步编排、webhook/callback 或超时/重试策略。
-- 需要明确 HTTP 边界、登录/站点/API key 上下文或 front plugin 自定义交互接口。
-
-## Provider
-
-Provider 是给 Dever/page runtime 调用的适配层。
-
-Page hook 推荐使用当前通用签名：
+推荐普通签名使用 `context.Context + 明确参数`：
 
 ```go
-func (s XxxService) ProviderAction(c *server.Context, params []any) any
+type ReleaseService struct{}
+
+func (ReleaseService) Publish(ctx context.Context, input PublishInput) (Release, error) {
+    // 校验版本、签名和状态，并在一个事务内发布。
+}
 ```
 
-这不是生成器的签名校验条件；生成器只识别名称和接收者。新增其他签名前，先确认 `dever/load` 的注册适配是否支持。
+不要让核心方法直接依赖 `*server.Context`，否则 CLI、任务和测试会被 HTTP/runtime 上下文绑死。
 
-允许：
+### CRUD 方法名
 
-- `ProviderBeforeSaveXxx`：校验、规范化、派生字段。
-- `ProviderAfterSaveXxx`：关系同步、计数、缓存失效。
-- option/list 数据无法由 model metadata 提供时的适配。
-- 调用真实 Service 的薄适配器。
-- 根据登录态、父页面或路由写入审计、归属、派生字段。
+`Create`、`List`、`GetInfo`、`Update`、`Delete` 不是禁用词。以下场景可以使用：
 
-禁止：
+- 创建时生成/哈希凭据并只返回一次 secret。
+- 根据身份和租户范围查询，并维护不可绕过的权限边界。
+- 在事务中创建或更新多张表。
+- 校验状态流转、唯一约束或业务默认值。
+- 对接外部协议并保证幂等。
 
-- 返回原输入的空透传。
-- 只因为生成器能识别就保留。
-- 在 Provider 里写长流程、HTTP client 或事务编排。
+如果方法只把参数传给 Model 的同名 CRUD，没有额外业务不变量，它就是多余 wrapper，应删除并使用 Model + Page JSON。审查方法体语义，不根据名称直接定罪。
 
-常见字段责任：
+`HandleData`、`Process`、`DoWork` 等名字通常没有表达业务动作，应改成 `Publish`、`BindInstance`、`InstallRelease` 等意图名称。
 
-- 自动编号、`code/sn/no/slug` 派生和唯一校验：Provider 或 Service。
-- 创建人、更新人、操作人：Provider 或 Service 从登录上下文写。
-- 父资源 ID、站点 ID、租户 ID：Provider 或 Service 从上下文写。
-- 分类计数、关系同步、缓存失效：after hook 或聚焦 Service。
+## 3. Provider
 
-不要为了让管理员手填这些字段而把它们放进 page form。
+Provider 是 Dever 动态调用适配方法，不是业务层。
 
-## Service
+### 生成器事实
 
-Service 承载业务行为，方法名用业务动词：
+当前 Service 生成器：
 
-```txt
-Publish
-Archive
-RunNow
-AssignRole
-SyncRelation
-RotateToken
-ImportRows
-ExecuteWorkflow
+- 递归扫描 active module/package 的 `service/**`。
+- 只识别导出接收者上的 `ProviderXxx` 方法，`Xxx` 不能为空。
+- 普通 Service 方法不会自动注册。
+- 注册名包含 `service/` 下的子目录。
+
+例如：
+
+```go
+// package/crm/service/setting/customer.go
+type CustomerHook struct{}
+
+func (CustomerHook) ProviderBeforeSave(c *server.Context, params []any) any {
+    // 适配 Page 参数后调用普通 Service。
+}
 ```
 
-避免 CRUD wrapper 名：
+注册名：
 
-```txt
-Save
-List
-Create
-Update
-Delete
-GetInfo
-HandleData
-Process
+```text
+crm.setting.CustomerHook.BeforeSave
 ```
 
-Service 应该有清晰事务边界、错误返回、超时控制、幂等设计和脱敏日志。
+Page hook：
 
-Service 不做单纯 CRUD wrapper；如果方法只是 `Save/List/Create/Update/Delete/GetInfo/HandleData/Process` 的改名，回退到 Model + page JSON 或改成表达真实业务动作的 Service。
+```json
+{
+  "service": "crm.setting.CustomerHook.BeforeSave"
+}
+```
 
-## API
+### 签名
 
-API 必须薄：
+Page hook 常用且已受 runtime 适配支持的签名：
 
-1. 读取和校验请求。
-2. 获取登录/站点/API key 上下文。
-3. 调用 Service。
-4. 整理响应。
+```go
+func (XxxHook) ProviderAction(c *server.Context, params []any) any
+```
 
-不要把业务流程、SQL 拼接、状态流转或外部调用直接写在 API。
+生成器只识别接收者和名称，不验证签名。使用其它签名前必须先确认 `dever/load` 注册适配支持，不能凭空发明。
 
-API 路由规则：
+### 允许职责
 
-- `api/*.go` 生成 `/组件名/<资源>/<动作>`，只适合明确不归属具体站点的通用接口。
-- `api/admin/*.go` 生成 `/组件名/admin/<资源>/<动作>`，用于后台自定义接口。
-- `api/<site-or-scope>/*.go` 生成 `/组件名/<site-or-scope>/<资源>/<动作>`，用于工作台、前台或独立站点接口。
-- 需要站点权限保护时，同步在 `dever.json.front.sites.<site>.api` 声明该前缀。
+- Page before/after hook 的参数和返回值适配。
+- 从登录态、站点、父页面或路由派生归属字段。
+- 无法由 Model Options/Relations 提供的动态 option 适配。
+- 调用普通 Service 并把错误转换成 runtime 期望的结果。
+- 很小的边界校验或字段规范化。
 
-公开 API 必须在组件 `dever.json.front.public` 或 `front.sites.<site>.public` 中明确声明。
+### 禁止职责
+
+- 原样返回输入的透传 Provider。
+- 只为“统一入口”包装普通 CRUD。
+- 在 Provider 内实现事务、长流程、HTTP client 或外部重试。
+- 把普通 Service 方法全部改成 Provider 以便 Page 任意调用。
+
+Provider 变长或需要多个入口复用时，提取普通 Service 方法，Provider 只保留适配。
+
+## 4. API
+
+API 只处理：
+
+1. 用 `c.Input(...)` 读取和校验请求输入。
+2. 提取登录、站点、租户或 API key 上下文。
+3. 调用普通 Service 方法。
+4. 返回 `c.JSON(...)` 或 `c.Error(...)`。
+
+API 不写 SQL、事务、状态机、外部调用或跨表编排。
+
+### 生成器事实
+
+当前路由生成器递归扫描 active module/package 的 `api/**`，只识别接收者方法：
+
+```text
+GetXxx
+PostXxx
+PutXxx
+DeleteXxx
+```
+
+路径由 component、api 子目录、接收者和动作生成：
+
+```text
+package/bot/api/admin/team.go
+func (Team) GetWorkspaceData
+-> GET /bot/admin/team/workspace_data
+```
+
+常见目录：
+
+- `api/*.go`：不归属具体站点的通用接口。
+- `api/admin/*.go`：后台自定义接口。
+- `api/<site-or-scope>/*.go`：工作台、公开站点或独立协议。
+
+需要站点保护时，在 `dever.json.front.sites.<site>.api` 声明对应前缀；公开路由必须在组件 `front.public` 或站点 `public` 中明确声明。
+
+### 新增 API 的真实理由
+
+- 登录、注册、OAuth/callback、webhook。
+- 文件上传/下载或流式传输。
+- 对外集成协议和 API key 边界。
+- front plugin 需要的自定义交互接口。
+- 无法由 Page 标准 action 表达的业务命令。
+
+普通列表、详情、保存和删除不构成新增 API 的理由。
+
+## 5. 调用方向
+
+```text
+Page standard action -> Model
+Page hook            -> Provider -> Service
+API                  -> Service
+CLI / worker         -> Service
+middleware           -> Service（需要业务判断时）
+Model hook           -> Service（复杂生命周期时）
+```
+
+禁止反向依赖：Service 不依赖 API、Page JSON 或 front plugin；公共 runtime 不 import 业务 component。
+
+## 6. 错误、事务和安全
+
+- Service 返回业务可判断的错误；API/Provider 在边界处转换，不吞错。
+- 事务覆盖完整业务不变量，不拆到多个适配入口。
+- 外部调用设置超时；重试只用于幂等动作。
+- webhook/callback 校验签名并保证幂等。
+- 日志脱敏 password、token、secret、卡密、验证码和私钥。
+- public route 仍执行输入校验、权限范围和字段过滤。
+
+## 7. 自检
+
+- 这是否只是普通 CRUD？如果是，回到 Model + Page JSON。
+- 核心业务是否只有 `service/` 中一个实现。
+- Provider 是否仅做动态适配，API 是否仅做 HTTP 适配。
+- 是否误建了 Provider/contract/internal 或业务动作根目录。
+- CRUD 方法是否有可指出的真实业务不变量。
+- 注册名和 API 路由是否根据实际目录/生成器计算，而不是猜测。

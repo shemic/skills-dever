@@ -1,68 +1,60 @@
 ---
 name: shemic-dever
-description: Use when 实现、修改、审查、排查或维护 Dever 项目的 model、page JSON、Service、API、Provider、front plugin、component/package/module、framework、CLI、runtime、config 或 Dever skill。与 Dever 无关的通用问答不触发。
+description: Use when 实现、修改、审查或排查 Dever 项目的 component/package/module、Model、Page JSON、Service、Provider、API、front plugin、framework、CLI、runtime、config 或 Dever skill。与 Dever 无关的通用开发不触发。
 ---
 
 # shemic-dever
 
-本 skill 是 Dever 项目的薄入口。先判断角色，再只读取相关 reference。不要把普通 CRUD、普通页面或普通配置升级成 Service/API/front plugin。
+先确认代码归属和最低能力层，再读取对应 reference。不要把普通 CRUD、普通页面或组件私有问题升级成 Service、API、front plugin 或 framework 改动。
 
-## 角色路由
+## 必读路由
 
-| 角色 | 触发 | 必读 |
-| --- | --- | --- |
-| `dever-app` | 业务功能、module、model、普通后台、配置 | `references/app.md`、`references/model.md`；涉及 Service/API 再读 `references/service-api.md`；涉及页面再读 `references/front-page.md` |
-| `dever-front-page` | page JSON、route/action/option、权限、菜单、站点、后台/工作台页面 | `references/front-page.md` |
-| `dever-front-plugin` | `front/src/plugin.ts`、React 节点、画布、工作台、复杂交互 | `references/front-plugin.md`，再读组件 skill |
-| `dever-component` | `package/<name>`、`module/<name>`、`dever.json`、组件 skill | `references/component.md`，再读组件自己的 `skills/**/SKILL.md` |
-| `dever-framework` | `backend/dever`、CLI、生成器、run/build/package/skill install、`package/front` runtime | `references/framework.md`；维护 `backend/dever` 时再读 `backend/dever/SKILL.md`；涉及 front runtime 再读 `backend/package/front/skills/SKILL.md` |
-| `dever-review` | bug、代码审查、精简、安全、性能、重构分析；要求按 P0/P1/P2 输出真实问题 | `references/review.md`，按问题层叠加其它 reference |
-| `dever-skill-maintainer` | 修改 `skills/skills-dever`、`files/AGENTS.dever.md`、`scripts/audit.sh`、新增规则 | `references/skill-maintenance.md` |
+实现、重构或审查 Dever 代码时，先读：
 
-角色可以叠加。角色一时不明时先盘点到足以判断归属；用户目标和修改位置明确时，直接进入最匹配角色并完成实现。
+- [decide.md](references/decide.md)：判断项目模式、代码归属和最低能力层。
+- [development.md](references/development.md)：业务物理目录、命名、职责和质量约束。
+
+纯问答或只读排查可直接读取最相关 reference，不必加载全部开发规范。
+
+| 任务 | 继续读取 |
+| --- | --- |
+| 应用业务、module、配置 | [app.md](references/app.md)；完整产品需求再读 [product.md](references/product.md) |
+| Model、Options、Relations | [model.md](references/model.md) |
+| Provider、Service、API | [service-api.md](references/service-api.md) |
+| Page JSON、菜单、权限、action、option | [front-page.md](references/front-page.md) |
+| React 节点、复杂交互、插件 | [front-plugin.md](references/front-plugin.md)，再读组件 skill |
+| package/module/dever.json | [component.md](references/component.md)，再读组件自己的 `skills/**/SKILL.md` |
+| Dever CLI、生成器、framework、package/front runtime | [framework.md](references/framework.md)，再读对应 framework/component skill |
+| bug、审查、重构、安全、性能 | [review.md](references/review.md)，并叠加问题所属 reference |
+| 维护本 skill、模板或 audit | [skill-maintenance.md](references/skill-maintenance.md) |
 
 ## 全局硬规则
 
-- 普通业务默认只改应用 `module/*`；不要改 `backend/dever`、`backend/package/*`。如果用户明确指向框架、package、runtime、通用组件或当前项目本身就是框架/package 开发仓库，进入 `dever-framework` 或 `dever-component` 并按对应边界处理。
-- 普通 CRUD 使用 `Model + package/front + page JSON`；不要写 CRUD API、CRUD Service、空 Provider。
-- Page JSON 只用当前协议。能自动推导的不写；不能推导才写对应位置的 `model` 或 `service`。
-- 禁止旧 page 写法和兼容分支：`_model`、`_use`、`modelName`、`modelPath`、`type:"service"`、`submit.use`、`option.use`、`childUse`、`service@...`、`transform`、`<<NewXxxModel>>`、`{{Service}}`、`/front/route/option`。
-- `data.table.service`、`data.form.service` 在已有 model 时是补字段/规范化，不是替代数据源。
-- Service 只承载真实业务流程：事务、状态流转、外部调用、异步编排、跨表规则。API 必须薄。
-- 新增 Service/API/front plugin/framework runtime 前必须说明为什么不能用更低层能力。普通局部 bugfix、组件内小改和贴近现有模式的代码，不要求长篇升层说明。
-- Provider 只做真实 hook/适配/校验/规范化；不要创建透传 Provider。
-- Model 标签、Options、Relations 是字段展示和选项首选来源；不要在多个 page JSON 重复写。
+- 普通应用业务默认改 `module/*`。只有用户明确维护 framework/package，或仓库本身处于对应开发态，才改 `backend/dever`、`backend/package/*`。
+- 普通 CRUD 使用 `Model + package/front + Page JSON`，禁止 CRUD API、CRUD Service 和空 Provider。
+- 核心业务规则、事务、状态流转、跨表编排、外部调用及其私有辅助实现必须放在 `service/` 或 `service/<domain>/`。
+- `api/`、`cmd/`、`middleware/` 和 Model 生命周期方法只做适配并调用 Service，不承载核心业务流程。
+- Provider 不是目录或独立层，而是 `service/**` 接收者上的 `ProviderXxx` 动态调用适配方法；禁止透传 Provider。
+- 不为业务创建组件根级 `internal/`、`contract/`、`manager/`、`helper/`、`updater/`、`installer/` 或其它平行业务目录。私有类型、接口和 helper 放在所属 `service/<domain>` 附近。
+- Page JSON 只用当前协议。能推导的不写；不能推导才在当前协议规定的位置写 `model` 或 `service`。
+- 旧 Page 写法只能出现在禁止说明：`_model`、`_use`、`modelName`、`modelPath`、`type:"service"`、`submit.use`、`option.use`、`childUse`、`service@...`、`transform`、`<<NewXxxModel>>`、`{{Service}}`、手写 `/front/route/option`。
+- Model comment、Options、Relations 是字段标签和选项的首选来源，不在多个 Page JSON 重复配置。
 - 不手改生成文件：`data/router.go`、`data/load/*.go`、`data/table/*.json`。
-- 不手改编译产物：`front/dist/*`、`package/front/front/html/*`、`package/front/front/html/assets/*`。
-- 测试代码统一放在当前仓库根目录 `test/`；一次性验证测试在验证完成后删除，禁止长期与业务源码混放。语言或框架强制测试贴近源码时，只允许临时创建，并在交付前删除；不要为了迁移测试而暴露生产内部 API。
-- `dever run` 保持源码服务；生产插件由 `dever front build` / `dever build` 构建，宿主 `front/src` 由维护者单独执行 `pnpm --dir front build:backend`，不要混为一个构建入口。
-- 修改 `package/<name>` 或 `module/<name>` 前，先读该组件声明的 `skills/**/SKILL.md`。
-- 组件站点运行契约写在组件 `dever.json.front.sites`；项目 `config/front.json` 或 `config/front.jsonc` 只覆盖 `sites.<site>` 展示配置。
-- 自定义 API 必须按站点/用途隔离；细则归属 `references/service-api.md` 和 `references/front-page/site.md`。
-- `dever skill install` 每次从 `github.com/shemic/skills-dever` 拉取；不要使用本地缓存或项目镜像作为安装来源。
-- `dever skill install` 默认安装/更新 Trellis 并初始化当前项目；不需要 Trellis 时显式使用 `--trellis=false`，只管理全局 CLI 时使用 `--trellis-project=false`。
-- 如果用户禁止 build/test，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价测试。
+- 不手改编译产物：`front/dist/*`、`package/front/front/html/*`。
+- 修改 component/package/module 前先读其 `skills/**/SKILL.md`；组件私有规则不得上升成全局规则。
+- 测试统一放当前仓库根目录 `test/`；一次性验证结束后删除。
+- 用户或项目禁止 build/test 时，不运行 `npm run build`、`dever build`、`dever front build`、`go test` 或等价命令。
 
-## 工作方式
+## 工作顺序
 
-1. 先用 `rg`/`find` 搜索现有 model、page、service、api、组件 skill 和 `dever.json`。
-2. 判断最低能力层：model 元信息、page JSON、Provider、Service、API、front plugin、config、框架代码。
-3. 按角色读取 reference；不要加载无关长文档。
-4. 改动靠近归属 module/package；不做顺手重构。
-5. 实现前后按 `references/app.md` 的"自检"清单确认；可静态检查时运行：
+1. 用 `rg`/`find` 搜索现有 Model、Page、Service、Provider、API、组件 skill 和 `dever.json`。
+2. 按 [decide.md](references/decide.md) 选择最低能力层，并确认物理归属。
+3. 只读取当前任务需要的专项 reference 和组件 skill。
+4. 实现最小完整路径，删除被替代的重复、空层和临时代码。
+5. 运行允许的最小定向检查；可用时执行：
 
 ```bash
 bash skills/skills-dever/scripts/audit.sh <changed-file-or-dir>
 ```
 
-## 最终回复
-
-多步骤任务完成后，保持简短但包含：
-
-1. 状态：已完成 / 部分完成 / 未完成 / 阻塞。
-2. 完成内容：只写实际做过的事，不把计划或推测写成完成。
-3. 验证情况：写清运行过的命令和结果；用户禁止 build/test 时写明未运行。
-4. 剩余事项：写清未做、未验证、需要用户手动测试或后续迁移的内容；没有则写"剩余：无"。
-
-单步骤操作、简单排查、问答可直接回复，不需要四段式。
-不要只说"已完成"。不要把未运行的 build/test、未人工验证的 UI 说成已验证。
+最终回复写清实际改动、验证结果、未运行项和剩余阻塞，不把计划或推测写成已完成。

@@ -45,6 +45,12 @@ pascal_to_snake() {
     tr '[:upper:]' '[:lower:]'
 }
 
+path_is_under() {
+  local normalized="${1//\\//}"
+  local directory="$2"
+  [[ "$normalized" == "$directory/"* || "$normalized" == */"$directory/"* ]]
+}
+
 collect_files() {
   if (( CHANGED == 1 )); then
     if ! git rev-parse --is-inside-work-tree &>/dev/null; then
@@ -67,7 +73,7 @@ collect_files() {
 
   for target in "${TARGETS[@]}"; do
     if [[ -d "$target" ]]; then
-      find "$target" -type f \( -name '*.go' -o -name '*.json' -o -name '*.jsonc' -o -name '*.js' -o -name '*.css' -o -name '*.ts' -o -name '*.tsx' -o -name '*.go.tmpl' -o -name '*.json.tmpl' -o -name '*.jsonc.tmpl' \) |
+      find "$target" -type f \( -name '*.go' -o -name '*.json' -o -name '*.jsonc' -o -name '*.js' -o -name '*.css' -o -name '*.ts' -o -name '*.tsx' -o -name '*.md' -o -name '*.go.tmpl' -o -name '*.json.tmpl' -o -name '*.jsonc.tmpl' \) |
         filter_audit_files |
         skip_generated_or_built_files
     elif [[ -f "$target" ]]; then
@@ -97,7 +103,7 @@ git_untracked_files() {
 
 filter_audit_files() {
   awk '
-    /\.(go|json|jsonc|js|css|ts|tsx)$/ { print }
+    /\.(go|json|jsonc|js|css|ts|tsx|md)$/ { print }
     /\.(go|json|jsonc)\.tmpl$/ { print }
   '
 }
@@ -132,6 +138,11 @@ is_explicit_target() {
 domain_for_model_file() {
   local file="$1"
   local normalized="${file//\\//}"
+  if [[ "$normalized" == model/*/* ]]; then
+    local relative="${normalized#model/}"
+    echo "${relative%%/*}"
+    return
+  fi
   local after_model="${normalized#*/model/}"
   if [[ "$after_model" != "$normalized" && "$after_model" == */* ]]; then
     echo "${after_model%%/*}"
@@ -177,10 +188,95 @@ check_generated() {
   esac
 }
 
+check_component_business_root() {
+  local file="$1"
+  [[ "$file" == *.go ]] || return 0
+
+  local normalized component_kind component_name root_dir
+  normalized="${file//\\//}"
+  if [[ ! "$normalized" =~ (^|/)(package|module)/([^/]+)/([^/]+)/ ]]; then
+    return
+  fi
+
+  component_kind="${BASH_REMATCH[2]}"
+  component_name="${BASH_REMATCH[3]}"
+  root_dir="${BASH_REMATCH[4]}"
+  if [[ "$component_kind" == "package" && "$component_name" == "front" && "$root_dir" == "internal" ]]; then
+    return
+  fi
+  case "$root_dir" in
+    api|cmd|config|docs|front|middleware|migrations|model|sdk|service|skills)
+      return
+      ;;
+  esac
+
+  err "$file: component 根目录 ${root_dir}/ 不能承载业务代码；业务代码必须放在 service/ 或 service/<domain>/"
+}
+
+check_go_file_naming() {
+  local file="$1"
+  [[ "$file" == *.go ]] || return 0
+
+  local base stem parent normalized_parent underscores
+  base="$(basename "$file")"
+  stem="${base%.go}"
+  stem="${stem%_test}"
+
+  if [[ "$base" == *-* || "$base" != "$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')" ]]; then
+    err "$file: Go 文件名必须使用小写 snake_case"
+  fi
+
+  parent="$(basename "$(dirname "$file")")"
+  normalized_parent="$(printf '%s' "$parent" | tr '[:upper:]-' '[:lower:]_')"
+  if [[ -n "$normalized_parent" && "$stem" == "${normalized_parent}_"* ]]; then
+    warn "$file: 文件名重复父目录语义；目录已提供 ${parent} 上下文，请缩短业务名"
+  fi
+
+  underscores="${stem//[^_]/}"
+  if (( ${#underscores} >= 2 )); then
+    warn "$file: 文件名包含多个下划线；请检查是否混合职责，或应收进更明确的业务子目录"
+  fi
+
+  if [[ "_${stem}_" =~ _(helper|helpers|util|utils|common|manager|value|service|runtime)_ ]]; then
+    warn "$file: 文件名包含泛化命名；请使用具体业务意图，并让目录承担领域上下文"
+  fi
+}
+
+check_provider_location() {
+  local file="$1"
+  [[ "$file" == *.go ]] || return 0
+  path_is_under "$file" service && return 0
+
+  if rg -q '^func[[:space:]]*\([^)]*\)[[:space:]]+Provider[A-Z][A-Za-z0-9_]*\(' "$file"; then
+    err "$file: Provider 方法只能放在 service/ 或 service/<domain>/，否则 Dever Service 生成器不会注册"
+  fi
+}
+
+check_markdown_links() {
+  local file="$1"
+  [[ "$file" == *.md ]] || return 0
+
+  local raw target resolved
+  while IFS= read -r raw; do
+    target="${raw#](}"
+    target="${target%)}"
+    target="${target#<}"
+    target="${target%>}"
+    target="${target%%#*}"
+    case "$target" in
+      ""|http://*|https://*|mailto:*|/*) continue ;;
+    esac
+    resolved="$(dirname "$file")/$target"
+    if [[ ! -e "$resolved" ]]; then
+      err "$file: Markdown 引用不存在：$target"
+    fi
+  done < <(rg -o '\]\([^)]*\.md(#[^)]*)?\)' "$file" || true)
+}
+
 check_model() {
   local file="$1"
   [[ "$file" == *.go ]] || return 0
-  [[ "$file" == */model/* || "$file" == */model/*.go ]] || return 0
+  path_is_under "$file" model || return 0
 
   local base
   base="$(basename "$file")"
@@ -327,8 +423,9 @@ check_page_field_boundary() {
   local file="$1"
   local system_fields='code|key|slug|sn|no|created_at|updated_at|created_by|updated_by|author|author_id|editor|editor_id|creator|creator_id|operator|operator_id'
 
-  if rg -q '"value"[[:space:]]*:[[:space:]]*"form\.('"$system_fields"')"' "$file"; then
-    warn "$file: form 中出现系统/审计/派生字段；请确认不是 code/key/slug/作者/编辑/创建人/更新人等手填项"
+  if rg -q -U '\{[^{}]*"type"[[:space:]]*:[[:space:]]*"form-[^"]+"[^{}]*"value"[[:space:]]*:[[:space:]]*"form\.('"$system_fields"')"' "$file" ||
+     rg -q -U '\{[^{}]*"value"[[:space:]]*:[[:space:]]*"form\.('"$system_fields"')"[^{}]*"type"[[:space:]]*:[[:space:]]*"form-[^"]+"' "$file"; then
+    warn "$file: 可编辑节点包含系统/审计/派生字段；请确认不是 code/key/slug/作者/编辑/创建人/更新人等手填项"
   fi
 
   if rg -q '"\$form\.('"$system_fields"')"' "$file"; then
@@ -375,17 +472,20 @@ check_service_api() {
   local file="$1"
   [[ "$file" == *.go ]] || return 0
 
-  if [[ "$file" == */service/* ]]; then
+  if path_is_under "$file" service; then
     if rg -q 'Provider[A-Za-z0-9_]+\(.*params \[\]any\) any' "$file" &&
        rg -q 'return record|return params\[0\]|return map\[string\]any\{\}' "$file"; then
       warn "$file: Provider 看起来只是透传；只保留真实校验、规范化或适配 hook"
     fi
-    if rg -q 'func .* (Save|List|Create|Update|Delete|GetInfo|HandleData|Process)[A-Za-z0-9_]*\(' "$file"; then
-      warn "$file: Service 方法看起来像 CRUD wrapper；普通 CRUD 应交给 package/front"
+    if rg -q 'func .* (Save|List|Create|Update|Delete|GetInfo)\(' "$file"; then
+      warn "$file: Service 使用通用 CRUD 方法名；请确认方法维护真实业务不变量，纯 Model CRUD 应交给 package/front"
+    fi
+    if rg -q 'func .* (HandleData|Process|DoWork)[A-Za-z0-9_]*\(' "$file"; then
+      warn "$file: Service 方法命名过于模糊；请改成 Publish、InstallRelease、BindInstance 等具体业务动作"
     fi
   fi
 
-  if [[ "$file" == */api/* ]]; then
+  if path_is_under "$file" api; then
     if rg -q 'Post(Action|Create|Update|Save)|Get(List|Info|Detail)|Delete(Delete)?' "$file"; then
       warn "$file: API 看起来像 CRUD/action wrapper；请确认它是真实 HTTP 能力"
     fi
@@ -459,6 +559,10 @@ collect_files > "$audit_file_list" || fail=1
 
 while IFS= read -r file; do
   check_generated "$file"
+  check_component_business_root "$file"
+  check_go_file_naming "$file"
+  check_provider_location "$file"
+  check_markdown_links "$file"
   check_model "$file"
   check_page "$file"
   check_service_api "$file"

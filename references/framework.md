@@ -17,6 +17,7 @@
 - `dever update` 用于先在当前 Dever 后端项目执行 `go get github.com/shemic/dever@<ref>` 更新框架依赖，再从 GitHub 安装同一 ref 的 `github.com/shemic/dever/cmd/dever` 命令；默认追 `main`，安装到当前 `PATH` 命中的 `dever` 所在目录，不同步 AI skill。AI skill 单独用 `dever skill install` 安装或同步。需要稳定版本、tag 或提交时显式用 `--ref=latest`、`--ref=v0.1.1` 或 `--ref=<commit>`；只更新命令时用 `--skip-framework`。
 - `dever package` 更新当前项目已启用的所有 `github.com/dever-package/*` package；`dever package <name>` 安装或更新单个 package，写 shim，并刷新注册文件。
 - `dever package` 默认使用稳定通道 `@latest`。维护者需要验证 main、tag 或提交时使用 `dever package --ref=main <name>`、`dever package --ref=v0.1.1 <name>` 或 `dever package --ref=<commit> <name>`；不要把普通项目默认更新改成追 main。package 命令的 flag 必须写在组件名称前。
+- `dever package` 刷新注册前校验 active package shim；本地 `replace` 存在但 `require` 缺失时自动补 `v0.0.0`，该版本只用于进入 Go module graph，实际源码仍由 `replace` 决定。
 - `dever package add/update/sync/doctor/list` 已废弃。
 - `dever run` 启动前执行 `init --skip-tidy`，model/service/api/component 变更后刷新注册。
 - `dever run` 热重载只监听源码和配置目录：`config`、`dever`、`middleware`、`module`、`package`；不要监听 `data`，`data/skills`、`data/knowledge`、`data/upload`、`data/table` 等都是运行数据或生成数据。
@@ -49,13 +50,15 @@ data/table/*.json
 
 生成器事实：
 
-- model：扫描 active module/package 的 `model/`，只注册零参 `New*Model`。
-- service：扫描 `service/`，只注册 `Provider*` 接收者方法。
-- api：扫描 active module/package 的 `api/**/*.go`，`api/` 下的子目录会进入 URL 前缀。
+- model：递归扫描 active module/package 的 `model/**`，只注册导出、无接收者、零参数的 `New*Model`；注册名包含 model 子目录。
+- service：递归扫描 active module/package 的 `service/**`，只注册导出接收者上的 `ProviderXxx` 方法；普通 Service 方法不注册，Provider 注册名包含 service 子目录、接收者类型和 `Xxx` 后缀。
+- api：递归扫描 active module/package 的 `api/**/*.go`，只识别接收者方法 `Get/Post/Put/DeleteXxx`；`api/` 下的子目录会进入 URL 前缀。
   - `package/bot/api/admin/team.go` -> `/bot/admin/team/...`
   - `package/bot/api/body/project.go` -> `/bot/body/project/...`
   - `package/crm/api/work.go` -> `/crm/work/...`
 - component：扫描 active module/package 的 `dever.json` 和 embed FS。
+
+生成器支持嵌套目录不代表可以自造架构层。核心业务仍统一放 `service/`；Provider 只是其中的动态调用方法，不是独立目录。API、CLI、middleware 和 Model hook 只做适配。
 
 ## Go module
 
@@ -102,6 +105,7 @@ replace github.com/dever-package/front => ./package/front
 ## 框架维护原则
 
 - 先查现有 cache/runtimecache/middleware/generator，不新增平行机制。
+- 组件私有业务问题留在拥有它的 component；不能因为本地可改 framework 或 `package/front` 就把业务规则放进公共 runtime。
 - 改 CLI 时同步更新 skill、模板和 audit。
 - 改 package/front runtime 时同步检查组件 page JSON、bot 画布、CRM 工作台、权限和 public site。
 - 不为旧协议保留双路径兼容，除非用户明确要求迁移期。

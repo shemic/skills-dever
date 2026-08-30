@@ -47,6 +47,8 @@ model -> page JSON -> Provider hook -> Service -> API -> front plugin
 
 普通列表、新增、编辑、删除、详情只用 Model + page JSON，不写 CRUD API/Service。
 
+开始业务实现前读 `references/decide.md` 和 `references/development.md`。需要真实业务流程时，全部实现放在 component 的 `service/` 或 `service/<domain>/`；Provider 只是在该目录内增加动态调用适配方法。
+
 ## 最小骨架
 
 空项目模板包含：
@@ -97,4 +99,6 @@ bash ~/.agents/skills/shemic-dever/scripts/page.sh module/main admin product upd
 - 用 `boot.sh` 覆盖已有项目。
 - 手动复制 `package/front` 源码到普通项目。
 - 先写 API/Service，再补 model/page JSON。
+- 把安装、升级、签名、任务等业务写成 component 根级目录，而不是 `service/<domain>/`。
+- 把 Provider 当成独立目录或业务层。
 - 手改 `data/router.go`、`data/load/*.go` 或 `data/table/*.json`。

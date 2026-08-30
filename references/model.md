@@ -1,6 +1,6 @@
 # Model
 
-Model 是 Dever 普通资源的首选来源：表结构、字段标签、枚举、关联、默认排序、索引都优先放这里。
+Model 是 Dever 普通资源的数据契约：表结构、字段标签、枚举、关联、默认排序、索引都优先放这里。Model 不是业务实现层；核心业务统一放在 `service/`。
 
 ## 注册规则
 
@@ -34,6 +34,8 @@ func NewXxxModel() *XxxModel
 
 - 一个资源保留一个清晰的 `NewXxxModel` 构造函数。
 - 推荐一个 model 文件放一个资源，文件名使用对应资源的 snake_case，例如 `NewUserIdentityModel` 放在 `user_identity.go`。这些是维护性约定，不是生成器识别条件。
+- 目录已表达领域时，文件名不重复目录语义。例如 `model/agent/skill.go`，不要写 `agent_skill_model.go`。
+- 同一稳定领域有多个 Model 时可以使用 `model/<domain>/`；注册名必须包含对应子目录。
 
 不要手改 `data/load/model.go`。
 
@@ -109,9 +111,10 @@ CreatedAt
 ## 边界
 
 - Model 不写 HTTP 请求。
-- Model 不写长业务流程。
-- Model hook 只做紧贴数据生命周期的校验、关系同步和字段规范化。
-- 跨表事务、外部调用、状态流转放 Service。
+- Model 不实现业务流程。
+- Model hook 只做紧贴数据生命周期的轻量适配和字段规范化。
+- 跨表事务、外部调用、状态流转、多入口复用逻辑放在 `service/`；Model hook 需要这些能力时调用普通 Service 方法。
+- 不为 Model wrapper 创建根级 helper、contract 或 internal 目录；私有实现靠近所属 Service 域。
 
 ## 常见错误
 

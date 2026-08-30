@@ -1,45 +1,39 @@
 # Front Page 入口
 
-普通后台、配置页、列表、编辑、详情、工作台壳优先使用 `package/front` page JSON。只有 page JSON 表达不了画布、编辑器、实时工作台等强交互时，才升级到 front plugin。
+普通后台、配置页、列表、编辑、详情和简单工作台优先使用 `package/front` Page JSON。第一次实现一项页面功能先读 [任务式指南](front-page/guide.md)，遇到专项问题再读下面的协议文档。
 
-## 必读分流
+## 能力选择
 
-| 问题 | 继续读 |
+按最低可用能力逐级判断：
+
+1. 字段标签、枚举、关联和默认排序：Model comment、Options、Relations、Order。
+2. 普通列表、表单、详情、搜索、弹窗和标准保存删除：Page JSON。
+3. Page 数据补充、远程 option、保存前后校验或规范化：`service/**` 中的 Provider。
+4. 事务、状态流转、跨表规则和外部调用：普通 Service；Page Provider 只做边界适配。
+5. 真实 HTTP、文件、流式协议或外部回调：薄 API + Service。
+6. Page runtime 没有对应交互能力：front plugin。
+
+普通 CRUD 到第 2 步为止，不新增 CRUD Service、API 或空 Provider。
+
+## 阅读路由
+
+| 任务 | 必读 |
 | --- | --- |
-| 当前 page JSON 协议、禁止旧字段、model/service 来源 | `front-page/protocol.md` |
-| create/update 表单字段、系统字段、审计字段、code/key/分类边界 | `front-page/field.md` |
-| submit/save/delete、partial save、before/after hook | `front-page/action.md` |
-| option、meta、Relations、Options、远程选项 | `front-page/option.md` |
-| 数据模板配置、填写页、GetInfo 调用契约 | `front-page/data-template.md` |
-| site、auth、public、shell、plugin 自动发现、config/front | `front-page/site.md` |
-| 服务端模板、SEO、公开内容站 | `front-page/template.md` |
+| 从 Model 到 list/update/detail 的完整实施顺序 | [guide.md](front-page/guide.md) |
+| 顶层结构、路径推导、数据来源和禁止旧字段 | [protocol.md](front-page/protocol.md) |
+| submit/save/delete、partial save、Provider hook | [action.md](front-page/action.md) |
+| Options、Relations、本地与远程 option、复杂节点来源 | [option.md](front-page/option.md) |
+| 表单字段、系统字段、分类字段、富文本边界 | [field.md](front-page/field.md) |
+| 站点、权限、菜单、public、shell、插件发现 | [site.md](front-page/site.md) |
+| 服务端模板、SEO、公开内容站 | [template.md](front-page/template.md) |
+| 数据模板这一项专用能力 | [data-template.md](front-page/data-template.md) |
+| Page runtime 无法表达，需要 React 节点 | [front-plugin.md](front-plugin.md) |
 
-## 基本选择
+`data-template.md` 是 `package/front` 数据模板的专用契约，不是普通业务数据的通用替代方案。
 
-- 普通 CRUD：Model + page JSON。
-- 标签、列名、表单 label：model comment。
-- 枚举：model Options。
-- 外键/关联选择：model Relations。
-- 表单字段：只放当前页面真实录入或选择的字段。
-- 保存前规范化：Provider hook 或 `action.submit.before` 调用真实 Service。
-- 跨表事务、状态流转、外部调用：Service。
-- 自定义 HTTP 能力：API + Service。
+## 稳定骨架
 
-## 编辑器正文展示
-
-- `form-editor` 保存的是 Dever 富文本 JSON，不是可直接拼接的 HTML。
-- seed、`data.form` 默认值、数据模板 `default_value`、AI 预置内容如果目标字段是 `form-editor`，必须直接生成 Dever 富文本 JSON 字符串；不要生成 `<p>...</p>` 这类 HTML 默认值。
-- 只有纯文本来源时，先组装为 `doc > paragraph > text` 的富文本 JSON；不要依赖编辑器运行时把 HTML 或纯文本自动归一化。
-- React 页面展示编辑器正文用 `show-rich` 或 `RichTextView`，不要自己解析 JSON。
-- front plugin 或客户端代码需要 HTML 字符串时，用 `richTextToHtml(value)`；只要内部片段时才传 `wrapper:false`。
-- Go template 服务端模板展示编辑器正文时，用 `{{ richText .Data.article.content }}`；只要内部片段时才用 `{{ richTextInner .Data.article.content }}`。
-- 不要在项目里复制富文本解析、媒体解析、备注解析或手写 `dangerouslySetInnerHTML` 解析逻辑。
-- 图片、视频、音频备注统一存储在媒体节点 `attrs.caption`，前端必须渲染为 `figure > figcaption`；备注样式必须和编辑器/`RichTextView` 保持一致。
-- 新增富文本节点、媒体节点或展示样式时，必须同步更新 `RichTextView`、`richTextToHtml` 和 Go template `richText`，保证后台预览、React 展示和 template HTML 一致。
-
-## 最小结构
-
-每个 page JSON 必须有六个顶层对象：
+Page 源文件统一保留六个顶层对象：
 
 ```json
 {
@@ -52,31 +46,35 @@
 }
 ```
 
-标准 `list/update/create/view/detail/info` 页面按 route path 自动推导 model。能推导的不写，不能推导才写对应位置的 `model` 或 `service`。
+客户端 schema 要求 `page` 和 `layout`，并会为 `nodes/data/state/action` 提供默认空对象；源文件仍显式保留六项，避免经过服务端 `RawMessage` 封装后产生 `null`，也方便审查页面的数据和动作边界。
 
-写 create/update 页前先判断字段来源。`code/key/slug`、作者、编辑、创建人、更新人、操作人、创建时间、更新时间默认不进入表单；分类、类型、分组优先用 Options/Relations/category 选择，不做自由输入。
+标准推导只发生在固定容器和路径组合：
 
-## 直接禁止
+- `.../list` 的 `data.table` 推导列表 Model。
+- `.../create|update|view|detail|info` 的 `data.form` 推导表单 Model。
+- 标准保存和删除从 action path 推导 Model。
 
-- `_model`、`_use`
-- `modelName`、`modelPath`
-- `type: "service"`
-- `submit.use`、`option.use`、`childUse`
-- `service@...`、`transform`
-- `<<NewXxxModel>>`、`{{Service}}`
-- 手写 `/front/route/option` 或 `/front/route/action`
+能推导的不写；非标准路径、跨资源或真实自定义数据才在所属 `data/action/option/meta` 位置声明当前协议的 `model` 或 `service`。
 
-发现这些写法，改成当前协议或让 `audit.sh` 报错。
+## 旧协议隔离
 
-## 示例来源
+以下内容只能出现在禁止说明或审计脚本中，不能进入正向示例和模板：
 
-优先看当前代码：
+```txt
+_model  _use  modelName  modelPath  type:"service"
+submit.use  option.use  childUse  service@...  transform
+<<NewXxxModel>>  {{Service}}  /front/route/option  /front/route/action
+```
 
-1. `backend/package/front/front/page`
-2. `backend/package/bot/front/page`
-3. `backend/package/crm/front/page`
-4. `backend/package/source/front/page`
-5. `backend/package/user/front/page`
-6. 当前项目 `module/*/front/page`
+`loadApi`、`optionSource`、`paramSource`、`fillFromOption` 不是上述旧协议。它们是少数复杂节点仍在使用的当前 `meta` 字段，只能按 [option.md](front-page/option.md) 和节点源码使用，不能扩展为普通 option 的默认写法。
 
-不要从旧 demo 复制被当前 runtime 禁止的字段。
+## 事实来源
+
+实现前按以下顺序核对：
+
+1. `backend/package/front/service/page` 与 `service/action`。
+2. `front/src/lib/schema.ts`、`front/src/lib/action.ts`、`front/src/page/option.ts`。
+3. 目标节点在 `front/src/page/nodes` 下的实现。
+4. 当前组件已有 Page JSON 和 `dever.json`。
+
+已有页面只是例子，不高于 runtime/schema。不要从旧 demo 复制字段，也不要因为某个历史页面仍存在某种写法就把它提升为全局协议。

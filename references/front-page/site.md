@@ -9,6 +9,7 @@
 ```txt
 api
 page
+route
 config
 setting
 access
@@ -41,6 +42,8 @@ favicon
 不要写成字符串。`url` 只表示域名根路径绑定，不支持带 path、query 或 fragment。
 
 不要在 `front.sites.<site>` 写其它自定义字段。
+
+`page` 是物理页面目录名。`route` 是可选的对外 Page route 前缀；未写时使用站点页面所有者组件名，写了以后 runtime 会把外部前缀映射回内部组件前缀。它不改变 API 前缀，也不用于 Host 路径绑定。普通后台不需要配置 `route`。
 
 ## api
 
@@ -133,6 +136,8 @@ dever.json.front.sites.<site>.public
 
 ## shell
 
+`shell` 配置在 `front.sites.<site>.setting.runtime.shell`，不是站点一级字段。
+
 - `app`：后台壳，侧边栏、顶栏、命令面板。
 - `blank`：只渲染页面基础上下文。
 
@@ -142,12 +147,14 @@ dever.json.front.sites.<site>.public
 
 `front/page/{page}/...` 里的 `{page}` 是物理目录，来自 site 的 `page` 字段。它不自动进入 route。
 
-页面 route 前缀由定义该站点页面的组件名决定，不由站点 key 或 `site.api` 决定。`site.api` 只用于接口前缀。
+页面 route 前缀默认由定义该站点页面的组件名决定，不由站点 key 或 `site.api` 决定。`site.api` 只用于接口前缀。只有站点显式声明 `route` 时，对外 Page route 才使用该别名前缀。
 
 ```txt
 package/front 定义 admin 页面 -> front/login, front/main
 module/mt 定义 mt_content 页面 -> mt/home, mt/article
 ```
+
+例如页面所有者是 `mt`，配置 `"route": "content"` 后，对外可使用 `content/home`，runtime 内部仍定位 `mt/home`。不要同时改 Page 文件路径或把 `route` 当成 `api`。
 
 模板页面的 `template.route` 以站点路径为前缀。未绑定 Host 时使用原始 `/{site}` 路径；绑定 Host 时站点路径视为 `/`，模板资源也按 `/assets/...` 输出。
 

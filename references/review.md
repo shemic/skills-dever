@@ -73,6 +73,10 @@ P2（可择机优化）
 - 是否有重复业务逻辑。
 - 是否有 `Xxx2/XxxNew/XxxEx/XxxV2`。
 - 是否有无意义 `Helper/Manager/Util/Base/Interface`。
+- 核心业务是否全部归属 `service/` 或 `service/<domain>/`。
+- 是否创建了根级 `internal/contract/installer/updater/serveridentity` 等平行业务目录。
+- 私有类型、接口和 helper 是否靠近拥有它们的 Service，而不是形成通用桶层。
+- 文件名是否重复父目录语义，或用多段下划线掩盖混合职责。
 - 是否有巨大函数、巨大文件、混合职责。
 - 是否把组件私有逻辑放进 `package/front`。
 
@@ -80,8 +84,10 @@ P2（可择机优化）
 
 - 普通 CRUD 是否错误新增 API/Service。
 - Provider 是否只是透传。
-- Service 是否只是 CRUD wrapper。
+- Service 是否只是没有业务不变量的 Model CRUD wrapper。
+- `Create/List/GetInfo/Update/Delete` 方法是否有真实权限、事务、状态、派生凭据、跨表一致性或外部协议；不能只按名称判错。
 - API 是否内联业务流程。
+- CLI、middleware 或 Model hook 是否复制了 Service 业务规则。
 - page JSON 是否承担了状态流转、事务或外部调用。
 - front plugin 是否替代了 page JSON 能力。
 
@@ -147,4 +153,4 @@ P2（可择机优化）
 bash skills/skills-dever/scripts/audit.sh --changed
 ```
 
-或检查指定文件/目录。`audit.sh` 是静态约束检查，不替代人工审查。
+或检查指定文件/目录。`audit.sh` 是静态约束检查，不替代人工审查。CRUD 名称和复杂度类提示是审查入口，不是自动定罪；旧 Page 协议、生成文件手改和明确非法业务根目录可以直接失败。

@@ -37,6 +37,8 @@ files/
 - Go module 固定 `module my`。
 - 普通项目入口使用 `github.com/dever-package/front/service/site`，不 import 本地 `package/front`。
 - package shim 只写 `// dever:import github.com/dever-package/<name>`。
+- component skill 模板必须声明核心业务统一放 `service/`，Provider 不是独立目录，API/CLI/middleware/Model hook 只做适配。
+- Model/Page 模板保持最低层骨架，不生成 Service/API/Provider 占位代码。
 
 ## 旧写法禁止
 

@@ -143,6 +143,8 @@ dever package bot
 ## 规则归属
 
 - 核心入口：`SKILL.md`、`files/AGENTS.dever.md`
+- 能力决策与代码归属：`references/decide.md`、`references/development.md`
+- 产品需求拆解：`references/product.md`
 - 应用开发：`references/app.md`
 - Model：`references/model.md`
 - Provider/Service/API：`references/service-api.md`
@@ -160,4 +162,4 @@ bash scripts/audit.sh --changed
 bash scripts/audit.sh <file-or-dir>
 ```
 
-`audit.sh` 只检查可机器识别的硬约束，不替代人工判断。
+`audit.sh` 对可确定的问题报错，对需要业务语义判断的结构和命名风险给出警告；它不替代人工审查。
