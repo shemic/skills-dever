@@ -10,7 +10,7 @@
 curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 ```
 
-脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 `dever` 命令，然后执行 `dever skill install` 同步 shemic-dever skill 和项目 agent 提示。Trellis 与 Codex 调度由 DAI 单独管理。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。不要把通用 AI skill 安装工具作为主安装路径。
+脚本会在 Linux/macOS 校验 Go 官方归档 SHA-256 后，把 Go 1.25.3 安装到受管的 `~/.dever/go`，再检查 git、安装 `dever` 命令，并执行 `dever skill install` 同步 shemic-dever skill 和项目 agent 提示；自定义 Go 目录的替换边界见 [framework.md](framework.md)。Trellis 与 Codex 调度由 DAI 单独管理。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。不要把通用 AI skill 安装工具作为主安装路径。
 
 2. 检查项目根提示词：
 

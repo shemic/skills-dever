@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 FILES_DIR="${SKILL_ROOT}/files"
+source "${SCRIPT_DIR}/lib/template.sh"
 
 FORCE=0
 ADOPT_EXISTING=0
@@ -33,6 +34,12 @@ if [[ -z "$REQUESTED_MODULE_NAME" ]]; then
   exit 1
 fi
 
+if [[ ! "$PORT" =~ ^[0-9]+$ ]] || (( 10#$PORT < 1 || 10#$PORT > 65535 )); then
+  echo "端口必须是 1 到 65535 之间的整数。"
+  exit 1
+fi
+dever_template_require_single_line app_name "$APP_NAME" || exit 1
+
 if [[ "$REQUESTED_MODULE_NAME" != "$MODULE_NAME" ]]; then
   echo "已忽略传入的 module path：$REQUESTED_MODULE_NAME"
   echo "Dever 应用项目固定使用 Go 模块路径：$MODULE_NAME"
@@ -41,40 +48,17 @@ fi
 copy_file() {
   local src="$1"
   local dest="$2"
-  if [[ ! -f "$src" ]]; then
-    echo "模板不存在：$src"
-    exit 1
-  fi
-  if [[ -e "$dest" && "$FORCE" != "1" ]]; then
-    return
-  fi
-  if [[ -e "$dest" && "$FORCE" == "1" ]]; then
-    cp "$dest" "${dest}.bak"
-  fi
-  mkdir -p "$(dirname "$dest")"
-  cp "$src" "$dest"
+  dever_copy_template_file "$src" "$dest" "$FORCE"
 }
 
 render_template() {
   local src="$1"
   local dest="$2"
-  if [[ ! -f "$src" ]]; then
-    echo "模板不存在：$src"
-    exit 1
-  fi
-  if [[ -e "$dest" && "$FORCE" != "1" ]]; then
-    return
-  fi
-  if [[ -e "$dest" && "$FORCE" == "1" ]]; then
-    cp "$dest" "${dest}.bak"
-  fi
-  mkdir -p "$(dirname "$dest")"
-  sed \
-    -e "s/{{MODULE_NAME}}/${MODULE_NAME}/g" \
-    -e "s/{{APP_NAME}}/${APP_NAME}/g" \
-    -e "s/{{APP_KEY}}/${APP_KEY}/g" \
-    -e "s/{{PORT}}/${PORT}/g" \
-    "$src" > "$dest"
+  dever_render_template "$src" "$dest" "$FORCE" \
+    raw MODULE_NAME "$MODULE_NAME" \
+    json APP_NAME "$APP_NAME" \
+    json APP_KEY "$APP_KEY" \
+    raw PORT "$PORT"
 }
 
 ensure_empty_project() {
@@ -141,18 +125,8 @@ write_package_shim() {
   local name="$1"
   local src="${FILES_DIR}/go/package-shim.go.tmpl"
   local target="module/${name}/main.go"
-  if [[ ! -f "$src" ]]; then
-    echo "模板不存在：$src"
-    exit 1
-  fi
-  if [[ -e "$target" && "$FORCE" != "1" ]]; then
-    return
-  fi
-  if [[ -e "$target" && "$FORCE" == "1" ]]; then
-    cp "$target" "${target}.bak"
-  fi
-  mkdir -p "$(dirname "$target")"
-  sed -e "s/{{PACKAGE_NAME}}/${name}/g" "$src" > "$target"
+  dever_render_template "$src" "$target" "$FORCE" \
+    raw PACKAGE_NAME "$name"
 }
 
 ensure_empty_project

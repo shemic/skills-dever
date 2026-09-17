@@ -5,7 +5,7 @@
 ## 命令事实
 
 - 全新机器先用 `curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash` 获取 `dever` 命令并同步 skill。
-- Go 是 Dever 开发前置依赖；安装脚本在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，Windows 只提示手动安装。
+- Go 是 Dever 开发前置依赖；安装脚本在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，Windows 只提示手动安装。自动安装会先用 Go 官方下载清单校验归档 SHA-256，只替换默认目录、空目录或带 `.dever-managed-go` 标记的受管目录，并在新目录验证通过后再切换。
 - `dever skill install` 每次从 `github.com/shemic/skills-dever` 拉取临时副本。
 - `dever skill install` 只同步 shemic-dever skill 和项目 agent 提示，不安装、更新或配置 Trellis。
 - Trellis 与 Codex 调度统一由 DAI 管理；更新使用 `dai trellis update`，不要从 Dever 命令维护同一批配置文件。
@@ -95,6 +95,9 @@ replace github.com/dever-package/front => ./package/front
 - 本地可编辑插件继续走项目级 Vite source server 和 virtual compat；不增加 watch build，不读取生产 dist 模拟开发环境。
 - 外部 package 继续消费已经发布的 dist。
 - source server 端口默认 `http.port + 10000`；源码模块请求数不套用生产 bundle 预算。
+- CLI 只把本次发现的可编辑插件名写入 `DEVER_FRONT_PLUGIN_DEV_NAMES`；`package/front` 必须按这份精确名单暴露源码，名单外插件继续读取已发布 dist，不能因本地存在源码目录就进入开发态。
+- 每次 source server 启动生成新的 `DEVER_FRONT_PLUGIN_DEV_VERSION`，`package/front` 把它加入源码入口 URL，避免浏览器复用上一轮开发会话缓存。
+- source server 异常退出并重启后，CLI 必须同步重启后端进程，使新的插件名单、URL 和会话版本一次性生效；不能只重启 Vite 后继续使用旧后端环境变量。
 
 宿主 `front/src`：
 

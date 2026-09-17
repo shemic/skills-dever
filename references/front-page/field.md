@@ -22,6 +22,15 @@ Model 字段集合不等于表单字段集合。Page runtime 会从 form 节点�
 | 分类归属 | `cate_id`、`category_id`、`type`、`kind`、`group_id` | Options/Relations/category |
 | 业务指派 | `owner_staff_id`、`assignee_id`、`department_id` | 真实业务选择，可用 Relations |
 
+## 普通配置型资源的列表维护
+
+普通配置型资源的启停状态和展示排序默认在列表维护：
+
+- Model 存在普通 `status` 或 `sort` 字段时，create/update 页不放对应 form 节点，也不在 `data.form` 中机械声明默认值；默认值由 Model 提供。
+- 列表展示这些字段并通过 partial save 直接修改。二值启停状态优先使用 `form-switch`，表格排序使用行内数字编辑，分类列表使用拖拽排序和状态选择。
+- 列表内联保存使用表格 `savePath` 或明确的 `changeAction`，不得为普通状态和排序增加 CRUD Service/API。
+- 审批、发布、任务等业务状态流转不属于普通启停状态，必须按业务规则进入 Service，不能用通用 partial save 绕过校验。
+
 ## 标识字段
 
 默认不让管理员录入通用 `code/key/slug/sn/no`：

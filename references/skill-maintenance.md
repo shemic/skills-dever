@@ -122,9 +122,12 @@ rg -n '业务.*service|Provider.*service|CRUD' skills/skills-dever/SKILL.md skil
 检查 shell 和 skill 结构：
 
 ```bash
-for file in skills/skills-dever/scripts/*.sh; do bash -n "$file"; done
+for file in skills/skills-dever/scripts/*.sh skills/skills-dever/scripts/lib/*.sh; do bash -n "$file"; done
+bash skills/skills-dever/test/run.sh
 python3 /root/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/skills-dever
 ```
+
+生成器、安装目录保护、下载校验和 audit 的确定性行为使用仓库根 `test/` 下的永久测试；测试必须在临时目录运行，不访问真实项目、不安装 CLI，也不替换本机 Go。
 
 修改 audit 时用项目根 `test/` 的最小夹具先观察失败，再实现并观察通过；一次性夹具在交付前删除。
 

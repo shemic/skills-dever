@@ -75,6 +75,8 @@ Page 之前先检查 Model：
 
 标准列表页使用 `.../list` 和 `data.table`。最小数据配置可以是：
 
+筛选栏默认紧凑左对齐，layout 使用 `flex-wrap items-center justify-start gap-2`。搜索节点只配置真实需要的字段，不在 Page JSON 中用 `controlClassName` 或宽度 class 固定输入框、选择框宽度；响应式基础宽度由 front runtime 统一提供。
+
 ```json
 "data": {
   "search": {
@@ -88,6 +90,8 @@ Page 之前先检查 Model：
   }
 }
 ```
+
+Model 存在普通启停状态时，列表应提供状态筛选，并同时声明 `data.search.status` 和 `data.table.filterFields`；没有状态字段的资源不要机械增加。
 
 `data.table` 不需要写 `model`、`list`、`total`、`page` 或 `pageSize`。runtime 对 `.../list` 自动推导 Model、查询列表并回填分页数据。只有以下情况才显式配置：
 
@@ -115,6 +119,8 @@ Page 之前先检查 Model：
   }
 }
 ```
+
+普通配置型资源的状态和排序应在列表展示并直接维护，create/update 页不重复提供。字段边界见 [field.md](field.md)，partial save 见 [action.md](action.md)。
 
 列、搜索控件和 action 只写需求实际需要的内容。不要把历史页面的 className、按钮和字段整段复制到新资源。
 

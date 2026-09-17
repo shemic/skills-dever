@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TEMPLATE_DIR="${SKILL_ROOT}/files/page/standard"
+source "${SCRIPT_DIR}/lib/template.sh"
 
 OWNER_DIR="${1:-}"
 SITE_KEY="${2:-}"
@@ -44,6 +45,7 @@ fi
 
 RESOURCE_NAME="$(echo "$RESOURCE_RAW" | tr '[:upper:]' '[:lower:]' | tr '-' '_')"
 RESOURCE_TITLE="${RESOURCE_TITLE:-$RESOURCE_NAME}"
+dever_template_require_single_line resource_title "$RESOURCE_TITLE" || exit 1
 COMPONENT_NAME="$(basename "$OWNER_DIR" | tr '[:upper:]' '[:lower:]' | tr '-' '_')"
 PARENT_ROUTE="${PARENT_OVERRIDE:-${COMPONENT_NAME}/${RESOURCE_NAME}/list}"
 UPDATE_ROUTE="${COMPONENT_NAME}/${RESOURCE_NAME}/update"
@@ -64,18 +66,12 @@ if [[ -e "$TARGET" && "$FORCE" != "1" ]]; then
   echo "确认需要替换后再使用 --force 重新执行。"
   exit 1
 fi
-if [[ -e "$TARGET" && "$FORCE" == "1" ]]; then
-  cp "$TARGET" "${TARGET}.bak"
-fi
-
-mkdir -p "$(dirname "$TARGET")"
-sed \
-  -e "s/{{RESOURCE_NAME}}/${RESOURCE_NAME}/g" \
-  -e "s/{{RESOURCE_TITLE}}/${RESOURCE_TITLE}/g" \
-  -e "s#{{PARENT_KEY}}#${PARENT_OVERRIDE}#g" \
-  -e "s#{{PARENT_ROUTE}}#${PARENT_ROUTE}#g" \
-  -e "s#{{UPDATE_ROUTE}}#${UPDATE_ROUTE}#g" \
-  "$TEMPLATE" > "$TARGET"
+dever_render_template "$TEMPLATE" "$TARGET" "$FORCE" \
+  json RESOURCE_NAME "$RESOURCE_NAME" \
+  json RESOURCE_TITLE "$RESOURCE_TITLE" \
+  json PARENT_KEY "$PARENT_OVERRIDE" \
+  json PARENT_ROUTE "$PARENT_ROUTE" \
+  json UPDATE_ROUTE "$UPDATE_ROUTE"
 
 echo "已生成："
 echo "  $TARGET"

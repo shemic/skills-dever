@@ -71,6 +71,7 @@ transform
 
 ## 脚本
 
+- `scripts/lib/template.sh` 统一处理模板值校验、JSON/`sed` 转义、备份和临时文件替换；生成脚本不要各自复制字符串替换逻辑，也不要直接重定向到最终文件。
 - `install.sh` 自动安装 Go，安装 Dever CLI，并执行 `dever skill install`；不安装、更新或配置 Trellis。
 - `boot.sh` 只用于空项目。
 - `module.sh` 只生成 model 骨架，不生成 Service/API。

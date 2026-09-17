@@ -25,7 +25,8 @@ description: Use when 实现、修改、审查或排查 Dever 项目的 componen
 | React 节点、复杂交互、插件 | [front-plugin.md](references/front-plugin.md)，再读组件 skill |
 | package/module/dever.json | [component.md](references/component.md)，再读组件自己的 `skills/**/SKILL.md` |
 | Dever CLI、生成器、framework、package/front runtime | [framework.md](references/framework.md)，再读对应 framework/component skill |
-| bug、审查、重构、安全、性能 | [review.md](references/review.md)，并叠加问题所属 reference |
+| bug、审查、重构、性能 | [review.md](references/review.md)，并叠加问题所属 reference |
+| 安全、权限边界、密钥、上传、外部 URL、webhook | [security.md](references/security.md) 与 [review.md](references/review.md)，并叠加问题所属 reference |
 | 维护本 skill、模板或 audit | [skill-maintenance.md](references/skill-maintenance.md) |
 
 ## 全局硬规则
