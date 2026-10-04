@@ -18,7 +18,7 @@
 5. 有真实业务不变量时，在 `service/` 或 `service/<domain>/` 写普通 Service 方法。
 6. Page 需要动态 hook/option 时，在同一 Service 域增加薄 Provider 方法。
 7. 只有真实 HTTP 边界才写薄 API；只有 Page 无法表达的交互才写 front plugin。
-8. 改 Model/Provider/API 后让 `dever run` 或 `dever init --skip-tidy` 刷新生成文件。
+8. 改 Model/Provider/API 后让 `dever-go run` 或 `dever-go init --skip-tidy` 刷新生成文件。
 
 普通资源的最小形态：
 
@@ -77,16 +77,16 @@ module my
 安装或更新 package：
 
 ```bash
-dever package front
-dever package bot
-dever package
+dever-go package front
+dever-go package bot
+dever-go package
 ```
 
 默认使用稳定 `@latest`。维护 package 或验证未发布提交时才使用：
 
 ```bash
-dever package --ref=main front
-dever package --ref=v0.1.1 front
+dever-go package --ref=main front
+dever-go package --ref=v0.1.1 front
 ```
 
 flag 写在组件名称前。

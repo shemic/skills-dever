@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEVER_MODULE="${DEVER_MODULE:-github.com/shemic/dever/cmd/dever}"
+DEVER_COMMAND="dever-go"
+DEVER_MODULE="${DEVER_MODULE:-github.com/shemic/dever/cmd/${DEVER_COMMAND}}"
 DEVER_VERSION="${DEVER_VERSION:-latest}"
 REQUIRED_GO_VERSION="${REQUIRED_GO_VERSION:-1.25.3}"
 GO_DOWNLOAD_BASE="${GO_DOWNLOAD_BASE:-https://go.dev/dl}"
@@ -540,8 +541,12 @@ main() {
   local dever_bin
 
   parse_arguments "$@"
+  if [[ "${DEVER_MODULE##*/}" != "$DEVER_COMMAND" ]]; then
+    echo "错误：DEVER_MODULE 的命令包名称必须是 ${DEVER_COMMAND}：$DEVER_MODULE" >&2
+    return 1
+  fi
   ensure_go
-  require_command git "dever skill install 需要 git 拉取 skills-dever。请先安装 git。"
+  require_command git "${DEVER_COMMAND} skill install 需要 git 拉取 skills-dever。请先安装 git。"
 
   PROJECT_ROOT="$(absolute_dir "$PROJECT_ROOT")"
   if [[ -z "$BIN_DIR" ]]; then
@@ -556,9 +561,9 @@ main() {
   echo "安装 Dever CLI: ${DEVER_MODULE}@${DEVER_VERSION}"
   GOBIN="$BIN_DIR" go install "${DEVER_MODULE}@${DEVER_VERSION}"
 
-  dever_bin="$BIN_DIR/dever"
+  dever_bin="$BIN_DIR/$DEVER_COMMAND"
   if [[ ! -x "$dever_bin" ]]; then
-    echo "错误：安装后未找到 dever 命令：$dever_bin" >&2
+    echo "错误：安装后未找到 ${DEVER_COMMAND} 命令：$dever_bin" >&2
     return 1
   fi
 
@@ -578,7 +583,7 @@ main() {
   fi
 
   echo "完成。下一步："
-  echo "  dever skill doctor --project-root=\"$PROJECT_ROOT\""
+  echo "  ${DEVER_COMMAND} skill doctor --project-root=\"$PROJECT_ROOT\""
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

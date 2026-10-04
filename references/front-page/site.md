@@ -170,4 +170,4 @@ front/dist/manifest.json > front/src/plugin.ts
 
 普通插件不要手写 `setting.runtime.plugins`。只有外部 URL 插件或特殊 runtime 注入才显式配置。
 
-`dever run` 只在缺少 dist manifest 且存在 `front/src/plugin.ts` 时启动插件 dev server。`dever build` 会先构建本地可编辑插件；外部 Go module package 如果有 `front/src/plugin.ts` 必须随发布携带 `front/dist/manifest.json`。
+`dever-go run` 只在缺少 dist manifest 且存在 `front/src/plugin.ts` 时启动插件 dev server。`dever-go build` 会先构建本地可编辑插件；外部 Go module package 如果有 `front/src/plugin.ts` 必须随发布携带 `front/dist/manifest.json`。

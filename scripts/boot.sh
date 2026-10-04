@@ -150,5 +150,5 @@ write_package_shim front
 write_package_shim bot
 
 echo "已生成最小 Dever 项目骨架。"
-echo "已生成 module/front 和 module/bot package shim；请执行 dever package front 和 dever package bot 安装或更新组件。"
+echo "已生成 module/front 和 module/bot package shim；请执行 dever-go package front 和 dever-go package bot 安装或更新组件。"
 echo "未生成任何业务 API 或 Service。"

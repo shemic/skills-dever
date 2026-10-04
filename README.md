@@ -16,9 +16,11 @@ https://github.com/shemic/skills-dever
 curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 ```
 
-脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 Dever CLI，然后执行 `dever skill install` 同步项目提示词和多工具 skill 引用。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。
+脚本会在 Linux/macOS 自动安装 Go 1.25.3 到 `~/.dever/go`，检查 git，安装 Dever CLI，然后执行 `dever-go skill install` 同步项目提示词和多工具 skill 引用。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。
 
-`dever skill install` 会每次从 GitHub 拉取临时副本，同步到：
+发布顺序：先发布包含 `cmd/dever-go` 的 Go 稳定 tag，再发布默认安装 `github.com/shemic/dever/cmd/dever-go@latest` 的安装脚本。tag 发布前仅使用 `DEVER_VERSION=<包含新路径的提交或分支>` 验证，不能依赖旧 tag 的 `@latest`。
+
+`dever-go skill install` 会每次从 GitHub 拉取临时副本，同步到：
 
 ```txt
 ~/.agents/skills/shemic-dever
@@ -37,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/in
 
 项目根只写 `AGENTS.md`，`CLAUDE.md` 使用 `@AGENTS.md` 引用。
 
-`dever skill install` 只负责 shemic-dever skill 和项目 agent 提示。Trellis 与 Codex 调度统一由 DAI 管理，Dever 不安装、更新或改写 `.trellis`。
+`dever-go skill install` 只负责 shemic-dever skill 和项目 agent 提示。Trellis 与 Codex 调度统一由 DAI 管理，Dever 不安装、更新或改写 `.trellis`。
 
 ## 常用命令
 
@@ -50,15 +52,15 @@ curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/in
 之后更新 Dever CLI 和当前项目 Dever 框架依赖：
 
 ```bash
-dever update
-dever update --ref=latest
+dever-go update
+dever-go update --ref=latest
 ```
 
-`dever update` 默认追 GitHub `main`，会先在当前 Dever 后端项目中执行 `go get github.com/shemic/dever@<ref>`，再安装同一 ref 的 `dever` 命令。它不同步 AI skill；需要更新 AI skill 时单独执行：
+`dever-go update` 默认追 GitHub `main`，会先在当前 Dever 后端项目中执行 `go get github.com/shemic/dever@<ref>`，再安装同一 ref 的 `dever-go` 命令。它不同步 AI skill；需要更新 AI skill 时单独执行：
 
 ```bash
-dever skill install
-dever skill doctor
+dever-go skill install
+dever-go skill doctor
 ```
 
 更新 Trellis 并重放 DAI 配置：
@@ -70,42 +72,42 @@ dai trellis update
 只想更新命令、不改当前项目 `go.mod` 时使用：
 
 ```bash
-dever update --skip-framework
+dever-go update --skip-framework
 ```
 
 常见项目命令：
 
 | 命令 | 用途 |
 | --- | --- |
-| `dever run` | 开发启动，自动生成注册文件并热重载源码和配置。 |
-| `dever daemon start --name app -- dever run` | 后台启动 `dever run`。 |
-| `dever daemon stop --name app` | 停止后台命令。 |
-| `dever daemon restart --name app` | 重启后台命令；不带命令时复用上次命令。 |
-| `dever daemon logs --name app -f` | 查看后台日志。 |
-| `dever package front` | 安装或更新 `front` package。 |
-| `dever package bot` | 安装或更新 `bot` package。 |
-| `dever package` | 更新当前项目已启用的所有 package。 |
-| `dever package --ref=main front` | 维护者验证未发布 package 时追 `main`；普通项目默认不用。 |
-| `dever front build bot` | 构建本地可编辑 `bot` 前端插件，发布 package 前使用。 |
-| `dever build` | 构建项目二进制，默认会先构建本地前端插件。 |
-| `dever publish root@1.2.3.4:/opt/app --service=app --install-service --restart` | 发布到远端服务器，安装或更新 systemd 服务并重启。 |
-| `dever publish root@1.2.3.4:/opt/app --include=server --service=app --restart` | 已完成首次部署后，只覆盖线上 server 二进制并重启，远端配置保持不变。 |
-| `dever publish root@1.2.3.4:/opt/app --include=server,config,data/table,data/migrations --service=app --restart` | 显式把指定目录加入发布包；`data/...` 会合并到远端 `shared/data`。 |
-| `dever cert issue root@1.2.3.4 --domain=admin.example.com --email=admin@example.com` | 在远端安装 acme.sh，并用 Nginx 模式签发和安装 HTTPS 证书。 |
-| `dever cert info root@1.2.3.4 --domain=admin.example.com` | 查看远端证书信息和下次续签时间。 |
-| `dever cert renew root@1.2.3.4 --domain=admin.example.com --force` | 远端强制续签证书。 |
+| `dever-go run` | 开发启动，自动生成注册文件并热重载源码和配置。 |
+| `dever-go daemon start --name app -- dever-go run` | 后台启动 `dever-go run`。 |
+| `dever-go daemon stop --name app` | 停止后台命令。 |
+| `dever-go daemon restart --name app` | 重启后台命令；不带命令时复用上次命令。 |
+| `dever-go daemon logs --name app -f` | 查看后台日志。 |
+| `dever-go package front` | 安装或更新 `front` package。 |
+| `dever-go package bot` | 安装或更新 `bot` package。 |
+| `dever-go package` | 更新当前项目已启用的所有 package。 |
+| `dever-go package --ref=main front` | 维护者验证未发布 package 时追 `main`；普通项目默认不用。 |
+| `dever-go front build bot` | 构建本地可编辑 `bot` 前端插件，发布 package 前使用。 |
+| `dever-go build` | 构建项目二进制，默认会先构建本地前端插件。 |
+| `dever-go publish root@1.2.3.4:/opt/app --service=app --install-service --restart` | 发布到远端服务器，安装或更新 systemd 服务并重启。 |
+| `dever-go publish root@1.2.3.4:/opt/app --include=server --service=app --restart` | 已完成首次部署后，只覆盖线上 server 二进制并重启，远端配置保持不变。 |
+| `dever-go publish root@1.2.3.4:/opt/app --include=server,config,data/table,data/migrations --service=app --restart` | 显式把指定目录加入发布包；`data/...` 会合并到远端 `shared/data`。 |
+| `dever-go cert issue root@1.2.3.4 --domain=admin.example.com --email=admin@example.com` | 在远端安装 acme.sh，并用 Nginx 模式签发和安装 HTTPS 证书。 |
+| `dever-go cert info root@1.2.3.4 --domain=admin.example.com` | 查看远端证书信息和下次续签时间。 |
+| `dever-go cert renew root@1.2.3.4 --domain=admin.example.com --force` | 远端强制续签证书。 |
 
-本地维护框架源码时，才使用 `dever install` 把当前项目里的 `dever/cmd/dever` 绑定成启动脚本：
+本地维护框架源码时，才使用 `dever-go install` 把当前项目里的 `dever/cmd/dever-go` 绑定成启动脚本：
 
 ```bash
-dever install --skip-skills
+dever-go install --skip-skills
 ```
 
-普通用户更新最新版命令用 `dever update`，不要把 `dever install` 当作在线更新命令。
+普通用户更新最新版命令用 `dever-go update`，不要把 `dever-go install` 当作在线更新命令。
 
 HTTPS 证书命令基于远端 `acme.sh`：`issue` 默认使用 Let's Encrypt 和 Nginx 验证模式，证书安装到 `/etc/dever/certs/<domain>`，续签时会执行默认 reload 命令 `systemctl reload nginx`。如果不是 Nginx，可用 `--mode=webroot --webroot=/path/to/site` 或 `--mode=standalone`；reload 命令用 `--reload="systemctl reload caddy"` 覆盖，或用 `--reload=` 关闭。
 
-`dever publish` 会在本机生成 `tar.gz` 发布包，再用 `scp` 上传到远端 `releases/<version>`。同一次发布会复用临时 SSH ControlMaster 连接，尽量避免准备目录、上传和激活发布时重复输入密码。
+`dever-go publish` 会在本机生成 `tar.gz` 发布包，再用 `scp` 上传到远端 `releases/<version>`。同一次发布会复用临时 SSH ControlMaster 连接，尽量避免准备目录、上传和激活发布时重复输入密码。
 
 ## 目录
 
@@ -124,13 +126,13 @@ scripts/                    # 静态 audit 和骨架脚本
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
-dever skill doctor
+dever-go skill doctor
 bash ~/.agents/skills/shemic-dever/scripts/boot.sh my dever-app 8082
-dever package front
-dever package bot
+dever-go package front
+dever-go package bot
 ```
 
-`dever package` 默认更新稳定版本；维护 package 时需要验证未发布提交，使用 `dever package --ref=main front` 或把 `main` 替换为指定 tag/commit。
+`dever-go package` 默认更新稳定版本；维护 package 时需要验证未发布提交，使用 `dever-go package --ref=main front` 或把 `main` 替换为指定 tag/commit。
 
 完整说明见 `references/quickstart.md`。已有项目不要用 `boot.sh` 覆盖骨架。
 

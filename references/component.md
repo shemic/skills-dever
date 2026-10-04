@@ -6,7 +6,7 @@ Dever 里 `module` 和 `package` 都是组件。`module` 是项目本地业务�
 
 - 应用业务放 `module/<name>`。
 - 可复用组件发布为 `github.com/dever-package/<name>`。
-- 普通项目安装或更新单个组件使用 `dever package <name>`；更新全部已启用 package 使用 `dever package`。默认使用稳定 `@latest`，维护者验证 main、tag 或提交时才使用 `--ref=main`、`--ref=<tag-or-commit>`。
+- 普通项目安装或更新单个组件使用 `dever-go package <name>`；更新全部已启用 package 使用 `dever-go package`。默认使用稳定 `@latest`，维护者验证 main、tag 或提交时才使用 `--ref=main`、`--ref=<tag-or-commit>`。
 - 框架/package 开发仓库可以保留本地 `package/<name>` 并通过 go.mod replace 接入。
 
 `module/<name>/main.go` 是 package shim 时：
@@ -109,7 +109,7 @@ front/dist/manifest.json > front/src/plugin.ts
 
 发布 package 如果带 `front/src/plugin.ts`，必须携带有效 `front/dist/manifest.json`。`placeholder.txt` 不算 dist。
 
-`dever run` 只为本地可编辑且没有 dist manifest 的插件启动 dev server。
+`dever-go run` 只为本地可编辑且没有 dist manifest 的插件启动 dev server。
 
 发布用 `front/dist/manifest.json` 必须让入口 JS 带上 `css` 数组；如果 Vite 生成了独立 CSS asset，编译器应在 manifest 后处理阶段归并到入口，不能依赖宿主扫描所有 manifest 项。
 

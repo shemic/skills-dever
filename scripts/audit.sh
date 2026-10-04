@@ -612,7 +612,7 @@ if (( fail != 0 )); then
 fi
 
 if (( warn_count > 0 )); then
-  echo "dever skill audit 通过，有 ${warn_count} 个警告"
+  echo "dever-go skill audit 通过，有 ${warn_count} 个警告"
 else
-  echo "dever skill audit 通过"
+  echo "dever-go skill audit 通过"
 fi

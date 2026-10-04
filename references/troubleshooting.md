@@ -62,7 +62,7 @@
 - 组件是否 active。
 - 是否有 `front/dist/manifest.json` 或 `front/src/plugin.ts`。
 - `dist/placeholder.txt` 不算有效 dist。
-- `dever run` 是否启动插件 dev server。
+- `dever-go run` 是否启动插件 dev server。
 - page JSON 是否使用已注册 node type。
 - plugin `depends` 是否写 Dever plugin 名，不是 npm 包名。
 
@@ -74,7 +74,7 @@
 - 组件 `dever.json.front.sites.<site>.auth`。
 - `page.parent` 是否指向有效分组或列表。
 - 当前账号角色是否有权限。
-- `dever init`/权限同步是否已执行。
+- `dever-go init`/权限同步是否已执行。
 
 不要把菜单写到项目 `config/front.json`。
 

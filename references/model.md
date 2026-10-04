@@ -118,6 +118,6 @@ CreatedAt
 
 ## 常见错误
 
-- model 未注册：检查 active module/package、`model/` 目录、导出名称、零参数、无接收者、嵌套目录对应的完整注册名，以及是否已执行 `dever init`。
+- model 未注册：检查 active module/package、`model/` 目录、导出名称、零参数、无接收者、嵌套目录对应的完整注册名，以及是否已执行 `dever-go init`。
 - option 无法推导：检查 Options/Relations，而不是先硬编码 `option.model`。
 - 保存字段丢失：检查 dorm 字段、列名解析和 `action.submit.data`。

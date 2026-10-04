@@ -16,11 +16,17 @@ Model 字段集合不等于表单字段集合。Page runtime 会从 form 节点�
 | --- | --- | --- |
 | 用户录入 | `name`、`title`、`summary` | form 节点 |
 | 列表维护 | `status`、`sort` | 优先列表 partial save；新增默认值按需 |
-| 主键/时间 | `id`、`created_at`、`updated_at`、`deleted_at` | id 用于上下文，时间只展示 |
+| 主键/时间 | `id`、`created_at`、`updated_at`、`deleted_at` | id 默认只用于上下文，时间只展示 |
 | 审计上下文 | `created_by`、`updated_by`、`author_id`、`editor_id`、`operator_id` | 服务端写，只展示 |
 | 派生标识 | `code`、`key`、`slug`、`sn`、`no` | 默认服务端生成或派生 |
 | 分类归属 | `cate_id`、`category_id`、`type`、`kind`、`group_id` | Options/Relations/category |
 | 业务指派 | `owner_staff_id`、`assignee_id`、`department_id` | 真实业务选择，可用 Relations |
+
+## 列表主键展示
+
+- 列表默认不展示数据库主键 `id`。
+- 只有用户明确要求，或该 ID 是后续业务沟通、查询或关联使用的真实业务信息时，才配置可见 ID 列。
+- `rowKey`、编辑/删除 action 的 `$row.id` 和表单上下文 `form.id` 仍应保留；它们不等于可见列。
 
 ## 普通配置型资源的列表维护
 

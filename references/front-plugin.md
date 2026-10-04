@@ -64,9 +64,9 @@ Runtime 会根据当前 Page 使用的 node type 匹配插件，先加载 `depen
 
 ## Dev 和 Build
 
-- `dever run`：本地可编辑插件缺少 dist manifest 且存在 `front/src/plugin.ts` 时，使用项目级 Vite source server。
-- `dever front build [name]`：构建指定/本地可编辑插件，staging 校验通过后替换 `front/dist`。
-- `dever build`：先构建本地可编辑插件，再构建 Go 二进制；不会隐式构建宿主 `front/src`。
+- `dever-go run`：本地可编辑插件缺少 dist manifest 且存在 `front/src/plugin.ts` 时，使用项目级 Vite source server。
+- `dever-go front build [name]`：构建指定/本地可编辑插件，staging 校验通过后替换 `front/dist`。
+- `dever-go build`：先构建本地可编辑插件，再构建 Go 二进制；不会隐式构建宿主 `front/src`。
 - 宿主发布：维护者单独运行 `pnpm --dir front build:backend`。
 
 插件和宿主构建不是同一个入口。用户禁止 build/test 时不运行上述命令；仅修改本规范也不需要构建。

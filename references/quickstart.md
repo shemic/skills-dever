@@ -10,15 +10,15 @@
 curl -fsSL https://raw.githubusercontent.com/shemic/skills-dever/main/scripts/install.sh | bash
 ```
 
-脚本会在 Linux/macOS 校验 Go 官方归档 SHA-256 后，把 Go 1.25.3 安装到受管的 `~/.dever/go`，再检查 git、安装 `dever` 命令，并执行 `dever skill install` 同步 shemic-dever skill 和项目 agent 提示；自定义 Go 目录的替换边界见 [framework.md](framework.md)。Trellis 与 Codex 调度由 DAI 单独管理。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。不要把通用 AI skill 安装工具作为主安装路径。
+脚本会在 Linux/macOS 校验 Go 官方归档 SHA-256 后，把 Go 1.25.3 安装到受管的 `~/.dever/go`，再检查 git、安装 `dever-go` 命令，并执行 `dever-go skill install` 同步 shemic-dever skill 和项目 agent 提示；自定义 Go 目录的替换边界见 [framework.md](framework.md)。Trellis 与 Codex 调度由 DAI 单独管理。Windows 暂不自动安装 Go，按脚本提示手动安装 Go 后重跑。不要把通用 AI skill 安装工具作为主安装路径。
 
 2. 检查项目根提示词：
 
 ```bash
-dever skill doctor
+dever-go skill doctor
 ```
 
-缺少 `AGENTS.md` 的 Dever 管理块时，重新执行安装脚本或 `dever skill install`。`CLAUDE.md` 只引用 `@AGENTS.md`。`.trellis` 的安装、更新和配置不属于 Dever 安装流程。
+缺少 `AGENTS.md` 的 Dever 管理块时，重新执行安装脚本或 `dever-go skill install`。`CLAUDE.md` 只引用 `@AGENTS.md`。`.trellis` 的安装、更新和配置不属于 Dever 安装流程。
 
 3. 空目录生成最小骨架：
 
@@ -33,11 +33,11 @@ Dever 应用 Go module 固定是 `my`。不要按项目名、域名或目录名�
 4. 安装基础 package：
 
 ```bash
-dever package front
-dever package bot
+dever-go package front
+dever-go package bot
 ```
 
-`dever package <name>` 默认安装或更新稳定版本，写 `module/<name>/main.go` package shim 并刷新注册文件。普通项目不保留 `package/<name>` 源码。维护 package 时需要验证 main、tag 或提交，才使用 `dever package --ref=main <name>` 或 `dever package --ref=<tag-or-commit> <name>`。
+`dever-go package <name>` 默认安装或更新稳定版本，写 `module/<name>/main.go` package shim 并刷新注册文件。普通项目不保留 `package/<name>` 源码。维护 package 时需要验证 main、tag 或提交，才使用 `dever-go package --ref=main <name>` 或 `dever-go package --ref=<tag-or-commit> <name>`。
 
 5. 新增业务资源按最低层级：
 
